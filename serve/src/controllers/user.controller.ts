@@ -23,3 +23,17 @@ export const createUser = async (c: Context) => {
     }
 };
 
+export const getuserByusername = async (c: Context) => {
+  try{
+     const db = c.get('db') as DrizzleDB;
+     const { username } = c.req.param();
+     const user = await userModel.findByUsername(db, username);
+     if (!user) {
+       return c.json({ message: 'User not found' }, 404);
+     }
+     return c.json(user);
+  } catch (error){
+    console.error(error);
+    return c.json({ message: 'Cannot fetch user' }, 500);
+  }
+}
