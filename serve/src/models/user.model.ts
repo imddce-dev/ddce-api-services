@@ -29,4 +29,12 @@ export const create = async (
   return { id: newId, ...data };
 };
 
+export const findByUsername = async (db: DrizzleDB, username: string) => {
+  return await db
+    .select().from(users)
+    .where(eq(users.username, username))
+    .limit(1)
+    .then((res) => res[0]);
+}
+
 
