@@ -22,3 +22,4 @@ export const createUser = async (c: Context) => {
         return c.json({ message: 'Cannot create user' }, 400);
     }
 };
+
