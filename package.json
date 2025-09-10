@@ -1,0 +1,7 @@
+{
+  "devDependencies": {
+    "@types/styled-jsx": "^2.2.9",
+    "i": "^0.3.7",
+    "npm": "^11.6.0"
+  }
+}
