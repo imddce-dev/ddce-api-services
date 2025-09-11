@@ -129,3 +129,16 @@
     @apply bg-background text-foreground;
   }
 }
+@layer base {
+  @keyframes ekgDash {
+    from {
+      stroke-dashoffset: 0; 
+    }
+    to {
+      stroke-dashoffset: -400; 
+    }
+  }
+}
+.animate-ekg-custom {
+  animation: ekgDash 6s linear infinite;
+}
