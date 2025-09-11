@@ -39,11 +39,11 @@ const Page = () => {
 
           <div className="row">
             <label className="remember"><input type="checkbox" name="remember" /> จดจำฉันไว้</label>
-            <Link href="/forgotpassword" className="link">ลืมรหัสผ่าน?</Link>
+            <Link href="/auth/forgetpass" className="link">ลืมรหัสผ่าน?</Link>
           </div>
 
           <button type="submit" className="btnPrimary">เข้าสู่ระบบ</button>
-          <Link href="/register" className="btnSecondary" role="button" aria-label="สมัครใช้งาน">
+          <Link href="/auth/register" className="btnSecondary" role="button" aria-label="สมัครใช้งาน">
             สมัครใช้งาน (Register)
           </Link>
         </form>
