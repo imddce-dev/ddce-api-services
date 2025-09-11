@@ -1,404 +1,391 @@
-// app/introduction/page.tsx
+"use client";
 import React from "react";
 import Link from "next/link";
-
-export const metadata = {
-  title: "DDCE API — Introduction",
-  description:
-    "ศูนย์กลางเชื่อมต่อข้อมูลเหตุการณ์โรคและภัยสุขภาพฉุกเฉิน (DDCE API Portal)",
-};
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
+import { Copy, Check, Shield, KeyRound, Activity, Database, Cloud, Lock, Globe, Rocket, BookOpenCheck, Code, Server, PlugZap, Mail, ArrowRight, Link2 } from "lucide-react";
 
 export default function IntroductionPage() {
+  const [copied, setCopied] = React.useState(false);
+
+  const curl = `curl -X GET \
+  https://api.ddce.go.th/v1/events?from=2025-08-01&to=2025-09-01 \
+  -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>" \
+  -H "X-Org: your-org-code"`;
+
+  const tsFetch = String.raw`import type { EventItem } from "./types";
+
+async function fetchEvents(token: string): Promise<EventItem[]> {
+  const res = await fetch("https://api.ddce.go.th/v1/events?limit=20", {
+    headers: { Authorization: 'Bearer \${token}' },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to fetch events");
+  return res.json();
+}`;
+
+  function copy(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    });
+  }
+
   return (
-    <main className="intro">
-      {/* ===== Background ===== */}
-      <div className="bg-aurora" aria-hidden="true" />
-      <div className="bg-grid" aria-hidden="true" />
-      <div className="bg-noise" aria-hidden="true" />
+    <main className="relative min-h-screen overflow-x-hidden bg-[#060913] text-slate-100">
+      {/* ===== Background (Aurora + Grid + Orbs) ===== */}
+      <div className="pointer-events-none absolute inset-0 [background:radial-gradient(80%_60%_at_50%_-10%,rgba(56,189,248,.18),transparent_60%),radial-gradient(40%_25%_at_10%_15%,rgba(16,185,129,.15),transparent_60%),radial-gradient(45%_30%_at_90%_10%,rgba(250,204,21,.12),transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.07] [background:linear-gradient(to_right,transparent_48%,rgba(255,255,255,.25)_50%,transparent_52%),linear-gradient(to_bottom,transparent_48%,rgba(255,255,255,.25)_50%,transparent_52%)] [background-size:28px_28px] [mask-image:radial-gradient(80%_50%_at_50%_10%,#000_25%,transparent_70%)]" aria-hidden />
+      <div className="pointer-events-none absolute -top-32 right-[-10%] h-[36rem] w-[36rem] rounded-full bg-cyan-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -left-32 top-40 h-[28rem] w-[28rem] rounded-full bg-emerald-400/10 blur-3xl" />
 
-      {/* ===== HERO (Split) ===== */}
-      <header className="hero">
-        <div className="hero-left">
-          <span className="badge">DDCE API</span>
-          <h1 className="title">
-            เชื่อมต่อข้อมูลสุขภาพฉุกเฉิน
-            <br />
-            ได้อย่างปลอดภัยและเป็นมาตรฐาน
-          </h1>
-          <p className="lead">
-            พอร์ทัล <strong>REST API</strong> สำหรับหน่วยงานและนักพัฒนา
-            พร้อมระบบยืนยันตัวตน, ควบคุมสิทธิ์, บันทึกการใช้งาน และ
-            <em> uptime</em> ระดับองค์กร
-          </p>
+      {/* ===== HERO ===== */}
+      {/* ===== Top Bar ===== */}
+      <div className="sticky top-0 z-50 border-b border-white/10 bg-black/20 backdrop-blur supports-[backdrop-filter]:bg-black/35">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 md:px-6">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-cyan-500 to-emerald-500 text-sm font-bold text-white shadow-sm">DD</span>
+            <span className="text-sm font-semibold tracking-tight text-slate-100 md:text-base">DDCE API</span>
+          </Link>
 
-          <div className="cta">
-            <Link href="/login" className="btnPrimary">เริ่มใช้งาน</Link>
-            <Link href="/register" className="btnGhost">สมัครใช้งาน</Link>
-            <Link href="/docs" className="btnGhost subtle">เอกสาร API</Link>
+          <nav className="hidden items-center gap-6 text-sm text-slate-300 md:flex">
+            <Link href="/docs" className="transition-colors hover:text-white">Docs</Link>
+            <Link href="/introduction/quickstart" className="transition-colors hover:text-white">Quickstart</Link>
+            <Link href="/introduction/contact" className="transition-colors hover:text-white">Contact</Link>
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" className="text-slate-200 hover:text-white">
+              <Link href="/login">เข้าสู่ระบบ</Link>
+            </Button>
+            <Button asChild className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white">
+              <Link href="/register">สมัครใช้งาน</Link>
+            </Button>
           </div>
-
-          <ul className="chips">
-            <li className="chip with-ic"><span className="ic ic-lock" />OAuth2</li>
-            <li className="chip with-ic"><span className="ic ic-json" />JSON</li>
-            <li className="chip with-ic"><span className="ic ic-version" />Versioned API</li>
-            <li className="chip with-ic"><span className="ic ic-uptime" />99.9% Uptime</li>
-          </ul>
         </div>
+      </div>
 
-        <aside className="hero-card">
-          <div className="hero-card-head">
-            <span className="dot" /><span className="dot" /><span className="dot" />
-          </div>
-          <div className="hero-card-body">
-            <p className="hero-label">Quick Start (curl)</p>
-            <pre className="code"><code>{`# รับ token (Client Credentials)
-curl -X POST https://auth.ddce.go.th/oauth/token \\
-  -u <CLIENT_ID>:<CLIENT_SECRET> \\
-  -d "grant_type=client_credentials"
+      <header className="relative">
+        <div className="mx-auto max-w-7xl px-6 pt-20 pb-10 md:pt-28">
+          <div className="flex flex-col items-start gap-8 md:flex-row md:items-center md:gap-12">
+            <div className="flex-1">
+              <div className="mb-5 flex items-center gap-2">
+                <Badge variant="secondary" className="bg-cyan-600/20 text-cyan-300 ring-1 ring-inset ring-cyan-400/30">
+                  DDCE API
+                </Badge>
+                <Badge variant="outline" className="border-emerald-400/40 text-emerald-300">
+                  v1 • Public Beta
+                </Badge>
+              </div>
+              <h1 className="text-balance text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">
+                เชื่อมต่อข้อมูล <span className="bg-gradient-to-r from-cyan-300 via-emerald-200 to-amber-200 bg-clip-text text-transparent">เหตุการณ์โรคและภัยสุขภาพ</span>
+                <br className="hidden md:block" /> อย่างปลอดภัย มาตรฐาน และตรวจสอบได้
+              </h1>
+              <p className="mt-5 max-w-2xl text-lg text-slate-300/90">
+                ข้อมูล API ของกองควบคุมโรคและภัยสุขภาพในภาวะฉุกเฉิน กรมควบคุมโรค (DDCE) สำหรับระบบ M‑EBS / EBS / EBS Province <span className="whitespace-nowrap">/ผลัก</span>ข้อมูลเหตุการณ์ และสถานการณ์
+                แบบ near real‑time พร้อมมาตรการความปลอดภัยครบถ้วน
+              </p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Button asChild size="lg" className="gap-2 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-lg shadow-cyan-500/20">
+                  <Link href="/introduction/quickstart">
+                    <Rocket className="h-4 w-4" /> เริ่มใช้งานอย่างรวดเร็ว
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="secondary" className="gap-2 bg-white/10 text-slate-100 hover:bg-white/20 border border-white/10 backdrop-blur">
+                  <Link href="/docs">
+                    <BookOpenCheck className="h-4 w-4" /> คู่มือและสคีมา
+                  </Link>
+                </Button>
+              </div>
+              <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-slate-400">
+                <div className="flex items-center gap-2"><Shield className="h-4 w-4" />OAuth2 • OpenID Connect</div>
+                <div className="hidden items-center gap-2 md:flex"><Lock className="h-4 w-4" />TLS 1.3 • mTLS (partner)</div>
+                <div className="hidden items-center gap-2 md:flex"><Globe className="h-4 w-4" />SLA 99.9%*</div>
+              </div>
+            </div>
 
-# เรียก API
-curl -H "Authorization: Bearer <TOKEN>" \\
-  https://api.ddce.go.th/v1/incidents`}</code></pre>
-
-            <div className="mini-stats">
-              <div><span className="v">99.9%</span><span className="k">Uptime</span></div>
-              <div><span className="v">~120ms</span><span className="k">Latency</span></div>
-              <div><span className="v">600/min</span><span className="k">Rate Limit</span></div>
+            {/* Code Demo Card with glow border */}
+            <div className="relative w-full max-w-xl flex-1">
+              <div className="absolute -inset-0.5 -z-10 rounded-2xl bg-gradient-to-r from-cyan-500/40 via-emerald-400/40 to-amber-300/40 opacity-40 blur-xl" />
+              <Card className="rounded-2xl border-slate-700/70 bg-slate-900/40 backdrop-blur">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-base font-medium text-slate-200">
+                    <Server className="h-4 w-4" /> ตัวอย่างเรียกใช้งาน API
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue="curl" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 rounded-lg border border-slate-700/60 bg-slate-800/30 p-1">
+                      <TabsTrigger value="curl" className="text-slate-200 data-[state=active]:bg-white data-[state=active]:text-slate-900 shadow-sm">cURL</TabsTrigger>
+                      <TabsTrigger value="node" className="text-slate-200/90 hover:text-slate-200 data-[state=active]:bg-white data-[state=active]:text-slate-900 shadow-sm">Node/TS</TabsTrigger>
+                      <TabsTrigger value="go" className="text-slate-200/90 hover:text-slate-200 data-[state=active]:bg-white data-[state=active]:text-slate-900 shadow-sm">Go</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="curl">
+                      <div className="relative">
+                        <pre className="mt-3 overflow-x-auto rounded-lg border border-slate-700/60 bg-[#0a0f1e] p-4 text-sm leading-relaxed text-slate-200 shadow-inner">
+                          {curl}
+                        </pre>
+                        <Button size="sm" variant="secondary" className="absolute right-3 top-3" onClick={() => copy(curl)}>
+                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="node">
+                      <div className="relative">
+                        <pre className="mt-3 overflow-x-auto rounded-lg border border-slate-700/60 bg-[#0a0f1e] p-4 text-sm leading-relaxed text-slate-200 shadow-inner">
+                          {tsFetch}
+                        </pre>
+                        <Button size="sm" variant="secondary" className="absolute right-3 top-3" onClick={() => copy(tsFetch)}>
+                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="go">
+                      <div className="relative">
+                        <pre className="mt-3 overflow-x-auto rounded-lg border border-slate-700/60 bg-[#0a0f1e] p-4 text-sm leading-relaxed text-slate-200 shadow-inner">
+                          {`package main
+import (
+  "net/http"
+  "io"
+)
+func main(){
+  req, _ := http.NewRequest("GET", "https://api.ddce.go.th/v1/events", nil)
+  req.Header.Set("Authorization", "Bearer <TOKEN>")
+  res, _ := http.DefaultClient.Do(req)
+  defer res.Body.Close()
+  body, _ := io.ReadAll(res.Body)
+  println(string(body))
+}`}
+                        </pre>
+                        <Button size="sm" variant="secondary" className="absolute right-3 top-3" onClick={() => copy("Go example copied")}>
+                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
             </div>
           </div>
 
-          {/* Pulse line */}
-          <svg className="pulse" viewBox="0 0 1200 80" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="pulseG" x1="0" x2="1" y1="0" y2="0">
-                <stop offset="0" stopColor="var(--pri)" />
-                <stop offset="1" stopColor="var(--acc)" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M0 40 Q140 14 280 40 T560 40 T840 40 T1200 40"
-              fill="none"
-              stroke="url(#pulseG)"
-              strokeWidth="2"
-              className="pulsePath"
-            />
-          </svg>
-        </aside>
+          {/* Quick Stats */}
+          <div className="mt-10 grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { label: "Avg. Latency", value: "180 ms" },
+              { label: "Uptime (30d)", value: "99.97%" },
+              { label: "Req/min (peak)", value: "12k" },
+            ].map((s) => (
+              <Card key={s.label} className="border-slate-700/70 bg-slate-900/40">
+                <CardContent className="flex items-center justify-between p-4">
+                  <span className="text-sm text-slate-400">{s.label}</span>
+                  <span className="text-lg font-semibold text-slate-100">{s.value}</span>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </header>
 
-      {/* ===== VALUE PILLARS ===== */}
-      <section className="pillars">
-        {[
-          {
-            t: "ความปลอดภัยเชิงลึก",
-            d: "Zero-Trust, OAuth2/Scopes, Audit Log, Rate limit + Retry-After",
-            i: "shield",
-          },
-          {
-            t: "มาตรฐานข้อมูล",
-            d: "REST + JSON, Versioning, Pagination/Filtering, Idempotency-Key",
-            i: "layers",
-          },
-          {
-            t: "พร้อมใช้งานจริง",
-            d: "รองรับ M-EBS, EBS, EBS Province • Sandbox/Production",
-            i: "rocket",
-          },
-        ].map((x, i) => (
-          <article className="pillar" key={`pillar-${i}`}>
-            <span className={`ix ix-${x.i}`} aria-hidden="true" />
-            <div>
-              <h3>{x.t}</h3>
-              <p>{x.d}</p>
-            </div>
-          </article>
-        ))}
-      </section>
-
-      {/* ===== SYSTEMS ===== */}
-      <section className="systems">
-        <h2 className="sr-only">ระบบที่พร้อมเชื่อมต่อ</h2>
-        <div className="system-grid">
+      {/* ===== Highlights ===== */}
+      <section className="relative mx-auto max-w-7xl px-6 pb-4">
+        <div className="grid gap-4 md:grid-cols-3">
           {[
-            { t: "M-EBS", d: "Modernized Event-Based Surveillance ระดับประเทศ", i: "radar" },
-            { t: "EBS", d: "Event-Based Surveillance ติดตามสัญญาณในพื้นที่", i: "activity" },
-            { t: "EBS Province", d: "เชื่อมข้อมูลจังหวัดสู่ศูนย์กลางอย่างปลอดภัย", i: "map" },
-          ].map((s, i) => (
-            <article key={`sys-${i}`} className="card">
-              <span className={`ic ic-${s.i}`} aria-hidden="true" />
-              <div className="card-txt">
-                <h3>{s.t}</h3>
-                <p>{s.d}</p>
-              </div>
-              <div className="tags">
-                <span>REST</span><span>JSON</span><span>OAuth2</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* ===== AUTH FLOWS (visual list) ===== */}
-      <section className="flows">
-        <h2>โฟลว์การยืนยันตัวตน</h2>
-        <div className="flow-grid">
-          {[
-            { t: "Client Credentials", d: "ระบบ-ต่อ-ระบบ / เซิร์ฟเวอร์ฝั่งหลังบ้าน", i: "key" },
-            { t: "Authorization Code", d: "แอปมีผู้ใช้ล็อกอิน • รองรับ PKCE", i: "user" },
-            { t: "Scopes & Roles", d: "จำกัดสิทธิ์ตามงาน เช่น incidents.read / write", i: "scope" },
+            { icon: <KeyRound className="h-5 w-5" />, title: "มาตรฐานสากล", desc: "OAuth2/OIDC, JWT, RBAC, Scopes ตามบทบาทและหน่วยงาน" },
+            { icon: <Database className="h-5 w-5" />, title: "ข้อมูลคุณภาพ", desc: "สคีมาข้อมูล EBS สอดคล้องมาตรฐาน และมีร่องรอยการแก้ไข" },
+            { icon: <Cloud className="h-5 w-5" />, title: "พร้อมใช้งาน", desc: "โครงสร้างพื้นฐาน Cloud‑native, autoscaling, log & audit ครบ" },
           ].map((f, i) => (
-            <div className="flow" key={`flow-${i}`}>
-              <span className={`ix ix-${f.i}`} aria-hidden="true" />
-              <div>
-                <h3>{f.t}</h3>
-                <p>{f.d}</p>
-              </div>
-            </div>
+            <Card key={i} className="border-slate-700/60 bg-gradient-to-b from-slate-900/60 to-slate-900/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-slate-100">
+                  {f.icon} <span className="text-base font-semibold">{f.title}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-slate-300">{f.desc}</CardContent>
+            </Card>
           ))}
         </div>
       </section>
 
-      {/* ===== ENDPOINTS (compact) ===== */}
-      <section className="endpoints">
-        <h2 className="sr-only">ตัวอย่าง Endpoints</h2>
-        <div className="ep-grid">
+      {/* ===== Endpoints Glance ===== */}
+      <section className="relative mx-auto max-w-7xl px-6 py-12">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold tracking-tight md:text-2xl">จุดเชื่อมต่อหลัก (API Endpoints)</h2>
+          <Button asChild variant="link" className="gap-2 text-cyan-300">
+            <Link href="/docs">ดูทั้งหมด <ArrowRight className="h-4 w-4" /></Link>
+          </Button>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
           {[
-            { m: "GET", e: "/v1/incidents", d: "เหตุการณ์ทั้งหมด (แบ่งหน้า)" },
-            { m: "GET", e: "/v1/incidents/{id}", d: "รายละเอียดตาม ID" },
-            { m: "POST", e: "/v1/incidents", d: "สร้างเหตุการณ์ (scope: incidents.write)" },
-            { m: "GET", e: "/v1/signals", d: "สัญญาณจาก M-EBS/EBS" },
-          ].map((x, i) => (
-            <div className="ep" key={`ep-${i}`}>
-              <span className={`badge-m ${x.m.toLowerCase()}`}>{x.m}</span>
-              <div className="ep-main">
-                <code className="path">{x.e}</code>
-                <p className="desc">{x.d}</p>
-              </div>
-            </div>
+            {
+              name: "เหตุการณ์ (Events)",
+              path: "/v1/events",
+              note: "ดึงเหตุการณ์ที่ผ่านการคัดกรอง/จัดหมวด พร้อม metadata และสถานะ",
+              tags: ["GET", "JSON", "paginated"],
+            },
+            {
+              name: "การแจ้งเตือน (Notifications)",
+              path: "/v1/notifications",
+              note: "รับ feed แจ้งเตือนแบบ near real‑time และ webhook",
+              tags: ["GET", "webhook", "SSE"],
+            },
+            {
+              name: "รายงานสถานการณ์ (Situation)",
+              path: "/v1/situation",
+              note: "ข้อมูลสรุปรายวัน/รายสัปดาห์สำหรับแดชบอร์ด",
+              tags: ["GET", "charts"],
+            },
+            {
+              name: "ส่งข้อมูลกลับ (Ingest)",
+              path: "/v1/ingest",
+              note: "ช่องทางส่งข้อมูลจากจังหวัด/หน่วยงานกลับเข้าสู่ศูนย์",
+              tags: ["POST", "mTLS"],
+            },
+          ].map((e, i) => (
+            <Card key={i} className="relative overflow-hidden border-slate-700/60 bg-slate-900/40">
+              <div className="absolute -inset-px -z-10 rounded-xl bg-gradient-to-r from-cyan-500/20 via-emerald-400/20 to-amber-300/20 opacity-40 blur-lg" />
+              <CardHeader className="pb-1">
+                <CardTitle className="flex items-center justify-between text-base">
+                  <span className="flex items-center gap-2"><PlugZap className="h-4 w-4" /> {e.name}</span>
+                  <Badge variant="outline" className="border-cyan-400/40 text-cyan-300">{e.path}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-slate-300">
+                <div className="mb-3 text-slate-300/90">{e.note}</div>
+                <div className="flex flex-wrap gap-2">
+                  {e.tags.map((t) => (
+                    <Badge key={t} variant="secondary" className="bg-slate-700 text-slate-200">
+                      {t}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </section>
 
-      {/* ===== SAMPLE RESPONSE ===== */}
-      <section className="sample">
-        <div className="sample-head">
-          <span className="tag with-ic"><span className="ic ic-json" />ตัวอย่าง JSON</span>
-          <span className="envs">Prod: api.ddce.go.th • Sandbox: sandbox.ddce.go.th</span>
+      {/* ===== How it works ===== */}
+      <section className="relative mx-auto max-w-7xl px-6 py-12">
+        <h2 className="mb-6 text-xl font-semibold md:text-2xl">วิธีเริ่มต้นใช้งาน</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            { step: 1, title: "ลงทะเบียนผู้พัฒนา", desc: "ยืนยันตัวตน, สมัคร Client, ขอ scopes ตามบทบาท" },
+            { step: 2, title: "ขอสิทธิ์และทดสอบ", desc: "รับ Client ID/Secret, ทดลองกับ Sandbox และ Postman" },
+            { step: 3, title: "เชื่อมต่อจริง", desc: "โยกไป Production, ตั้งค่า IP whitelist, webhook และ monitoring" },
+          ].map((s) => (
+            <Card key={s.step} className="border-slate-700/60 bg-slate-900/40">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-3 text-base">
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-600 bg-slate-800 text-sm font-semibold text-slate-200">
+                    {s.step}
+                  </span>
+                  {s.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-slate-300">{s.desc}</CardContent>
+            </Card>
+          ))}
         </div>
-        <pre className="code"><code>{`{
-  "id": "INC-2025-004512",
-  "type": "outbreak_signal",
-  "reported_at": "2025-03-21T07:42:11Z",
-  "location": { "province_code": "10", "province_name": "กรุงเทพมหานคร" },
-  "source": "M-EBS",
-  "severity": "high",
-  "summary": "พบสัญญาณการเพิ่มขึ้นผิดปกติ",
-  "links": { "self": "/v1/incidents/INC-2025-004512" }
-}`}</code></pre>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <Button asChild className="gap-2 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white">
+            <Link href="/register"><KeyRound className="h-4 w-4" /> สมัครใช้งาน API</Link>
+          </Button>
+          <Button asChild variant="outline" className="gap-2 border-slate-700/80 bg-slate-900/40">
+            <Link href="/contact"><Mail className="h-4 w-4" /> ติดต่อทีม API</Link>
+          </Button>
+        </div>
       </section>
 
-      {/* ===== POLICIES (accordion) ===== */}
-      <section className="policies">
-        <details>
-          <summary>Security & Access</summary>
-          <p>
-            ใช้ OAuth 2.0 (Client Credentials / Authorization Code) พร้อม Scopes เฉพาะงาน,
-            ตรวจสิทธิ์ทุกคำขอ, เก็บ Audit Log และป้องกันด้วย Rate Limit + Retry-After
-          </p>
-        </details>
-        <details>
-          <summary>Data & Governance</summary>
-          <p>
-            แยก Sandbox/Production, เวอร์ชัน API ชัดเจน (<code>/v1</code>), ข้อมูลส่วนบุคคลปกป้องด้วย
-            role-based access และการปิดบังข้อมูลตามความเหมาะสม
-          </p>
-        </details>
-        <details>
-          <summary>Change Management</summary>
-          <p>
-            มี Changelog, ระยะเวลา Deprecation และการแจ้งเตือนล่วงหน้าเพื่อลดผลกระทบต่อระบบปลายทาง
-          </p>
-        </details>
+      {/* ===== Try playground ===== */}
+      <section className="relative mx-auto max-w-7xl px-6 py-12">
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="border-slate-700/60 bg-slate-900/40">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base"><Code className="h-4 w-4" /> ลองยิง API (Sandbox)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-3" onSubmit={(e) => e.preventDefault()}>
+                <div>
+                  <label className="mb-1 block text-sm text-slate-300">Endpoint</label>
+                  <Input defaultValue="https://sandbox.ddce.go.th/v1/events?limit=5" className="bg-slate-900/60 text-slate-100 placeholder:text-slate-400" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm text-slate-300">Bearer Token</label>
+                  <Input type="password" placeholder="ใส่ token เพื่อทดสอบ" className="bg-slate-900/60 text-slate-100 placeholder:text-slate-400" />
+                </div>
+                <div className="flex gap-3">
+                  <Button type="submit" className="gap-2"><PlugZap className="h-4 w-4" /> ส่งคำขอ</Button>
+                  <Button type="button" variant="outline" className="gap-2"><Link2 className="h-4 w-4" /> เปิดด้วย Postman</Button>
+                </div>
+                <p className="text-xs text-slate-400">ตัวอย่างสำหรับเดโม UI เท่านั้น — เชื่อม logic ภายหลังได้</p>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-700/60 bg-slate-900/40">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base"><Shield className="h-4 w-4" /> หลักการความปลอดภัย</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-slate-300">
+              <ul className="list-inside list-disc space-y-2">
+                <li>ยืนยันตัวตนผ่าน OAuth2/OIDC (Authorization Code + PKCE)</li>
+                <li>กำหนดขอบเขตการเข้าถึงด้วย Scopes และ RBAC ตามหน่วยงาน</li>
+                <li>เข้ารหัสข้อมูลระหว่างทางด้วย TLS 1.3 และบังคับ mTLS สำหรับ partner สำคัญ</li>
+                <li>บันทึกการเข้าถึง (Audit Log) และมีระบบแจ้งเตือนเมื่อผิดปกติ</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
       </section>
 
-      {/* ===== FOOTER CTA ===== */}
-      <footer className="foot">
-        <p className="muted">
-          Production: <code>https://api.ddce.go.th</code> • Sandbox: <code>https://sandbox.ddce.go.th</code>
-        </p>
-        <div className="cta">
-          <Link href="/docs" className="btnGhost">เปิดเอกสาร API</Link>
-          <Link href="/login" className="btnPrimary">เข้าใช้งาน</Link>
+      {/* ===== FAQ ===== */}
+      <section className="relative mx-auto max-w-7xl px-6 py-12">
+        <h2 className="mb-4 text-xl font-semibold md:text-2xl">คำถามที่พบบ่อย</h2>
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="q1">
+            <AccordionTrigger>รองรับระบบอะไรบ้าง (M‑EBS / EBS / EBS Province)?</AccordionTrigger>
+            <AccordionContent>
+              API ถูกออกแบบให้ทำงานร่วมกับหลายระบบของ DDCE โดยใช้สคีมามาตรฐานเดียวกัน และมีตัวแปลง (adapter) สำหรับแหล่งข้อมูลเดิม
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="q2">
+            <AccordionTrigger>ขอสิทธิ์ใช้งาน Production ต้องทำอย่างไร?</AccordionTrigger>
+            <AccordionContent>
+              ลงทะเบียนผู้พัฒนา สร้าง Client และส่งแบบคำขอระบุขอบเขตการเข้าถึง ข้อมูลการติดต่อผู้รับผิดชอบ และรายการ IP ที่จะเชื่อมต่อ
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="q3">
+            <AccordionTrigger>มี SDK หรือไม่?</AccordionTrigger>
+            <AccordionContent>
+              เรามีตัวอย่างโค้ดและไฟล์ Postman ให้เริ่มต้นได้ทันที SDK ทางการสำหรับ TypeScript และ Go อยู่ระหว่างพัฒนา
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </section>
+
+      {/* ===== CTA ===== */}
+      <footer className="relative border-t border-slate-800/60 bg-slate-950/60">
+        <div className="mx-auto max-w-7xl px-6 py-12">
+          <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+            <div>
+              <h3 className="text-2xl font-semibold">พร้อมเชื่อมต่อหรือยัง?</h3>
+              <p className="mt-1 text-slate-300">สมัครใช้งาน ใช้ Sandbox ทดสอบ และย้ายสู่ Production ได้เมื่อพร้อม</p>
+            </div>
+            <div className="flex gap-3">
+              <Button asChild size="lg" className="gap-2 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white">
+                <Link href="/register"><KeyRound className="h-5 w-5" /> สมัครใช้งาน</Link>
+              </Button>
+              <Button asChild size="lg" variant="secondary" className="gap-2 bg-white/10 text-slate-100 hover:bg-white/20 border border-white/10">
+                <Link href="/introduction/quickstart"><Rocket className="h-5 w-5" /> Quickstart</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </footer>
-
-      {/* ===== Styles ===== */}
-      <style>{`
-        .intro{
-          --pri:#7b61ff; --acc:#4cd4ff; --bg:#0f1021;
-          --panel:rgba(255,255,255,.06); --muted:#a8b2d1; --stroke:rgba(255,255,255,.12);
-          color:#fff; background:var(--bg);
-          min-height:100vh; position:relative; overflow:hidden;
-          padding:34px 20px; display:grid; gap:28px;
-        }
-        /* Background */
-        .bg-aurora{position:absolute; inset:-25%;
-          background:
-            radial-gradient(40% 34% at 18% 0%, rgba(123,97,255,.45), transparent 60%),
-            radial-gradient(42% 34% at 82% 12%, rgba(76,212,255,.35), transparent 60%),
-            radial-gradient(30% 30% at 50% 100%, rgba(67,233,123,.22), transparent 70%);
-          filter:blur(70px); animation:float 28s ease-in-out infinite alternate;}
-        .bg-grid{position:absolute; inset:0; opacity:.12; pointer-events:none;
-          background-image:
-            linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px);
-          background-size:40px 40px; mask-image:radial-gradient(80% 70% at 50% 40%,#000 70%,transparent 100%);
-          animation:grid 45s linear infinite;}
-        .bg-noise{position:absolute; inset:0; opacity:.05;
-          background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-          background-size:220px 220px;}
-        @keyframes float{0%{transform:translate(0,0)}50%{transform:translate(-1.6%,1%)}100%{transform:translate(0,0)}}
-        @keyframes grid{to{background-position:240px 180px, 240px 180px}}
-
-        /* HERO split */
-        .hero{max-width:1180px; margin:0 auto; position:relative; display:grid; gap:16px;
-          grid-template-columns: 1.05fr .95fr; align-items:stretch;}
-        @media(max-width:1000px){ .hero{grid-template-columns:1fr; gap:18px;} }
-        .hero-left{display:grid; gap:14px; align-content:start}
-        .badge{display:inline-block; background:rgba(255,255,255,.08); border:1px solid var(--stroke);
-          padding:6px 12px; border-radius:999px; font-size:12px; backdrop-filter:blur(8px);}
-        .title{font-size:clamp(28px,4vw,44px); font-weight:900; letter-spacing:.2px; line-height:1.15;}
-        .lead{color:var(--muted); font-size:15px; max-width:640px}
-        .cta{display:flex; gap:10px; flex-wrap:wrap}
-        .btnPrimary{background:linear-gradient(135deg,var(--pri),var(--acc)); color:#0f1021; font-weight:800; padding:12px 16px; border-radius:12px; text-decoration:none; box-shadow:0 14px 28px rgba(123,97,255,.18);}
-        .btnGhost{border:1px solid var(--stroke); color:#fff; padding:12px 16px; border-radius:12px; text-decoration:none; background:var(--panel); backdrop-filter:blur(8px);}
-        .btnGhost.subtle{opacity:.85}
-        .btnPrimary:hover,.btnGhost:hover{filter:brightness(1.08)}
-        .chips{margin-top:6px; display:flex; gap:8px; flex-wrap:wrap; color:#cbd5ff; font-size:12px}
-        .chip{background:var(--panel); border:1px solid var(--stroke); padding:6px 10px; border-radius:999px}
-        .with-ic{display:inline-flex; align-items:center; gap:8px}
-
-        .hero-card{position:relative; border:1px solid var(--stroke); background:rgba(7,10,30,.55);
-          border-radius:16px; overflow:hidden; backdrop-filter:blur(10px); box-shadow:0 18px 36px rgba(0,0,0,.28)}
-        .hero-card-head{display:flex; gap:6px; padding:10px 12px; border-bottom:1px solid var(--stroke); background:rgba(255,255,255,.04)}
-        .hero-card-head .dot{width:8px; height:8px; border-radius:999px; background:linear-gradient(135deg,var(--pri),var(--acc))}
-        .hero-card-body{padding:12px}
-        .hero-label{font-size:12px; color:#cbd5ff; margin:0 0 6px}
-        .code{margin:0; background:#0f1227; border:1px solid var(--stroke); border-radius:12px; padding:12px; font-size:12.5px; overflow-x:auto}
-        .mini-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px}
-        .mini-stats > div{background:var(--panel); border:1px solid var(--stroke); border-radius:10px; padding:10px; text-align:center}
-        .mini-stats .v{display:block; font-weight:900; font-size:18px}
-        .mini-stats .k{display:block; color:var(--muted); font-size:12px}
-        .pulse{position:absolute; left:0; right:0; bottom:0; height:72px}
-        .pulsePath{stroke-dasharray:12 16; animation:pulseAnim 7s linear infinite}
-        @keyframes pulseAnim{to{stroke-dashoffset:-420}}
-
-        /* Pillars */
-        .pillars{max-width:1180px; margin:0 auto; display:grid; gap:12px; grid-template-columns:repeat(3,1fr)}
-        @media(max-width:900px){ .pillars{grid-template-columns:1fr 1fr} }
-        @media(max-width:620px){ .pillars{grid-template-columns:1fr} }
-        .pillar{display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:start;
-          background:var(--panel); border:1px solid var(--stroke); border-radius:14px; padding:14px}
-        .pillar h3{margin:0 0 4px; font-size:16px}
-        .pillar p{margin:0; color:var(--muted); font-size:12.8px}
-
-        /* Systems */
-        .systems{max-width:1180px; margin:0 auto}
-        .system-grid{display:grid; gap:12px; grid-template-columns:repeat(3,1fr)}
-        @media(max-width:900px){ .system-grid{grid-template-columns:1fr 1fr} }
-        @media(max-width:620px){ .system-grid{grid-template-columns:1fr} }
-        .card{display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:center;
-          background:var(--panel); border:1px solid var(--stroke); padding:14px; border-radius:14px;
-          transition:transform .18s, border .18s}
-        .card:hover{transform:translateY(-3px); border-color:rgba(255,255,255,.22)}
-        .card h3{margin:0 0 4px; font-size:16px}
-        .card p{margin:0; color:var(--muted); font-size:12.5px}
-        .tags{display:flex; gap:6px; margin-top:8px; grid-column:1 / -1}
-        .tags span{font-size:11px; border:1px solid var(--stroke); padding:2px 8px; border-radius:999px; background:rgba(255,255,255,.06)}
-
-        /* Auth flows */
-        .flows{max-width:1180px; margin:0 auto; display:grid; gap:12px}
-        .flows h2{font-size:16px; font-weight:900}
-        .flow-grid{display:grid; gap:10px; grid-template-columns:repeat(3,1fr)}
-        @media(max-width:900px){ .flow-grid{grid-template-columns:1fr 1fr} }
-        @media(max-width:620px){ .flow-grid{grid-template-columns:1fr} }
-        .flow{display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:center; background:var(--panel); border:1px solid var(--stroke); border-radius:12px; padding:12px}
-        .flow h3{margin:0 0 4px; font-size:14px}
-        .flow p{margin:0; color:var(--muted); font-size:12.5px}
-
-        /* Endpoints */
-        .endpoints{max-width:1180px; margin:0 auto}
-        .ep-grid{display:grid; gap:10px; grid-template-columns:repeat(4,1fr)}
-        @media(max-width:1100px){ .ep-grid{grid-template-columns:1fr 1fr} }
-        @media(max-width:620px){ .ep-grid{grid-template-columns:1fr} }
-        .ep{display:flex; gap:10px; align-items:flex-start; background:var(--panel); border:1px solid var(--stroke); padding:12px; border-radius:12px}
-        .badge-m{font-size:11px; padding:2px 8px; border-radius:999px; font-weight:800; color:#0f1021; white-space:nowrap}
-        .badge-m.get{background:#43e97b}
-        .badge-m.post{background:#f9d423}
-        .ep-main .path{font-size:12.5px}
-        .ep-main .desc{margin:2px 0 0; color:var(--muted); font-size:12px}
-
-        /* Sample */
-        .sample{max-width:1180px; margin:0 auto; display:grid; gap:8px}
-        .sample-head{display:flex; justify-content:space-between; align-items:center; gap:10px}
-        .tag{display:inline-flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--stroke); padding:6px 10px; border-radius:999px; font-size:12px}
-        .envs{color:#cbd5ff; font-size:12px}
-        .sample .code{background:#0f1227; border:1px solid var(--stroke); border-radius:12px; padding:12px; font-size:12.5px; overflow-x:auto; margin:0}
-
-        /* Policies (accordion) */
-        .policies{max-width:1180px; margin:0 auto; display:grid; gap:10px}
-        details{background:var(--panel); border:1px solid var(--stroke); border-radius:12px; padding:10px 12px}
-        summary{cursor:pointer; font-weight:700; list-style:none}
-        summary::-webkit-details-marker{display:none}
-        details p{margin:8px 0 0; color:var(--muted); font-size:13px}
-
-        /* Footer */
-        .foot{text-align:center; display:grid; gap:10px}
-        .muted{color:var(--muted)}
-        .foot code{background:#121326; border:1px solid var(--stroke); padding:1px 6px; border-radius:6px}
-
-        /* ICONS (SVG Data URIs) */
-        .ic{display:inline-block; width:30px; height:30px; border-radius:10px}
-        .ic-radar{background:
-          radial-gradient(120% 120% at 0% 0%, rgba(123,97,255,.35), transparent 40%),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='white' stroke-width='1.6' viewBox='0 0 24 24'><path d='M12 21a9 9 0 1 1 9-9'/><path d='M12 3v9l3 3'/></svg>") center/18px 18px no-repeat}
-        .ic-activity{background:
-          radial-gradient(120% 120% at 0% 0%, rgba(76,212,255,.35), transparent 40%),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='white' stroke-width='1.6' viewBox='0 0 24 24'><path d='M2 12h4l2 7 4-14 2 7h6'/></svg>") center/18px 18px no-repeat}
-        .ic-map{background:
-          radial-gradient(120% 120% at 0% 0%, rgba(67,233,123,.35), transparent 40%),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='white' stroke-width='1.6' viewBox='0 0 24 24'><path d='M9 3l-6 2v15l6-2 6 2 6-2V3l-6 2-6-2z'/></svg>") center/18px 18px no-repeat}
-
-        /* Extra icon set for chips/flows/pillars */
-        .ix{display:inline-block; width:26px; height:26px; border-radius:8px; background:#ffffff1a; border:1px solid var(--stroke)}
-        .ix-shield{background:
-          linear-gradient(135deg, rgba(123,97,255,.18), rgba(76,212,255,.12)),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' stroke='white' fill='none' stroke-width='1.6' viewBox='0 0 24 24'><path d='M12 3l8 4v5c0 5-3 7-8 9-5-2-8-4-8-9V7l8-4z'/></svg>") center/16px 16px no-repeat}
-        .ix-layers{background:
-          linear-gradient(135deg, rgba(67,233,123,.18), rgba(76,212,255,.12)),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' stroke='white' fill='none' stroke-width='1.6' viewBox='0 0 24 24'><path d='M12 3l9 4-9 4-9-4 9-4z'/><path d='M3 12l9 4 9-4'/><path d='M3 16l9 4 9-4'/></svg>") center/16px 16px no-repeat}
-        .ix-rocket{background:
-          linear-gradient(135deg, rgba(123,97,255,.18), rgba(67,233,123,.12)),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' stroke='white' fill='none' stroke-width='1.6' viewBox='0 0 24 24'><path d='M5 19l4-1 10-10a3 3 0 0 0-4-4L5 14l-1 4z'/><path d='M15 9l-6 6'/></svg>") center/16px 16px no-repeat}
-        .ix-key{background:
-          linear-gradient(135deg, rgba(123,97,255,.18), rgba(76,212,255,.12)),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' stroke='white' fill='none' stroke-width='1.6' viewBox='0 0 24 24'><circle cx='7' cy='12' r='3'/><path d='M10 12h10l-3 3 3 3'/></svg>") center/16px 16px no-repeat}
-        .ix-user{background:
-          linear-gradient(135deg, rgba(76,212,255,.18), rgba(123,97,255,.12)),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' stroke='white' fill='none' stroke-width='1.6' viewBox='0 0 24 24'><circle cx='12' cy='8' r='4'/><path d='M4 20a8 8 0 0 1 16 0'/></svg>") center/16px 16px no-repeat}
-        .ix-scope{background:
-          linear-gradient(135deg, rgba(67,233,123,.18), rgba(76,212,255,.12)),
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' stroke='white' fill='none' stroke-width='1.6' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9'/><path d='M12 3v6M21 12h-6M12 21v-6M3 12h6'/></svg>") center/16px 16px no-repeat}
-
-        /* Small chips icons */
-        .ic-lock{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' stroke='white' fill='none' stroke-width='1.6' viewBox='0 0 24 24'><rect x='4' y='10' width='16' height='10' rx='2'/><path d='M8 10V7a4 4 0 0 1 8 0v3'/></svg>") center/16px 16px no-repeat; width:16px; height:16px}
-        .ic-json{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' stroke='white' fill='none' stroke-width='1.6' viewBox='0 0 24 24'><path d='M6 7c-2 2 2 4 0 6-2 2 2 4 0 6'/><path d='M18 7c2 2-2 4 0 6 2 2-2 4 0 6'/></svg>") center/16px 16px no-repeat; width:16px; height:16px}
-        .ic-version{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' stroke='white' fill='none' stroke-width='1.6' viewBox='0 0 24 24'><path d='M3 7h18M3 12h12M3 17h8'/></svg>") center/16px 16px no-repeat; width:16px; height:16px}
-        .ic-uptime{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' stroke='white' fill='none' stroke-width='1.6' viewBox='0 0 24 24'><path d='M3 12h5l2 5 4-10 2 5h5'/></svg>") center/16px 16px no-repeat; width:16px; height:16px}
-
-        /* A11y helper */
-        .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-      `}</style>
     </main>
   );
 }
