@@ -15,3 +15,20 @@ export const users = mysqlTable('users', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   appoveAt: timestamp('appove_at').defaultNow().notNull(),
 });
+export const agency_types = mysqlTable('agency_types', {
+  id: serial('id').primaryKey(),
+  name: varchar('name',{ length:191}).notNull(),
+  creatAt: timestamp('creat_at').defaultNow().notNull(),
+})
+export const organizer_group = mysqlTable('organizer_group', {
+  id: serial('id').primaryKey(),
+  name: varchar('name',{ length:191}).notNull(),
+  type_id: int('type_id').notNull(),
+  creatAt: timestamp('creat_at').defaultNow().notNull(),
+})
+export const organizer = mysqlTable('organizer',{
+  id: serial('id').primaryKey(),
+  parent_id: int('parent_id').notNull(),
+  name: varchar('name',{ length:191}).notNull(),
+  creatAt: timestamp('creat_at').defaultNow().notNull(),
+})

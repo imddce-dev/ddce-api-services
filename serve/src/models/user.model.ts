@@ -1,3 +1,4 @@
+import { int } from 'drizzle-orm/mysql-core';
 
 import { MySql2Database, drizzle } from 'drizzle-orm/mysql2';
 import { users } from '../configs/mysql/schema';
@@ -17,7 +18,7 @@ export const create = async (
     password: string;
     prename: string;
     surname: string;
-    organizer: string;
+    organizer: number;
     email: string;
   }
 ) => {
@@ -37,4 +38,24 @@ export const findByUsername = async (db: DrizzleDB, username: string) => {
     .then((res) => res[0]);
 }
 
+export const RemoveUser = async (db: DrizzleDB, id: number) => {
+  return await db
+    .delete(users)
+    .where(eq(users.id, id))
+    .then(() => ({ id })); 
+}
 
+export const EditUser = async (db: DrizzleDB, id: number,
+  data: {
+    prename: string;
+    surname: string;
+    organizer: number;
+    email: string;
+  }
+) => {
+  await db
+    .update(users)
+    .set({ ...data, organizer: Number(data.organizer) })
+    .where(eq(users.id, id));
+  return { id, ...data };
+}
