@@ -20,7 +20,9 @@ const Field = ({ children }: { children: React.ReactNode }) => (
 );
 /** children ไม่บังคับ (แก้ error) + คงความสูงด้วย min-h-5 */
 const Hint = ({ children }: { children?: React.ReactNode }) => (
-  <p className="min-h-5 text-xs leading-5 text-slate-500">{children ?? "\u00A0"}</p>
+  <div className="min-h-5 text-xs leading-5 text-slate-500">
+    {children ?? <span>&nbsp;</span>}
+  </div>
 );
 
 export default function RegisterForm() {
@@ -234,7 +236,7 @@ export default function RegisterForm() {
                       <span className={pw ? (pwScore >= 3 ? "text-emerald-600" : "text-slate-600") : "text-slate-500"}>
                         {strengthLabel}
                       </span>
-                      <span className="inline-flex h-1.5 w-36 overflow-hidden rounded bg-slate-200">
+                      <span className="inline-flex h-1.5 w-40 overflow-hidden rounded bg-slate-200">
                         <span
                           className={`h-full transition-all ${
                             pwScore === 0 ? "w-0" : pwScore === 1 ? "w-1/4" : pwScore === 2 ? "w-2/4" : pwScore === 3 ? "w-3/4" : "w-full"
