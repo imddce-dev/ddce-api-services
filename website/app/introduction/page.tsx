@@ -60,7 +60,7 @@ async function fetchEvents(token: string): Promise<EventItem[]> {
 
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" className="text-slate-200 hover:text-white">
-              <Link href="/login">เข้าสู่ระบบ</Link>
+              <Link href="/auth/login">เข้าสู่ระบบ</Link>
             </Button>
             <Button asChild className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white">
               <Link href="/register">สมัครใช้งาน</Link>
