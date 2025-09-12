@@ -1,21 +1,39 @@
-function EKGs({ className = "" }: { className?: string }) {
+"use client";
+import React from "react";
+
+type Props = {
+  className?: string;
+  strokeWidth?: number;
+  opacityClass?: string;
+};
+
+export default function EKGLine({
+  className = "",
+  strokeWidth = 2.6,
+  opacityClass = "opacity-35",
+}: Props) {
   return (
-    <svg className={className} viewBox="0 0 1600 260" preserveAspectRatio="none" aria-hidden>
+    <svg
+      aria-hidden
+      viewBox="0 0 2000 160"
+      preserveAspectRatio="none"
+      className={`pointer-events-none absolute left-1/2 -translate-x-1/2 w-[200vw] max-w-none h-[120px] md:h-[140px] ${className}`}
+    >
       <defs>
-        <linearGradient id="ekg-g-1" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#4ea492" />
-          <stop offset="1" stopColor="#89cdbd" />
+        <linearGradient id="ekg-g" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#34d399" />
+          <stop offset="1" stopColor="#22d3ee" />
         </linearGradient>
       </defs>
-      <path d="M0,130 L120,130 170,60 210,200 250,130 420,130 460,58 500,202 540,130 820,130 860,60 900,200 940,130 1180,130 1220,58 1260,202 1300,130 1600,130"
-            fill="none" stroke="url(#ekg-g-1)" strokeWidth={3}
-            strokeLinecap="round" strokeLinejoin="round"
-            className="[stroke-dasharray:12_18] animate-ekg-custom opacity-60" /> 
-      <path d="M0,130 L120,130 170,60 210,200 250,130 420,130 460,58 500,202 540,130 820,130 860,60 900,200 940,130 1180,130 1220,58 1260,202 1300,130 1600,130"
-            fill="none" stroke="#cfeee5" strokeWidth={5}
-            strokeLinecap="round" strokeLinejoin="round"
-            className="blur-sm [stroke-dasharray:12_18] animate-ekg-custom opacity-30" /> 
+
+      <path
+        d="M0,80 L120,80 170,30 210,130 250,80 420,80 460,28 500,132 540,80 820,80 860,30 900,130 940,80 1180,80 1220,28 1260,132 1300,80 1600,80 1640,28 1680,132 1720,80 1860,80 1900,30 1940,130 2000,80"
+        fill="none"
+        stroke="url(#ekg-g)"
+        strokeWidth={strokeWidth}
+        className={`[stroke-dasharray:12_18] motion-safe:[animation:ekgDash_6s_linear_infinite] ${opacityClass} [filter:drop-shadow(0_0_6px_rgba(34,211,238,.28))]`}
+      />
+      <style>{`@keyframes ekgDash{to{stroke-dashoffset:-400}}`}</style>
     </svg>
   );
 }
-export default EKGs;
