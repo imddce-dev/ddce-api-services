@@ -16,10 +16,17 @@ export const createUser = async (c: Context) => {
         const db = c.get('db') as DrizzleDB;
         const body = await c.req.json();
         const newUser = await userModel.create(db, body);
-        return c.json(newUser, 201);
-    } catch (error) {
+        return c.json(newUser, 201); 
+    } catch (error: any) { 
         console.error(error);
-        return c.json({ message: 'Cannot create user' }, 400);
+        if (error.message && error.message.includes('is already taken')) {
+            return c.json({ 
+                message: error.message 
+            }, 409); 
+        }
+        return c.json({ 
+            message: 'An internal server error occurred.' 
+        }, 500); 
     }
 };
 

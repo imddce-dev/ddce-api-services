@@ -5,6 +5,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.2",
+    "bcrypt": "^6.0.0",
     "drizzle-orm": "^0.44.5",
     "hono": "^4.9.6",
     "hono-rate-limit": "^1.0.2",
@@ -12,6 +13,7 @@
     "redis": "^5.8.2"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/bun": "latest",
     "@types/node": "^24.3.1",
     "@types/react": "^19.1.12",

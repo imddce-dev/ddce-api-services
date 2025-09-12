@@ -5,9 +5,9 @@ import app from '../..';
 
 export const users = mysqlTable('users', {
   id: serial('id').primaryKey(),
-  username: varchar('name', { length: 20 }).notNull(),
+  username: varchar('name', { length: 20 }).notNull().unique(),
   password  : varchar('password', { length: 191 }).notNull(),
-  email: varchar('email', { length: 100 }).notNull().unique(),
+  email: varchar('email', { length: 100 }).notNull(),
   prename: varchar('prename', { length: 100 }).notNull(),
   surname: varchar('surname', { length: 100 }).notNull(),
   organizer: int('organizer').notNull(),

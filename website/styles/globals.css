@@ -131,14 +131,11 @@
 }
 @layer base {
   @keyframes ekgDash {
-    from {
-      stroke-dashoffset: 0; 
-    }
     to {
-      stroke-dashoffset: -400; 
+      stroke-dashoffset: -200;
     }
   }
 }
 .animate-ekg-custom {
-  animation: ekgDash 6s linear infinite;
+  animation: ekgDash 10s linear infinite;
 }
