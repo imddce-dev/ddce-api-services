@@ -1,14 +1,17 @@
+
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import * as userController from './controllers/user.controller';
+import * as authController from './controllers/auth.controller';
 import { db } from './configs/mysql';
-import { DrizzleDB, RemoveUser } from './models/user.model';
+import { DrizzleDB } from './configs/type';
 import { sql } from 'drizzle-orm';
 import { connectRedis, getRedisClient } from './configs/redis';
 import { contextMiddleware } from './middlewares/context.middleware';
 import { coreMiddleware } from './middlewares/core.middleware';
 import { secureHeadersMiddleware } from './middlewares/secure-headers.middleware';
-import { createRateLimiter } from './middlewares/rate-limit.middleware';
+import *  as rateLimited from './middlewares/rate-limit.middleware';
+import { verifyCsrf } from './middlewares/csrf.middleware';
 type AppContext = {
   Variables: {
     db: DrizzleDB;
@@ -24,18 +27,25 @@ const main = async () => {
       connectRedis()
     ]);
     console.log('MySQL and Redis connected successfully.');
-    const rateLimiterMiddleware = createRateLimiter();
+    const rateLimiterMiddleware = rateLimited.createRateLimiter();
+    app.use('api/app/*', verifyCsrf);
     app.use('*', secureHeadersMiddleware);
     app.use('*', rateLimiterMiddleware); 
     app.use('*', coreMiddleware);
     app.use('*', contextMiddleware);
+     
+    const application = app.basePath('api/app');
+    application.get('/health', (c) => c.json({ status: 'ok' }));
+    application.get('/', (c) => c.json({ message: 'Welcome to the API service' }));
 
-    const api = app.basePath('/api/v1');
-    api.get('/users', userController.getAllUsers);
-    api.post('/users', userController.createUser);
-    api.delete('/users/:id', userController.removeUser);
-    api.put('/users/:id', userController.editUser);
-    api.get('/users/username/:username', userController.getuserByusername);
+    const api = app.basePath('api/users');
+    api.get('/get',userController.getAllUsers);
+    api.post('/createusr',rateLimited.createAuthRateLimiter(), userController.createUser);
+    api.delete('/:id', userController.removeUser);
+    api.put('/:id', userController.editUser);
+    api.get('/getusr/:username', userController.getuserByusername);
+    api.post('/login',rateLimited.createAuthRateLimiter(),authController.login);
+    api.post('/logout',rateLimited.createAuthRateLimiter(), authController.Logout);
 
     const port = parseInt(process.env.SERVER_PORT || '8080');
     serve({

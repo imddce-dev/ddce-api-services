@@ -1,6 +1,8 @@
 import { Context } from 'hono';
 import * as userModel from '../models/user.model';
-import { DrizzleDB } from '../models/user.model'; 
+import { DrizzleDB } from '../configs/type'; 
+
+
 export const getAllUsers = async (c: Context) => {
   try {
     const db = c.get('db') as DrizzleDB;
@@ -11,6 +13,7 @@ export const getAllUsers = async (c: Context) => {
     return c.json({ message: 'Cannot fetch users' }, 500);
   }
 };
+
 export const createUser = async (c: Context) => {
     try {
         const db = c.get('db') as DrizzleDB;
@@ -76,3 +79,4 @@ export const editUser = async (c: Context) =>{
     return c.json({ message: 'Cannot edit user' }, 500);
   }
 }
+
