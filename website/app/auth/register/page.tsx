@@ -384,16 +384,14 @@ function RegisterForm() {
                   </label>
                   {errs.agree && <div className="mt-1"><ErrorText>{errs.agree}</ErrorText></div>}
                 </div>
-                <div className="col-span-12 md:col-span-4 flex md:justify-end">
-                  <Button
+              </Row>
+                   <Button
                     type="submit"
                     disabled={submitting}
                     className="w-full md:w-auto rounded-lg bg-gradient-to-r from-emerald-500 to-teal-400 text-white shadow hover:from-emerald-600 hover:to-teal-500"
                   >
                     {submitting ? 'กำลังสมัคร...' : 'สมัครใช้งาน'} <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                </div>
-              </Row>
             </form>
           </CardContent>
 

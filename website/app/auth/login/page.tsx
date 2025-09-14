@@ -1,202 +1,214 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Eye, EyeOff, Lock, User, ArrowRight, Shield, KeyRound } from 'lucide-react';
 
-const Page = () => {
+/* ===== เส้น EKG วิ่งแบบ dashed เรืองแสง (อยู่ "หลัง" การ์ดฟอร์ม) ===== */
+function EKGLine({ className = '' }: { className?: string }) {
   return (
-    <main className="page">
-      {/* ultra-light background */}
-      <div className="bgGrid" aria-hidden="true" />
-      {/* ตัวปิดทับด้านบน กันกรอบ/เงาโผล่ */}
-      <div className="topCover" aria-hidden="true" />
+    <svg className={className} viewBox="0 0 1600 160" preserveAspectRatio="none" aria-hidden>
+      <defs>
+        <linearGradient id="ekg-g" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#34d399" />
+          <stop offset="1" stopColor="#22d3ee" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M0,80 L120,80 170,30 210,130 250,80 420,80 460,28 500,132 540,80 820,80 860,30 900,130 940,80 1180,80 1220,28 1260,132 1300,80 1600,80"
+        fill="none"
+        stroke="url(#ekg-g)"
+        strokeWidth={3}
+        className="[stroke-dasharray:12_18] motion-safe:[animation:ekgDash_6s_linear_infinite] opacity-35 [filter:drop-shadow(0_0_6px_rgba(34,211,238,.35))]"
+      />
+      <style>{`@keyframes ekgDash{to{stroke-dashoffset:-400}}`}</style>
+    </svg>
+  );
+}
 
-      {/* CARD */}
-      <section className="card" role="region" aria-label="ลงชื่อเข้าใช้ระบบ DDCE API">
-        <div className="brand">
-          <img src="/ddcelogo.png" alt="กองควบคุมโรคและภัยสุขภาพในภาวะฉุกเฉิน" />
+export default function LoginPage() {
+  const router = useRouter();
+  const [username, setUsername] = useState('');
+  const [pw, setPw] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const userOk = useMemo(() => username.trim().length >= 4, [username]);
+  const pwOk = useMemo(() => pw.trim().length >= 6, [pw]);
+  const canSubmit = userOk && pwOk && !sending;
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setSending(true);
+    setErr(null);
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password: pw }),
+      });
+      if (res.ok) router.push('/');
+      else setErr((await res.text()) || 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่');
+    } catch {
+      setErr('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <main className="relative grid h-dvh place-items-center">
+      {/* เส้นพาดกลางจอ — อยู่หลังฟอร์ม และหน้าจอไม่เลื่อน */}
+      <EKGLine className="pointer-events-none absolute inset-x-0 top-1/2 -z-10 w-full -translate-y-1/2" />
+
+      {/* ===== กล่องคอนเทนท์: 1 คอลัมน์บนจอเล็ก / 2 คอลัมน์ตั้งแต่ lg ขึ้นไป ===== */}
+      <div className="mx-auto grid w-full max-w-[1100px] grid-cols-1 items-center gap-8 px-4 lg:grid-cols-5">
+        {/* แบรนด์/ข้อมูล (ซ่อนบนจอเล็กเพื่อไม่เบียดฟอร์ม) */}
+        <Card className="hidden rounded-2xl border-slate-700/60 bg-slate-900/40 backdrop-blur lg:col-span-2 lg:block">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-cyan-500 to-emerald-500 text-sm font-bold text-white">DD</span>
+              <div className="leading-tight">
+                <div className="text-sm font-semibold text-white">DDCE API</div>
+                <div className="text-xs text-slate-400">IM-DDCE • v1 • Public Beta</div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 text-slate-300">
+            <h2 className="text-2xl font-extrabold leading-snug">
+              เข้าสู่ระบบ<br />เพื่อเชื่อมต่อข้อมูล
+              <span className="ml-2 bg-gradient-to-r from-cyan-300 via-emerald-200 to-amber-200 bg-clip-text text-transparent">เหตุการณ์สุขภาพ</span>
+            </h2>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2"><Shield className="h-4 w-4 text-cyan-300" /> OAuth2 / OIDC • TLS 1.3</li>
+              <li className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-emerald-300" /> RBAC ตามบทบาท/หน่วยงาน</li>
+            </ul>
+            <p className="pt-2 text-xs text-slate-400">
+              ยังไม่มีบัญชี? <Link href="/register" className="text-cyan-300 hover:text-cyan-200">สมัครใช้งาน</Link>
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* ฟอร์มล็อกอิน */}
+        <div className="relative w-[min(560px,94vw)] justify-self-center lg:col-span-3 lg:w-auto lg:justify-self-stretch">
+          {/* halo glow */}
+          <div className="absolute -inset-0.5 -z-10 rounded-2xl bg-gradient-to-r from-cyan-500/40 via-emerald-400/40 to-amber-300/40 opacity-40 blur-xl" />
+          <Card className="rounded-2xl border-slate-700/70 bg-slate-900/50 backdrop-blur">
+            <CardHeader className="pb-2">
+              <div className="mb-2 flex items-center gap-2">
+                <Badge variant="secondary" className="bg-cyan-600/20 text-cyan-300 ring-1 ring-inset ring-cyan-400/30">IM-DDCE API</Badge>
+                <Badge variant="outline" className="border-emerald-400/40 text-emerald-300">Login</Badge>
+              </div>
+              <CardTitle className="text-lg font-semibold text-slate-100">ลงชื่อเข้าใช้ระบบ</CardTitle>
+            </CardHeader>
+
+            <CardContent>
+              <form onSubmit={onSubmit} className="grid gap-4" noValidate>
+                {/* Username */}
+                <div className="relative">
+                  <User className="pointer-events-none absolute left-3 top-1/2 z-[1] h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    id="username"
+                    name="username"
+                    placeholder=" "
+                    autoComplete="username"
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.currentTarget.value)}
+                    className="peer h-11 rounded-xl border-slate-700/60 bg-slate-900/60 pl-10 text-slate-100 placeholder:text-transparent focus:border-cyan-400 focus:ring-0"
+                  />
+                  {/* patch ใต้ label ป้องกันกลืนพื้นหลัง */}
+                  <span className="pointer-events-none absolute left-9 right-9 top-3 block h-4 rounded bg-slate-900/60" aria-hidden />
+                  <label
+                    htmlFor="username"
+                    className="pointer-events-none absolute left-10 top-2.5 origin-left rounded bg-slate-900/60 px-1 text-xs text-slate-400 transition
+                               peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm
+                               peer-focus:top-2.5 peer-focus:text-xs peer-focus:text-cyan-300"
+                  >
+                    Username
+                  </label>
+                  <div className="mt-1 text-xs text-slate-400">แนะนำ 4–20 ตัว a-z / 0-9 / . _ -</div>
+                </div>
+
+                {/* Password */}
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 z-[1] h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPw ? 'text' : 'password'}
+                    placeholder=" "
+                    autoComplete="current-password"
+                    required
+                    value={pw}
+                    onChange={(e) => setPw(e.currentTarget.value)}
+                    className="peer h-11 rounded-xl border-slate-700/60 bg-slate-900/60 pl-10 pr-10 text-slate-100 placeholder:text-transparent focus:border-cyan-400 focus:ring-0"
+                  />
+                  <span className="pointer-events-none absolute left-9 right-16 top-3 block h-4 rounded bg-slate-900/60" aria-hidden />
+                  <label
+                    htmlFor="password"
+                    className="pointer-events-none absolute left-10 top-2.5 origin-left rounded bg-slate-900/60 px-1 text-xs text-slate-400 transition
+                               peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm
+                               peer-focus:top-2.5 peer-focus:text-xs peer-focus:text-cyan-300"
+                  >
+                    รหัสผ่าน
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPw((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-slate-700/60 bg-slate-800/50 p-1.5 text-slate-300 hover:bg-slate-800"
+                    aria-label={showPw ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
+                  >
+                    {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                  <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
+                    <label className="inline-flex items-center gap-2">
+                      <input type="checkbox" name="remember" className="h-3.5 w-3.5 accent-cyan-500" /> จดจำฉันไว้
+                    </label>
+                    <Link href="/auth/forgetpass" className="text-cyan-300 hover:text-cyan-200">ลืมรหัสผ่าน?</Link>
+                  </div>
+                </div>
+
+                {err && (
+                  <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                    {err}
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={!canSubmit}
+                  className="mt-1 h-11 w-full gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-lg shadow-cyan-500/20 disabled:opacity-60"
+                >
+                  เข้าสู่ระบบ <ArrowRight className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  asChild
+                  className="h-11 w-full rounded-xl border border-white/10 bg-white/10 text-slate-100 hover:bg-white/20"
+                >
+                  <Link href="/register">สมัครใช้งาน (Register)</Link>
+                </Button>
+              </form>
+
+              {/* ลิงก์เพิ่มเติมใต้การ์ด */}
+              <div className="mt-6 text-center text-sm text-slate-400">
+                <span className="mr-2">ต้องการดูข้อมูลระบบ?</span>
+                <Link href="/introduction" className="text-cyan-300 hover:text-cyan-200">ไปหน้า Introduction</Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-
-        <header className="head">
-          <h1 className="title">ลงชื่อเข้าใช้ระบบ DDCE API</h1>
-          <p className="subtitle">
-            <strong>DDCE API</strong> ของกองควบคุมโรคและภัยสุขภาพในภาวะฉุกเฉิน
-          </p>
-        </header>
-
-        <form className="form" method="post" action="/api/auth/login" noValidate>
-          <div className="field withIcon">
-            <input type="text" id="username" name="username" placeholder=" " autoComplete="username" required aria-required="true" />
-            <label htmlFor="username">Username</label>
-            <span className="i i-user" aria-hidden="true" />
-          </div>
-
-          <div className="field withIcon">
-            <input type="password" id="password" name="password" placeholder=" " autoComplete="current-password" required aria-required="true" />
-            <label htmlFor="password">รหัสผ่าน</label>
-            <span className="i i-lock" aria-hidden="true" />
-          </div>
-
-          <div className="row">
-            <label className="remember"><input type="checkbox" name="remember" /> จดจำฉันไว้</label>
-            <Link href="/auth/forgetpass" className="link">ลืมรหัสผ่าน?</Link>
-          </div>
-
-          <button type="submit" className="btnPrimary">เข้าสู่ระบบ</button>
-          <Link href="/auth/register" className="btnSecondary" role="button" aria-label="สมัครใช้งาน">
-            สมัครใช้งาน (Register)
-          </Link>
-        </form>
-      </section>
-
-      <footer className="legal">
-        <p>© DDCE 2025 • <Link href="/license">License</Link> • <Link href="/privacy">Privacy</Link> • <Link href="/terms">Terms</Link></p>
-      </footer>
-
-      <style>{`
-/* Lock viewport */
-html, body { height:100%; overflow:hidden; }
-body { margin:0; }
-:root { overscroll-behavior: none; }
-
-/* Theme */
-.page{
-  --ink:#0f1f1a; --muted:#7a8a84; --line:#e9efec; --focus:#3aa089; --brand:#2d8e7b;
-  --bg:#ffffff; --surface:#ffffff; --field:#ffffff;
-
-  /* สีปุ่ม */
-  --btn-g1:#2fb180; --btn-g2:#66d1a8; --btn-text:#ffffff;
-  --btn-outline:#2fb180; /* ขอบปุ่มสมัคร */
-
-  height:100dvh; min-height:100svh; overflow:hidden;
-  display:grid; grid-template-rows:1fr auto; place-items:center;
-  background:var(--bg); color:var(--ink); padding:32px 18px; position:relative;
-}
-
-/* Background */
-.bgGrid{ position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.06;
-  background:
-    radial-gradient(42vmax 28vmax at 10% -10%, rgba(52,143,124,.06), transparent 60%),
-    radial-gradient(48vmax 32vmax at 90% 0%, rgba(52,143,124,.05), transparent 60%),
-    linear-gradient(to right, transparent 49%, rgba(0,0,0,.6) 50%, transparent 51%),
-    linear-gradient(to bottom, transparent 49%, rgba(0,0,0,.6) 50%, transparent 51%);
-  background-size:auto, auto, 28px 28px, 28px 28px;
-  mask-image: radial-gradient(90% 70% at 50% 40%, #000 58%, transparent 100%);
-}
-
-/* ปิดขอบบน */
-.topCover{ position:absolute; top:0; left:0; right:0; height:28px; background:#fff; z-index:1; pointer-events:none; }
-
-/* Card – กรอบคมชัดขึ้น */
-.card{
-  width:min(520px,92vw);
-  border:2px solid transparent;                          /* ← กรอบหนาขึ้น */
-  background:
-    linear-gradient(#fff,#fff) padding-box,
-    linear-gradient(135deg,#bfe9da,#e6f5f0) border-box;   /* ← ไล่สีกรอบ */
-  border-radius:22px;
-  padding:30px 24px 32px;
-  position:relative; z-index:2;
-  box-shadow:
-    0 24px 48px rgba(16,36,30,.09),
-    0 10px 18px rgba(16,36,30,.04);
-  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-/* เส้น inner ขาว เพิ่มความคม */
-.card::after{
-  content:""; position:absolute; inset:0; border-radius:22px;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.95);
-  pointer-events:none;
-}
-.card:hover{
-  transform:translateY(-1px);
-  box-shadow:
-    0 28px 56px rgba(16,36,30,.1),
-    0 12px 22px rgba(16,36,30,.05);
-}
-
-/* Logo */
-.brand{ display:grid; place-items:center; margin-bottom:10px; }
-.brand img{ height:200px; width:auto; object-fit:contain; filter:drop-shadow(0 2px 6px rgba(0,0,0,.05)); }
-
-/* Headings */
-.head{ text-align:center; margin:10px 0 18px; }
-.title{ font-size:24px; font-weight:800; letter-spacing:.1px; }
-.subtitle{ color:var(--muted); font-size:13.75px; margin-top:8px; line-height:1.6; }
-.subtitle strong{ color:var(--brand); font-weight:800; }
-
-/* Form */
-.form{ display:grid; gap:16px; }
-.field{ position:relative; display:grid; }
-.field input{
-  width:100%; background:var(--field); border:1px solid var(--line); border-radius:12px;
-  color:var(--ink); padding:16px 14px 12px 44px; font-size:14px; outline:none;
-  transition:border .15s, box-shadow .15s, transform .08s;
-  box-shadow: inset 0 1px 0 rgba(0,0,0,.015);
-}
-.field input::placeholder{ color:transparent; }
-.field input:focus{ border-color:var(--focus); box-shadow:0 0 0 4px color-mix(in srgb, var(--focus) 16%, transparent); transform:translateY(-1px); }
-
-.field label{
-  position:absolute; left:42px; top:12px; font-size:13.25px; color:var(--muted);
-  transform-origin:left top; background:linear-gradient(var(--field),var(--field)) padding-box;
-  padding:0 6px; border-radius:6px; pointer-events:none; transition:transform .14s, color .14s;
-}
-.field:focus-within label, .field input:not(:placeholder-shown)+label{ transform:translateY(-12px) scale(.88); color:var(--brand); }
-
-.withIcon .i{ position:absolute; left:12px; top:50%; transform:translateY(-50%); width:18px; height:18px; opacity:.5; }
-.i-user{ background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%2390a5a0' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M12 14c2.8 0 5 2 5 4H1c0-2 2.2-4 5-4h6z'/><circle cx='8' cy='7' r='3.5'/></svg>") center/contain no-repeat; }
-.i-lock{ background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%2390a5a0' stroke-width='1.6'><rect x='3' y='8' width='12' height='7' rx='2'/><path d='M6 8V6a3 3 0 0 1 6 0v2'/></svg>") center/contain no-repeat; }
-
-.row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:2px; }
-.remember{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted); }
-.remember input{ width:16px; height:16px; accent-color:var(--focus); }
-.link{ color:var(--brand); font-size:12.75px; text-decoration:none; }
-.link:hover{ text-decoration:underline; }
-
-/* Buttons */
-.btnPrimary{
-  width:100%; margin-top:6px; background:linear-gradient(135deg, var(--btn-g1), var(--btn-g2));
-  color:var(--btn-text); border:none; padding:12px 14px; border-radius:12px; font-weight:700; letter-spacing:.2px;
-  box-shadow:0 12px 22px rgba(47,177,128,.22), 0 1px 0 rgba(255,255,255,.4) inset;
-  transition:transform .06s, filter .14s, box-shadow .18s;
-}
-.btnPrimary:hover{ filter:brightness(1.04); }
-.btnPrimary:active{ transform:translateY(1px); }
-.btnPrimary:focus-visible{ outline:3px solid color-mix(in srgb, var(--btn-g1) 38%, transparent); outline-offset:2px; }
-
-/* ปุ่มสมัคร (Outlined + ขอบชัด) */
-.btnSecondary{
-  display:block; width:100%; margin-top:10px; text-align:center;
-  font-weight:700; letter-spacing:.2px; padding:11px 14px; border-radius:12px;
-  background:#fff;
-  border:2px solid var(--btn-outline);                /* ← ขอบหนาและเขียว */
-  color:var(--btn-outline);
-  transition:background .14s, border-color .14s, box-shadow .14s, transform .06s, color .14s;
-}
-.btnSecondary:hover{
-  background:color-mix(in srgb, var(--btn-outline) 8%, #fff);
-  box-shadow:0 8px 14px rgba(47,177,128,.12);
-}
-.btnSecondary:active{ transform:translateY(1px); }
-.btnSecondary:focus-visible{
-  outline:3px solid color-mix(in srgb, var(--btn-outline) 35%, transparent);
-  outline-offset:2px;
-}
-
-/* Footer */
-.legal{ z-index:2; text-align:center; color:var(--muted); font-size:12.75px; margin:6px 0 4px; }
-.legal a{ color:var(--brand); text-decoration:none; }
-.legal a:hover{ text-decoration:underline; }
-
-/* Responsive */
-@media (max-width:540px){
-  .brand img{ height:120px; }
-  .title{ font-size:21px; }
-}
-      `}</style>
+      </div>
     </main>
   );
-};
-
-export default Page;
+}
