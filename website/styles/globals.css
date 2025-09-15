@@ -44,14 +44,6 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-*{
-   font-family: "Noto Sans Thai", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
-  font-variation-settings:
-    "wdth" 100;
-}
 
 :root {
   --radius: 0.625rem;
