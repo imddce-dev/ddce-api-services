@@ -55,12 +55,23 @@ export default function LoginForm(){
                     required
                 />
             </div>
-
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-
-            <button type="submit" disabled={loading}>
-                {loading ? 'Logging in...' : 'Login'}
-            </button>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4 ">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <LogIn className="mr-2 h-4 w-4" />
+              )}
+              {isLoading ? "ลงชื่อเข้าใช้..." : "ลงชื่อเข้าใช้"}
+            </Button>
+            <div className="text-center text-sm text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <a href="#" className="underline">
+                Sign up
+              </a>
+            </div>
+          </CardFooter>
         </form>
   )
 
