@@ -49,7 +49,8 @@ export const Login = async (db: DrizzleDB, username : string, password: string) 
   await db.insert(users_session).values({
     user_id: user.id,
     jti: jwtid,
-    expireAt: refreshTokenExpiry 
+    expireAt: refreshTokenExpiry,
+    refreshtoken: refreshToken,
   });
 
       const payload: JWTPayload = {
