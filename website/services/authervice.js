@@ -7,15 +7,17 @@ import apiClient from './apiConfig'
  */
 export const login = async (username, password) => {
     try {
-        const response = await apiClient.post('/users/login', { 
+        const response = await apiClient.post('/users/login', {
             username,
             password,
         });
         return response.data;
     } catch (error) {
-        console.error('Login failed:', error);
+        if (error.response?.status !== 401) {
+            console.error('An unexpected login error occurred:', error);
+        }
         if (error.response && error.response.data) {
-            return error.response.data; 
+            return error.response.data;
         }
         throw error;
     }

@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import  LoginForm  from '@/components/form/LoginForm';
 
 export default function LoginPage() {
@@ -18,7 +18,7 @@ export default function LoginPage() {
               <CardTitle className="font-semibold text-slate-100 text-center text-2xl">Application Program Interface(API)</CardTitle>
                <CardTitle className='text-white text-center text-[16px]'> บริการเชื่อโยงข้อมูล การจัดการข้อมูลภาวะฉุกเฉินทางสาธารณสุข</CardTitle>
             </CardHeader>
-            <div className='px-5 text-white'>
+              <div className='px-5 text-white'>
               <LoginForm/>
             </div>
           </Card>

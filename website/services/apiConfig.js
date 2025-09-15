@@ -1,5 +1,5 @@
 import axios from 'axios';
-const ls = process.env.NEXT_PUBLIC_API_URL
+import Cookies from 'js-cookie';
 const apiClient = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
     timeout: 10000,
@@ -11,13 +11,9 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(async (config) => {
     if (config.method && ['post', 'put', 'delete', 'patch'].includes(config.method)) {
-        try {
-            const csrfCookie = await cookieStore.get('csrf_token');
-            if (csrfCookie && csrfCookie.value) {
-                config.headers['X-CSRF-Token'] = csrfCookie.value;
-            }
-        } catch (e) {
-            console.error("Could not read CSRF token from cookieStore", e);
+        const csrfToken = Cookies.get('csrf_token'); 
+        if (csrfToken) {
+            config.headers['X-CSRF-Token'] = csrfToken;
         }
     }
     return config;
