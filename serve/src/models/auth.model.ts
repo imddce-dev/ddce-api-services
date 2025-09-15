@@ -6,6 +6,8 @@ import { generateToken, JWTPayload } from '../utils/authToken';
 import { DrizzleDB } from '../configs/type';
 import { stat } from 'fs';
 import { getCookie } from 'hono/cookie';
+import { password } from 'bun';
+import { use } from 'react';
 
 const DAMMY_HASH = crypto.randomBytes(32).toString('hex');
 
@@ -78,5 +80,118 @@ export const Logout = async (db: DrizzleDB, userId: number) =>{
   }catch(error){
     console.error(error);
     return {status: false, message: 'Connot Logout user'}
+  }
+}
+
+export const RefreshToken = async (db: DrizzleDB, refreshToken: string) => {
+    try {
+        const existingSession = await db
+            .select()
+            .from(users_session)
+            .where(eq(users_session.refreshtoken, refreshToken));
+
+        if (existingSession.length === 0) {
+            return { success: false, message: 'Invalid or revoked session. Please login again.' };
+        }
+        const session = existingSession[0];
+        if (session.expireAt < new Date()) {
+            await db.delete(users_session).where(eq(users_session.id, session.id));
+            return { success: false, message: 'Session expired. Please login again.' };
+        }
+        const newJti = crypto.randomUUID();
+        const newRefreshToken = crypto.randomBytes(64).toString('hex');
+        const newRefreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); 
+        await db.update(users_session)
+            .set({
+                jti: newJti,
+                refreshtoken: newRefreshToken, 
+                expireAt: newRefreshTokenExpiry
+            })
+            .where(eq(users_session.id, session.id));  
+        const userRecord = await db
+            .select({ id: users.id, role: users.role })
+            .from(users)
+            .where(eq(users.id, session.user_id)) 
+            .limit(1);
+        if (userRecord.length === 0) {
+            return { success: false, message: 'User not found' };
+        }
+        const user = userRecord[0];
+        const payload: JWTPayload = {
+            userId: user.id.toString(),
+            role: user.role,
+            jti: newJti, 
+            exp: Math.floor(Date.now() / 1000) + (15 * 60) 
+        };
+        const newAccessToken = await generateToken(payload);
+        return {
+            success: true,
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken 
+        };
+    } catch (error) {
+        console.error(error);
+        return { success: false, message: 'Cannot refresh token' };
+    }
+};
+
+
+export const forgotPassword = async (db: DrizzleDB,userId: number, type: string, passwordold: string, passwordnew: string) => {
+  if(type === 'inWeb'){
+    const pepper = process.env.PASSWORD_PEPPER
+    if (!pepper) {
+          console.log("PASSWORD_PEPPER is not set in environment variables");
+          throw new Error("Application security configuration is incomplete.");
+    }
+    const existingUser = await db
+      .select({
+        id: users.id,
+        password: users.password,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+    if (existingUser.length === 0) {
+      return { success: false, message: 'User not found' };
+    }
+
+    const hashTocompare = existingUser[0].password;
+    const passwordWithPepper = passwordold + pepper;
+    const isMatch = await bcrypt.compare(passwordWithPepper, hashTocompare)
+    if(!isMatch){
+      return { success: false, message: 'Invalid current password' };
+    }
+    const newPasswordWithPepper = passwordnew + pepper;
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(newPasswordWithPepper, saltRounds);
+    try{
+      await db.update(users)
+        .set({ password: hashedPassword})
+        .where(eq(users.id, userId));
+      return { success: true, message: 'Password updated successfully' };
+    }catch(error){
+      console.error(error);
+      return { success: false, message: 'Cannot update password' };
+    }
+  } else if(type === 'token'){
+    const saltRounds = 12;
+    const pepper = process.env.PASSWORD_PEPPER
+    if (!pepper) {
+        console.log("PASSWORD_PEPPER is not set in environment variables");
+        throw new Error("Application security configuration is incomplete.");
+    }
+    const newPasswordWithpepper = passwordnew + pepper;
+    const hashedPassword = await bcrypt.hash(newPasswordWithpepper, saltRounds);
+    try{
+      await db.update(users)
+        .set({ password: hashedPassword})
+        .where(eq(users.id, userId));
+      return { success: true, message: 'Password updated successfully' };
+    }catch(error){
+      console.error(error);
+      return { success: false, message: 'Cannot update password' };
+    }
+  } else{
+    return { success: false, message: 'Invalid type' };
   }
 }

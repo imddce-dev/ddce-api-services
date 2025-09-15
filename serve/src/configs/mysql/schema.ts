@@ -37,6 +37,7 @@ export const users_session = mysqlTable('users_session',{
   id: serial('id').primaryKey(),
   user_id:int('user_id').notNull(),
   jti: varchar('jti',{length:191}).notNull().unique(),
+  refreshtoken: varchar('refreshtoken',{length:191}),
   createAt: timestamp('create_at').defaultNow().notNull(),
   expireAt: timestamp('expire_at').notNull(),
 })
