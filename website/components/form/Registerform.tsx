@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import PrivacyDialog from "@/components/common/PrivacyDialog"; // ปรับ path ให้ตรงโปรเจกต์
 
@@ -8,7 +9,7 @@ type OrgType = "central" | "odpc" | "ppho" | "hospital" | "other";
 
 type FormValues = {
   fullName: string;
-  username: string;
+  username: string;   // บังคับกรอก แต่ไม่กำหนดรูปแบบ
   email: string;
   phone: string;
   orgType: OrgType;
@@ -25,7 +26,7 @@ const ORG_OPTIONS: { value: OrgType; label: string }[] = [
   { value: "other", label: "อื่น ๆ" },
 ];
 
-/** ------- Password Policy & Helpers ------- **/
+/** Password policy **/
 const pwdRules = {
   minLen: 10,
   lower: /[a-z]/,
@@ -35,13 +36,11 @@ const pwdRules = {
   noSpace: /^\S+$/,
 };
 
-// รหัสผ่านยอดฮิต (ตัวอย่างชุดสั้น ๆ — เพิ่มได้ภายหลัง)
 const commonPasswords = new Set([
   "123456","123456789","password","qwerty","111111","12345678","abc123",
   "password1","123123","qwerty123","iloveyou","000000","1234","12345",
 ]);
 
-// ให้คะแนน 0–6 และหักแต้มถ้ามีข้อมูลส่วนตัว/รหัสฮิต
 function scorePassword(pwd: string, personal: string[] = []) {
   if (!pwd) return 0;
   let s = 0;
@@ -67,7 +66,7 @@ function containsPersonalInfo(pwd: string, username?: string, fullName?: string)
   return parts.some((t) => t.length >= 3 && p.includes(t));
 }
 
-// ตรวจเบอร์: อนุญาตตัวเลข ช่องว่าง ขีด วงเล็บ และเครื่องหมาย +
+// ตรวจเบอร์: ตัวเลข/ช่องว่าง/ขีด/วงเล็บ/เครื่องหมาย +
 function validatePhonePretty(v: string) {
   if (!v) return "กรอกเบอร์ติดต่อ";
   const digits = v.replace(/[^\d+]/g, "");
@@ -78,10 +77,7 @@ function validatePhonePretty(v: string) {
   return true;
 }
 
-// username: เริ่มด้วยตัวอักษร, a-z0-9_ ยาว 4–20
-const usernameRegex = /^[a-z][a-z0-9_]{3,19}$/;
-
-/** ------- UI helpers ------- **/
+/** UI **/
 function RuleItem({ ok, text }: { ok: boolean; text: string }) {
   return (
     <li className="flex items-center gap-2">
@@ -104,7 +100,6 @@ export function Registerform() {
     register,
     handleSubmit,
     watch,
-    setValue,
     formState: { errors, isValid, isSubmitting },
     reset,
   } = useForm<FormValues>({ mode: "onChange" });
@@ -117,7 +112,6 @@ export function Registerform() {
   const username = watch("username");
   const fullName = watch("fullName");
 
-  // สถานะเงื่อนไขรหัสผ่าน
   const ruleState = useMemo(() => {
     const len = (pwd?.length ?? 0) >= pwdRules.minLen;
     const lo = pwdRules.lower.test(pwd ?? "");
@@ -130,15 +124,13 @@ export function Registerform() {
     return { len, lo, up, dg, sp, ns, common, personal };
   }, [pwd, username, fullName]);
 
-  const score = useMemo(() => {
-    return scorePassword(pwd ?? "", [username ?? "", ...(fullName?.split(/\s+/) ?? [])]);
-  }, [pwd, username, fullName]);
-
+  const score = useMemo(
+    () => scorePassword(pwd ?? "", [username ?? "", ...(fullName?.split(/\s+/) ?? [])]),
+    [pwd, username, fullName]
+  );
   const strengthLabel = score <= 2 ? "อ่อน" : score <= 4 ? "ปานกลาง" : "แข็งแรง";
 
   const onSubmit = async (values: FormValues) => {
-    // TODO: เปลี่ยนเป็น endpoint ของคุณ
-    // await fetch("/api/register", { method: "POST", body: JSON.stringify(values) });
     console.log("register payload:", values);
     alert("สมัครเรียบร้อย");
     reset();
@@ -146,9 +138,8 @@ export function Registerform() {
 
   return (
     <>
-      {/* เพิ่ม space และ padding ให้โปร่งขึ้นเล็กน้อย */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-1 py-3 text-sm">
-  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {/* ชื่อ-สกุล */}
           <div>
             <label className="mb-1 block text-xs text-slate-300">ชื่อ-สกุล *</label>
@@ -165,22 +156,10 @@ export function Registerform() {
             <label className="mb-1 block text-xs text-slate-300">ชื่อผู้ใช้ (Username) *</label>
             <input
               className="h-9 w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-cyan-400/40"
-              placeholder="เช่น somchai_01"
-              {...register("username", {
-                required: "กรอกชื่อผู้ใช้",
-                validate: (v) => {
-                  const val = v.trim().toLowerCase();
-                  if (!usernameRegex.test(val)) return "ใช้ a–z, 0–9, _ เริ่มด้วยตัวอักษร ยาว 4–20 ตัว";
-                  return true;
-                },
-              })}
-              onBlur={(e) => {
-                const val = e.target.value.trim().toLowerCase();
-                setValue("username", val, { shouldValidate: true, shouldDirty: true });
-              }}
+              placeholder="เช่น ชื่อที่ต้องการใช้เข้าสู่ระบบ"
+              {...register("username", { required: "กรอกชื่อผู้ใช้" })}
               autoComplete="username"
             />
-            <p className="mt-1 text-[11px] text-slate-400">อนุญาตเฉพาะ a–z, 0–9 และขีดล่าง (_)</p>
             {errors.username && <p className="mt-1 text-[11px] text-rose-300" role="alert">{errors.username.message}</p>}
           </div>
 
@@ -207,10 +186,7 @@ export function Registerform() {
               type="tel"
               className="h-9 w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-cyan-400/40"
               placeholder="เช่น 081-234-5678 หรือ +66 81 234 5678"
-              {...register("phone", {
-                required: "กรอกเบอร์ติดต่อ",
-                validate: validatePhonePretty,
-              })}
+              {...register("phone", { required: "กรอกเบอร์ติดต่อ", validate: validatePhonePretty })}
               autoComplete="tel"
               inputMode="tel"
             />
@@ -322,7 +298,7 @@ export function Registerform() {
             {errors.orgType && <p className="mt-1 text-[11px] text-rose-300" role="alert">{errors.orgType.message}</p>}
           </div>
 
-          {/* ยอมรับเงื่อนไข + ลิงก์นโยบาย (เต็มแถว) */}
+          {/* เงื่อนไขการใช้งาน */}
           <div className="md:col-span-2">
             <div className="flex items-start justify-between gap-3">
               <label className="flex flex-1 items-start gap-3 text-xs text-slate-300">
@@ -351,7 +327,7 @@ export function Registerform() {
             </div>
           </div>
 
-          {/* ปุ่มส่ง (เต็มแถว) */}
+          {/* ปุ่มส่ง + ลิงก์ข้อความกลับไป Login */}
           <div className="md:col-span-2 pt-1">
             <button
               type="submit"
@@ -360,9 +336,18 @@ export function Registerform() {
             >
               {isSubmitting ? "กำลังสมัคร…" : "สมัครใช้งาน"}
             </button>
+
+            <div className="mt-2 text-center">
+              <Link
+                href="/auth/login"
+                className="text-xs text-slate-300 underline decoration-dotted hover:text-cyan-200"
+              >
+                กลับไปหน้าเข้าสู่ระบบ
+              </Link>
+            </div>
           </div>
 
-          {/* หมายเหตุ (เต็มแถว) */}
+          {/* หมายเหตุ */}
           <p className="md:col-span-2 text-[11px] text-slate-400">
             * ต้องกรอกทุกช่อง • นโยบายรหัสผ่าน: ยาว ≥ {pwdRules.minLen}, มีตัวพิมพ์เล็ก/ใหญ่ ตัวเลข และอักขระพิเศษ,
             ห้ามช่องว่าง, หลีกเลี่ยงคำยอดฮิต และห้ามมีชื่อผู้ใช้หรือชื่อ-สกุล
@@ -370,7 +355,6 @@ export function Registerform() {
         </div>
       </form>
 
-      {/* Dialog นโยบายความเป็นส่วนตัว */}
       <PrivacyDialog
         open={openPrivacy}
         onClose={() => setOpenPrivacy(false)}
