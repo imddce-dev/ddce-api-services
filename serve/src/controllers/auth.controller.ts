@@ -1,6 +1,6 @@
 import { Context } from 'hono';
 import { deleteCookie, setCookie } from 'hono/cookie';
-import { randomBytes } from 'crypto';
+
 import * as authModel from '../models/auth.model'; 
 import { DrizzleDB } from '../configs/type';
 
@@ -32,8 +32,7 @@ export const login = async (c: Context) => {
             maxAge: 60 * 60 * 24 * 7, 
         });
 
-        const csrfToken = randomBytes(24).toString('base64');
-        setCookie(c, 'csrf_token', csrfToken, {
+        setCookie(c, 'csrf_token', result.csrfToken || '', {
             httpOnly: false,
             secure: true,
             sameSite: 'Strict',

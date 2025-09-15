@@ -36,7 +36,6 @@ const main = async () => {
      
     const application = app.basePath('api/app');
     application.get('/health', (c) => c.json({ status: 'ok' }));
-    application.get('/', (c) => c.json({ message: 'Welcome to the API service' }));
 
     const api = app.basePath('api/users');
     api.get('/get',userController.getAllUsers);
@@ -46,7 +45,7 @@ const main = async () => {
     api.get('/getusr/:username', userController.getuserByusername);
     api.post('/login',rateLimited.createAuthRateLimiter(),authController.login);
     api.post('/logout',rateLimited.createAuthRateLimiter(), authController.Logout);
-    api.post('/refresh',authController.RefreshToken)
+    api.post('/refreshtoken',authController.RefreshToken)
 
     const port = parseInt(process.env.SERVER_PORT || '8080');
     serve({

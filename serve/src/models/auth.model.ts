@@ -3,15 +3,12 @@ import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { generateToken, JWTPayload } from '../utils/authToken';
+import { generateHmacToken } from '../utils/hmactoken'
 import { DrizzleDB } from '../configs/type';
-import { stat } from 'fs';
-import { getCookie } from 'hono/cookie';
-import { password } from 'bun';
-import { use } from 'react';
+
+
 
 const DAMMY_HASH = crypto.randomBytes(32).toString('hex');
-
-
 export const Login = async (db: DrizzleDB, username : string, password: string) => {
   const pepper = process.env.PASSWORD_PEPPER
    if (!pepper) {
@@ -60,10 +57,13 @@ export const Login = async (db: DrizzleDB, username : string, password: string) 
         exp: Math.floor(Date.now() / 1000) + (15 * 60) 
   }
   const accessToken = await generateToken(payload)
+  const csrfKey = process.env.CSRF_KEY || 'THZZuYm99jYPMXtEPd6bI811NswjDR8kW4qjh8c6UWg='
+  const newcsrfToken = await generateHmacToken(csrfKey)
     return { 
       success: true, 
       token: accessToken,
-      refreshToken: refreshToken 
+      refreshToken: refreshToken,
+      csrfToken: newcsrfToken
     };
   }catch (error){ 
     console.error(error);
@@ -128,7 +128,7 @@ export const RefreshToken = async (db: DrizzleDB, refreshToken: string) => {
         return {
             success: true,
             accessToken: newAccessToken,
-            refreshToken: newRefreshToken 
+            refreshToken: newRefreshToken
         };
     } catch (error) {
         console.error(error);
