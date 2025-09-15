@@ -46,6 +46,7 @@ const main = async () => {
     api.get('/getusr/:username', userController.getuserByusername);
     api.post('/login',rateLimited.createAuthRateLimiter(),authController.login);
     api.post('/logout',rateLimited.createAuthRateLimiter(), authController.Logout);
+    api.post('/refresh',authController.RefreshToken)
 
     const port = parseInt(process.env.SERVER_PORT || '8080');
     serve({

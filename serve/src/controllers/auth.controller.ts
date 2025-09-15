@@ -71,3 +71,22 @@ export const Logout = async (c: Context) => {
         return c.json({ success: false, message: 'An internal error occurred' }, 500);
     }
 }
+
+export const RefreshToken = async (c: Context) => {
+    try{
+        const db = c.get('db') as DrizzleDB
+        const body = await c.req.json();
+        const refreshToken = body.refreshToken;
+         if(!refreshToken){
+            return c.json({ success: false, message: 'refreshToken is required' }, 400);
+         }
+        const result = await authModel.RefreshToken(db, refreshToken)
+        if(!result.success){
+            return c.json({success:false, message:'refreshToken is not success'})
+        }
+        return c.json({success: true})
+    }catch (error){
+         console.error(error);
+        return c.json({ success: false, message: 'An internal error occurred' }, 500);
+    }
+}
