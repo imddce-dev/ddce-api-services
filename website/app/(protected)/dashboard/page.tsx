@@ -77,7 +77,7 @@ export default function DashboardPage() {
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <PlugZap className="h-5 w-5 text-cyan-300" />
-              <span className="text-sm font-semibold">DDCE • Emergency API</span>
+              <span className="text-sm font-semibold">IM - DDCE • Emergency API</span>
             </div>
             <button onClick={() => setOpen(false)} className="rounded-lg p-1 text-slate-300 hover:bg-white/5 md:hidden" aria-label="close menu"><X className="h-5 w-5" /></button>
           </div>
@@ -152,7 +152,7 @@ export default function DashboardPage() {
             <QuickCard
               title="ยื่นคำขอใช้งาน API"
               desc="กรอกข้อมูลผู้ยื่น/หน่วยงาน เลือก Scope และส่งเพื่ออนุมัติ"
-              href="/request"
+              href="/Request"
               icon={<FileText className="h-5 w-5" />}
             />
             <QuickCard

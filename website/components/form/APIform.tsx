@@ -2,6 +2,8 @@
 "use client";
 
 import React, { useMemo } from "react";
+import Link from "next/link";
+import { Home } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
   Check,
@@ -186,16 +188,16 @@ export default function APIForm({
       {/* QuickNav + Progress */}
       <div className="sticky top-0 z-10 -mx-4 mb-1 border-b border-white/10 bg-slate-900/60 px-4 py-3 backdrop-blur md:rounded-xl">
         <div className="flex flex-wrap items-center gap-2">
-          <QuickLink href="#sec-applicant" done={isSectionDone(["requesterName","requesterEmail","requesterPhone","orgType"], watch)}>
+          <QuickLink href="#sec-applicant" done={isSectionDone(["requesterName", "requesterEmail", "requesterPhone", "orgType"], watch)}>
             ผู้ยื่น
           </QuickLink>
-          <QuickLink href="#sec-project" done={isSectionDone(["projectName","description","environment"], watch)}>
+          <QuickLink href="#sec-project" done={isSectionDone(["projectName", "description", "environment"], watch)}>
             โครงการ
           </QuickLink>
-          <QuickLink href="#sec-scope" done={isSectionDone(["scopes","purpose","retentionDays"], watch)}>
+          <QuickLink href="#sec-scope" done={isSectionDone(["scopes", "purpose", "retentionDays"], watch)}>
             Scopes
           </QuickLink>
-          <QuickLink href="#sec-auth" done={isSectionDone(["authMethod","redirectUris","callbackUrl"], watch, authMethod)}>
+          <QuickLink href="#sec-auth" done={isSectionDone(["authMethod", "redirectUris", "callbackUrl"], watch, authMethod)}>
             Auth/Connect
           </QuickLink>
 
@@ -476,6 +478,14 @@ export default function APIForm({
           >
             ล้างแบบฟอร์ม
           </button>
+
+          <Link
+            href="/dashboard"
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 text-sm font-medium text-slate-200 hover:bg-white/10 focus:outline-none focus:ring-4 focus:ring-white/20"
+          >
+            <Home className="mr-2 h-4 w-4" />
+            กลับหน้าหลัก
+          </Link>
         </div>
         <p className="mt-2 text-[11px] text-slate-400">
           * โปรดระบุเฉพาะข้อมูลเท่าที่จำเป็น • ระบบจะพิจารณาตามหลักความจำเป็นและสัดส่วน (data minimization)
@@ -536,8 +546,8 @@ function Pill({
     tone === "emerald"
       ? "bg-emerald-500/15 text-emerald-300 ring-emerald-400/30"
       : tone === "amber"
-      ? "bg-amber-500/15 text-amber-300 ring-amber-400/30"
-      : "bg-cyan-500/15 text-cyan-300 ring-cyan-400/30";
+        ? "bg-amber-500/15 text-amber-300 ring-amber-400/30"
+        : "bg-cyan-500/15 text-cyan-300 ring-cyan-400/30";
 
   return (
     <button
