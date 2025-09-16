@@ -2,17 +2,17 @@ import { mysqlTable, serial, varchar, timestamp, int, boolean } from 'drizzle-or
 
 export const users = mysqlTable('users', {
   id:         serial('id').primaryKey(),
-  username:   varchar('name', { length: 20 }).notNull().unique(),
-  password:   varchar('password', { length: 191 }).notNull(),
+  fullname:   varchar('fullname', { length: 191 }).notNull(),
+  username:   varchar('username', { length: 20 }).notNull().unique(),
   email:      varchar('email', { length: 100 }).notNull(),
-  prename:    varchar('prename', { length: 100 }).notNull(),
-  surname:    varchar('surname', { length: 100 }).notNull(),
-  organizer:  int('organizer').notNull(),
-  role:       int('role').notNull().default(1),
-  createdAt:  timestamp('created_at').defaultNow().notNull(),
+  phone:      varchar('phone',{length:10}).notNull(),
+  password:   varchar('password', { length: 191 }).notNull(),
+  organizer:  varchar('organizer',{ length: 50}).notNull(),
+  policy:     boolean('policy').notNull().default(false),
+  createdAt:  timestamp('createdAt').defaultNow().notNull(),
   appove:     boolean('appove').notNull().default(false),
-  appoveAt:   timestamp('appove_at').defaultNow(),
-  status:     varchar('status',{length:100}).notNull().default('inactive'),
+  appoveAt:   timestamp('appoveAt'),
+  status:     varchar('status',{length:100}).notNull().default('pedding'),
 });
 
 export const agency_types = mysqlTable('agency_types', {

@@ -1,6 +1,6 @@
 import { cors } from 'hono/cors';
 export const coreMiddleware = cors({
-    origin: ['http://localhost:3001', process.env.WEBSITE_URL].filter((url): url is string => typeof url === 'string' && url.length > 0),
+    origin: ['http://localhost:3000',process.env.WEBSITE_URL].filter((url): url is string => typeof url === 'string' && url.length > 0),
     allowHeaders: [
         'Content-Type',
         'X-CSRF-Token', 

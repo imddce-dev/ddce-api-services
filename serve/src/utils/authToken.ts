@@ -9,7 +9,8 @@ if (!JWT_SECRET){
 
 export interface JWTPayload {
     userId: string;
-    role: string;
+    organize: string;
+    jti: string,
     exp: number;
     [key: string]: unknown;
 }

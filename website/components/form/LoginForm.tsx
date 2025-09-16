@@ -29,11 +29,10 @@ export default function LoginForm(){
       } finally{
         setLoading(false)
       }
-  }
+}
 return(
     <CardContent>
       <form onSubmit={handleSubmit}>
-        <h2>Login</h2>
         <div>
           <label htmlFor="username">Username</label>
           <input

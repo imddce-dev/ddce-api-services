@@ -1,3 +1,4 @@
+import { organizer } from './../configs/mysql/schema';
 import { users, users_session } from '../configs/mysql/schema';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
@@ -9,6 +10,8 @@ import { DrizzleDB } from '../configs/type';
 
 
 const DAMMY_HASH = crypto.randomBytes(32).toString('hex');
+
+
 export const Login = async (db: DrizzleDB, username : string, password: string) => {
   const pepper = process.env.PASSWORD_PEPPER
    if (!pepper) {
@@ -19,8 +22,9 @@ export const Login = async (db: DrizzleDB, username : string, password: string) 
     .select({
       id: users.id,
       password:users.password,
-      role: users.role,
-      appove: users.appoveAt
+      oraganize: users.organizer,
+      appove: users.appove,
+      appoveAt: users.appoveAt
     })
     .from(users)
     .where(eq(users.username, username))
@@ -32,7 +36,7 @@ export const Login = async (db: DrizzleDB, username : string, password: string) 
     if (existingUser.length === 0 || !isMatch) {
       return { success: false, message: 'Invalid username or password' };
     }
-    if (existingUser[0].appove === null){
+    if (existingUser[0].appoveAt === null && existingUser[0].appove === false){
       return { success:false, message: 'User not approved yet' };
     }
 
@@ -49,10 +53,9 @@ export const Login = async (db: DrizzleDB, username : string, password: string) 
     expireAt: refreshTokenExpiry,
     refreshtoken: refreshToken,
   });
-
       const payload: JWTPayload = {
         userId: user.id.toString(),
-        role: user.role,
+        organize: user.oraganize.toString(),
         jti: jwtid,
         exp: Math.floor(Date.now() / 1000) + (15 * 60) 
   }
@@ -70,6 +73,7 @@ export const Login = async (db: DrizzleDB, username : string, password: string) 
     return { message: 'Cannot login user' };
   }   
 }
+
 
 export const Logout = async (db: DrizzleDB, userId: number) =>{
   try{
@@ -110,7 +114,7 @@ export const RefreshToken = async (db: DrizzleDB, refreshToken: string) => {
             })
             .where(eq(users_session.id, session.id));  
         const userRecord = await db
-            .select({ id: users.id, role: users.role })
+            .select({ id: users.id, organizer: users.organizer })
             .from(users)
             .where(eq(users.id, session.user_id)) 
             .limit(1);
@@ -120,7 +124,7 @@ export const RefreshToken = async (db: DrizzleDB, refreshToken: string) => {
         const user = userRecord[0];
         const payload: JWTPayload = {
             userId: user.id.toString(),
-            role: user.role,
+            organize: user.organizer,
             jti: newJti, 
             exp: Math.floor(Date.now() / 1000) + (15 * 60) 
         };
