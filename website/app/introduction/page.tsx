@@ -19,6 +19,12 @@ const logoMap: Record<string, string | undefined> = {
   "EBS Province": "/ddclogo.png", // มีไฟล์ค่อยเปิด ใช้ชื่อ tag ให้ตรง!
 };
 
+const logoSizeMap: Record<string, string> = {
+  "M-EBS": "h-60",
+  "EBSDDC": "h-45",
+  "EBS Province": "h-45",
+};
+
 
 /* ---------- mock template list ---------- */
 const templates = [
@@ -230,12 +236,12 @@ export default function IntroductionPage() {
         {/* โลโก้ (ถ้ามี) */}
         {logoSrc && (
           <div className="absolute inset-0 flex items-center justify-center">
-      <Image
+<Image
   src={logoSrc}
   alt={`${t.tag} logo`}
   width={200}
   height={200}
-  className="h-20 w-auto md:h-45"  // << ปรับที่นี่
+  className={`${logoSizeMap[t.tag] ?? "h-20"} w-auto`}
 />
           </div>
         )}
