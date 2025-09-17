@@ -16,7 +16,7 @@ export default function LoginPage() {
             </div>
             <CardHeader className="pb-2">
               <CardTitle className="font-semibold text-slate-100 text-center text-2xl">Application Program Interface(API)</CardTitle>
-               <CardTitle className='text-white text-center text-[16px]'> บริการเชื่อโยงข้อมูล การจัดการข้อมูลภาวะฉุกเฉินทางสาธารณสุข</CardTitle>
+               <CardTitle className='text-white text-center text-[16px]'> บริการเชื่อโยงข้อมูล กลุ่มงานการจัดการข้อมูลภาวะฉุกเฉินทางสาธารณสุข</CardTitle>
             </CardHeader>
               <div className='px-5 text-white'>
               <LoginForm/>

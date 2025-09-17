@@ -63,7 +63,7 @@ async function fetchEvents(token: string): Promise<EventItem[]> {
               <Link href="/auth/login">เข้าสู่ระบบ</Link>
             </Button>
             <Button asChild className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white">
-              <Link href="/register">สมัครใช้งาน</Link>
+              <Link href="/auth/register">สมัครใช้งาน</Link>
             </Button>
           </div>
         </div>

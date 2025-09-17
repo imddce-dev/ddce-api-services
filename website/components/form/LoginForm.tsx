@@ -58,23 +58,16 @@ return(
         {error && (
           <div style={{ color: 'red', marginTop: '8px' }}>{error}</div>
         )}
-        <CardFooter className="flex flex-col gap-4 ">
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <LogIn className="mr-2 h-4 w-4" />
-            )}
-            {loading ? "ลงชื่อเข้าใช้..." : "ลงชื่อเข้าใช้"}
-          </Button>
-          <div className="text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <a href="#" className="underline">
-              Sign up
-            </a>
-          </div>
-        </CardFooter>
-      </form>
-    </CardContent>
+      </Button>
+
+      <div className="text-center text-sm text-slate-400">
+        ยังไม่มีบัญชี?{" "}
+        <a href="/auth/register" className="text-cyan-300 underline-offset-2 hover:text-cyan-200 hover:underline">
+          สมัครสมาชิก
+        </a>
+      </div>
+    </CardFooter>
+  </form>
+</CardContent>
   )    
 }
