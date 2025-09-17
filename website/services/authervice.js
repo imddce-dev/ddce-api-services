@@ -1,16 +1,14 @@
 import apiClient from './apiConfig'
 /**
  * ฟังก์ชันสำหรับ Login
- * @param {string} username
- * @param {string} password
+ * @param {object} userLogin
+ * @param {string} userLogin.username
+ * @param {string} userLogin.password
  * @returns {Promise<{success: boolean, message?: string}>}
  */
-export const login = async (username, password) => {
+export const login = async (userLogin) => {
     try {
-        const response = await apiClient.post('/users/login', {
-            username,
-            password,
-        });
+        const response = await apiClient.post('/users/login',userLogin);
         return response.data;
     } catch (error) {
         if (error.response?.status !== 401) {
