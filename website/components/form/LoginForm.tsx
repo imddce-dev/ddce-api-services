@@ -5,85 +5,108 @@ import { login as loginService } from "@/services/authervice";
 import { CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
 import { Loader2, LogIn } from "lucide-react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { Transition } from '@headlessui/react';
+
+type FormValues = {
+  username: string;
+  password: string;
+};
 
 export default function LoginForm() {
-  const router = useRouter();
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  const {
+    register, // เปลี่ยนจาก 'login' เป็น 'register'
+    handleSubmit,
+    formState: { errors, isSubmitting }, 
+  } = useForm<FormValues>({ mode: "onChange" });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  const router = useRouter();
+  const [apiError, setApiError] = useState<string>("");
+
+
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    setApiError("");
+    console.log(data)
     try {
-      const result = await loginService(username, password);
+      const result = await loginService(data);
       if (result && result.success) {
         alert("login Successfully");
-        router.push("/dashboard");
+        router.push("/auth/register");
       } else {
-        setError(result?.message || "An unknown error occurred.");
+        setApiError(result?.message || "An unknown error occurred.");
       }
     } catch {
-      setError("Failed to connect to the server. Please try again later.");
-    } finally {
-      setLoading(false);
+      setApiError("Failed to connect to the server. Please try again later.");
     }
   };
 
   return (
     <>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <label htmlFor="username" className="mb-1 block text-sm text-slate-300">
-              Username
+            <label htmlFor="username" className="mb-1 block text-[16px] font-extrabold text-white/90">
+              ชื่อผู้ใช้ (Username)
             </label>
             <input
               id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
-              required
-              className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/30"
+              className={`h-9 w-full rounded-lg border bg-slate-900/80 px-3 text-slate-100 outline-none transition duration-700 ease-in-out focus:ring-2 ${
+                errors.username
+                  ? 'border-red-400 focus:ring-red-400/40'
+                  : 'border-white/10 focus:border-cyan-400 [&:not(:placeholder-shown)]:border-cyan-400 focus:ring-cyan-400/40'
+              }`}
+              placeholder="username"
+              {...register("username", { required: "กรุณาป้อนชื่อผู้ใช้ให้ถูกต้อง" })}
             />
+            <Transition
+              show={!!errors.username}
+              enter="transition-opacity duration-700" enterFrom="opacity-0" enterTo="opacity-100"
+              leave="transition-opacity duration-700" leaveFrom="opacity-100" leaveTo="opacity-0"
+            >
+              <p className="mt-1 text-[12px] font-bold text-red-400" role="alert">
+                {errors.username?.message}
+              </p>
+            </Transition>
           </div>
 
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm text-slate-300">
-              Password
+            <label htmlFor="password" className="mb-1 block text-[16px] font-extrabold text-white/90">
+              รหัสผ่าน (Password)
             </label>
             <input
               id="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              className={`h-9 w-full rounded-lg border bg-slate-900/80 px-3 text-slate-100 outline-none transition duration-700 ease-in-out focus:ring-2 ${
+                errors.password
+                  ? 'border-red-400 focus:ring-red-400/40'
+                  : 'border-white/10 focus:border-cyan-400 [&:not(:placeholder-shown)]:border-cyan-400 focus:ring-cyan-400/40'
+              }`}
               placeholder="Password"
-              required
-              className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/30"
+              {...register("password", { required: "กรุณาป้อนรหัสผ่านให้ถูกต้อง" })}
             />
+            <Transition
+              show={!!errors.password}
+              enter="transition-opacity duration-700" enterFrom="opacity-0" enterTo="opacity-100"
+              leave="transition-opacity duration-700" leaveFrom="opacity-100" leaveTo="opacity-0"
+            >
+              <p className="mt-1 text-[12px] font-bold text-red-400" role="alert">
+                {errors.password?.message}
+              </p>
+            </Transition>
           </div>
 
-          {error && <div className="text-sm text-rose-300">{error}</div>}
-
-          {/* ลิงก์ลืมรหัสผ่านชิดขวา */}
+          {apiError && <div className="text-sm text-rose-300">{apiError}</div>}
           <div className="flex">
-            <a
-              href="/auth/forgot-password"
-              className="ml-auto text-xs text-cyan-300 hover:text-cyan-200"
-            >
+            <a href="/auth/forgot-password" className="ml-auto text-xs text-cyan-300 hover:text-cyan-200">
               ลืมรหัสผ่าน?
             </a>
           </div>
 
-          {/* ปุ่ม submit อยู่ใน form เพื่อกด Enter ได้ */}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? (
+          <Button type="submit" className="w-full text-white/90 text-[16px] p-1" disabled={isSubmitting}>
+            {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ลงชื่อเข้าใช้...
+                กำลังลงชื่อเข้าใช้...
               </>
             ) : (
               <>
@@ -95,17 +118,14 @@ export default function LoginForm() {
         </form>
       </CardContent>
 
-      <CardFooter className="flex flex-col gap-2">
+      {/* <CardFooter className="flex flex-col gap-2">
         <div className="text-center text-sm text-slate-400">
           ยังไม่มีบัญชี?{" "}
-          <a
-            href="/auth/register"
-            className="text-cyan-300 underline-offset-2 hover:text-cyan-200 hover:underline"
-          >
+          <a href="/auth/register" className="text-cyan-300 underline-offset-2 hover:text-cyan-200 hover:underline">
             สมัครสมาชิก
           </a>
         </div>
-      </CardFooter>
+      </CardFooter> */}
     </>
   );
 }
