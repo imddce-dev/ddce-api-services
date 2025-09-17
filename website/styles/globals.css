@@ -118,6 +118,14 @@
 *{
   font-family: var(--font-noto-sans-thai)
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  
+  scrollbar-width: none;  
+}
 /* ---------- Base & keyframes ---------- */
 @layer base {
   * { @apply border-border outline-ring/50; }
