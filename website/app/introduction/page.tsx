@@ -7,7 +7,7 @@ import { Network } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { ArrowRight, Copy, Check, Server, FileJson } from "lucide-react";
-/* ก่อน map การ์ด เพิ่มแม็พชื่อ -> สลั๊ก */
+
 const slugMap: Record<string, string> = {
   "Modernized Event-based Surveillance": "M-EBS",
   "Event-based Surveillance for DDC": "EBSDDC",
@@ -16,13 +16,13 @@ const slugMap: Record<string, string> = {
 const logoMap: Record<string, string | undefined> = {
   "M-EBS": "/M-EBSlogo.png",
   "EBSDDC": "/ddclogo.png",
-  "EBS Province": "/ddclogo.png", // มีไฟล์ค่อยเปิด ใช้ชื่อ tag ให้ตรง!
+  "EBS Province": "/ddclogo.png",
 };
 
 const logoSizeMap: Record<string, string> = {
   "M-EBS": "h-60",
-  "EBSDDC": "h-45",
-  "EBS Province": "h-45",
+  "EBSDDC": "h-50",
+  "EBS Province": "h-55",
 };
 
 
@@ -54,11 +54,9 @@ const exampleJson = JSON.stringify(
   4
 );
 
-
-/* ---------- พื้นหลัง: ใช้ภาพ bgintroduction.jpg + overlay โทนฟ้า/เขียว ---------- */
 function BGWithImage() {
   return (
-    // เปลี่ยน -z-10 -> z-0
+
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       {/* ภาพพื้นหลัง */}
       <div
