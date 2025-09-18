@@ -24,8 +24,6 @@ import {
   MapPin,
   QrCode,
 } from "lucide-react";
-
-/* ---------- BG: รูป + overlay (เหมือน intro) ---------- */
 function BGWithImage() {
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
@@ -39,8 +37,6 @@ function BGWithImage() {
     </div>
   );
 }
-
-/* ---------- แถบบน/ล่าง: เหมือนหน้า Introduction ---------- */
 function FixedHeader() {
   return (
     <div className="fixed inset-x-0 top-0 z-[60] border-b border-white/10 bg-black/40 backdrop-blur supports-[backdrop-filter]:bg-black/50">
@@ -67,7 +63,6 @@ function FixedHeader() {
     </div>
   );
 }
-
 function FixedBottomBar() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-[60] border-t border-white/10 bg-black/40 backdrop-blur supports-[backdrop-filter]:bg-black/50">
@@ -93,8 +88,6 @@ function FixedBottomBar() {
     </div>
   );
 }
-
-/* ---------- หน้า Contact ---------- */
 export default function ContactPage() {
   const [copied, setCopied] = React.useState<string | null>(null);
   const copyToClipboard = (text: string, key: string) => {

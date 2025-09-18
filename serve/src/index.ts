@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import * as userController from './controllers/user.controller';
 import * as authController from './controllers/auth.controller';
+import * as orgController from './controllers/org.controller'
 import { db } from './configs/mysql';
 import { DrizzleDB } from './configs/type';
 import { sql } from 'drizzle-orm';
@@ -28,14 +29,16 @@ const main = async () => {
     ]);
     console.log('MySQL and Redis connected successfully.');
     const rateLimiterMiddleware = rateLimited.createRateLimiter();
-    app.use('api/app/*', verifyCsrf);
+
+    //app.use('api/app/*', verifyCsrf);
     app.use('*', secureHeadersMiddleware);
     app.use('*', rateLimiterMiddleware); 
     app.use('*', coreMiddleware);
     app.use('*', contextMiddleware);
      
-    const application = app.basePath('api/app');
-    application.get('/health', (c) => c.json({ status: 'ok' }));
+  
+    const application = app.basePath('api/app/');
+    application.get('org', orgController.getOrg);
 
     const api = app.basePath('api/users');
     api.get('/get',userController.getAllUsers);

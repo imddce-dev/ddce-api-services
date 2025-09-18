@@ -1,17 +1,13 @@
 "use client";
-
 import React from "react";
 import { Menu } from "lucide-react";
 import { usePage } from "@/contexts/PageContext";
 import { motion, AnimatePresence } from "framer-motion"; // 1. Import motion and AnimatePresence
-
 interface TopbarProps {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
-
 export function Topbar({ setOpen }: TopbarProps) {
   const { pageInfo } = usePage();
-
   const textVariants = {
     hidden: { opacity: 0, y: -10 },
     visible: { opacity: 1, y: 0 },
@@ -40,7 +36,6 @@ export function Topbar({ setOpen }: TopbarProps) {
               {pageInfo.title}
             </motion.h1>
           </AnimatePresence>
-
           <AnimatePresence mode="wait">
             <motion.p
               key={pageInfo.description} 
