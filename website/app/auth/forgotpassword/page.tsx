@@ -28,7 +28,7 @@ export default function ForgotPasswordPage() {
             </CardHeader>
 
             <div className="px-5 text-white">
-              <ForgotPasswordForm frameless />
+              <ForgotPasswordForm frameless /> 
             </div>
           </Card>
         </div>
