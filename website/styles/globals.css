@@ -126,6 +126,12 @@
   -ms-overflow-style: none;  
   scrollbar-width: none;  
 }
+.btn-gradient {
+  background: linear-gradient(to right, #06b6d4, #10b981);
+}
+input[type="password"]::-ms-reveal {
+  display: none;
+}
 /* ---------- Base & keyframes ---------- */
 @layer base {
   * { @apply border-border outline-ring/50; }

@@ -1,11 +1,14 @@
-import { MySql2Database, drizzle } from 'drizzle-orm/mysql2';
 import { users } from '../configs/mysql/schema';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import { DrizzleDB } from '../configs/type';
+
+
 export const findAll = async (db: DrizzleDB) => {
   return await db.query.users.findMany();
 };
+
+
 export const create = async (
   db: DrizzleDB,
   data: {

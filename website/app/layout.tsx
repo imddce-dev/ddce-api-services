@@ -10,14 +10,10 @@ const notoSansThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "DDCE API Request",
-  description: "",
+   icons: {
+    icon: '/mophlogo.png',
+  },
 };
-
-export const viewport: Viewport = {
-  themeColor: "#060913",
-};
-
 export default function RootLayout({
   children,
 }: {

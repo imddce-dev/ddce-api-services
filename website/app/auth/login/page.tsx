@@ -1,9 +1,11 @@
 
-import React, { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import  LoginForm  from '@/components/form/LoginForm';
-
+import { Metadata } from 'next';
+export const metadata: Metadata = {
+  title: 'ลงชื่อเข้าใช้ | DDCE API Request'
+};
 export default function LoginPage() {
   return (
     <main className="relative h-dvh flex justify-center items-center">
@@ -14,9 +16,9 @@ export default function LoginPage() {
             <div className='flex justify-center m-0 p-0'>
               <Image src='/ddce-ct.png' alt='Logo' width={250} height={200} />
             </div>
-            <CardHeader className="pb-2">
-              <CardTitle className="font-semibold text-slate-100 text-center text-2xl">Application Program Interface(API)</CardTitle>
-               <CardTitle className='text-white text-center text-[16px]'> บริการเชื่อโยงข้อมูล กลุ่มงานการจัดการข้อมูลภาวะฉุกเฉินทางสาธารณสุข</CardTitle>
+            <CardHeader className="">
+              <CardTitle className="font-semibold text-slate-100 text-center text-2xl">DDCE Application Program Interface</CardTitle>
+               <CardTitle className='text-white text-center text-[16px]'> ระบบบริการข้อมูล กลุ่มงานการจัดการข้อมูลภาวะฉุกเฉินทางสาธารณสุข</CardTitle>
             </CardHeader>
               <div className='px-5 text-white'>
               <LoginForm/>

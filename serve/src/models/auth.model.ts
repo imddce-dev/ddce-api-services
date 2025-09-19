@@ -1,4 +1,3 @@
-import { organizer } from './../configs/mysql/schema';
 import { users, users_session } from '../configs/mysql/schema';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
@@ -6,17 +5,26 @@ import * as crypto from 'crypto';
 import { generateToken, JWTPayload } from '../utils/authToken';
 import { generateHmacToken } from '../utils/hmactoken'
 import { DrizzleDB } from '../configs/type';
-
+import { error } from 'console';
 
 
 const DAMMY_HASH = crypto.randomBytes(32).toString('hex');
-
+export const AUTH_ERROR_CODES = {
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS', 
+  USER_NOT_APPROVED: 'USER_NOT_APPROVED', 
+  LOGIN_FAILED: 'LOGIN_FAILED',  
+  CONFIG_ERROR: 'CONFIG_ERROR',
+};
 
 export const Login = async (db: DrizzleDB, username : string, password: string) => {
   const pepper = process.env.PASSWORD_PEPPER
    if (!pepper) {
         console.log("PASSWORD_PEPPER is not set in environment variables");
-        throw new Error("Application security configuration is incomplete.");
+        return {
+          success: false,
+          message: "Application security configuration is incomplete.",
+          errorCode: AUTH_ERROR_CODES.CONFIG_ERROR
+        }
   }
   const existingUser = await db
     .select({
@@ -34,10 +42,18 @@ export const Login = async (db: DrizzleDB, username : string, password: string) 
     const passwordWithPepper = password + pepper;
     const isMatch = await bcrypt.compare(passwordWithPepper, hashToCompare)
     if (existingUser.length === 0 || !isMatch) {
-      return { success: false, message: 'Invalid username or password' };
+      return { 
+        success: false, 
+        message: 'Username หรือ Password ไม่ถูกต้อง !!',
+        errorCode: AUTH_ERROR_CODES.INVALID_CREDENTIALS
+      };
     }
     if (existingUser[0].appoveAt === null && existingUser[0].appove === false){
-      return { success:false, message: 'User not approved yet' };
+      return { 
+        success: false, 
+        message: 'Username ยังไม่ถูกอนุญาตให้เข้าใช้งาน',
+        errorCode: AUTH_ERROR_CODES.USER_NOT_APPROVED 
+      };
     }
 
   await db.delete(users_session).where(eq(users_session.user_id, existingUser[0].id));
@@ -70,7 +86,11 @@ export const Login = async (db: DrizzleDB, username : string, password: string) 
     };
   }catch (error){ 
     console.error(error);
-    return { message: 'Cannot login user' };
+    return { 
+      success: false,
+      message: 'An unexpected error occurred during login.',
+      errorCode: AUTH_ERROR_CODES.LOGIN_FAILED 
+    };
   }   
 }
 

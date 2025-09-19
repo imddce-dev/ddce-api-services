@@ -1,8 +1,8 @@
 import { Context } from 'hono';
 import { deleteCookie, setCookie } from 'hono/cookie';
-
 import * as authModel from '../models/auth.model'; 
 import { DrizzleDB } from '../configs/type';
+import type { StatusCode } from 'hono/utils/http-status';
 
 export const login = async (c: Context) => {
     try {
@@ -10,12 +10,23 @@ export const login = async (c: Context) => {
         const body = await c.req.json();
         const { username, password } = body;
         if (!username || !password){
-            return c.json({ success: false, message: 'Username and password are required' }, 400);
+            return c.json({ 
+                success: false, 
+                message: 'Username and password are required', 
+                errorCode: 'MISSING_CREDENTIALS'
+            },{status:400});
         }
         const result = await authModel.Login(db, username, password);
-
         if (!result.success) {
-            return c.json({ success: false, message: result.message || 'Invalid credentials' }, 401);
+            let statusCode: StatusCode = 401;
+            if (result.errorCode === authModel.AUTH_ERROR_CODES.INVALID_CREDENTIALS || result.errorCode === authModel.AUTH_ERROR_CODES.USER_NOT_APPROVED){
+                statusCode = 500;
+            }
+            return c.json({ 
+                success: false, 
+                message: result.message,
+                errorCode: result.errorCode
+            },{status : statusCode});
         }
         setCookie(c, 'accessToken', result.token || '', {
             httpOnly: true,
@@ -39,14 +50,18 @@ export const login = async (c: Context) => {
             path: '/',
             maxAge: 60 * 60 * 24 * 7, 
         });
-
-        return c.json(result.success ? { success: true } : { success: false, message: result.message || 'Cannot login' });
-
+        return c.json({success: true});
     } catch (error) {
-        console.error(error);
-        return c.json({ success: false, message: 'An internal error occurred' }, 500);
+         console.log(error);
+         return c.json({ 
+            success: false, 
+            message: 'An internal server error occurred',
+            errorCode: 'INTERNAL_SERVER_ERROR'
+        }, {status : 500});
     }
-};
+}
+
+
 
 export const Logout = async (c: Context) => {
     try{
@@ -70,7 +85,6 @@ export const Logout = async (c: Context) => {
         return c.json({ success: false, message: 'An internal error occurred' }, 500);
     }
 }
-
 export const RefreshToken = async (c: Context) => {
     try{
         const db = c.get('db') as DrizzleDB

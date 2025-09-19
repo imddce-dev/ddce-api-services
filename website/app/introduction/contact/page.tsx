@@ -25,7 +25,7 @@ import {
   QrCode,
 } from "lucide-react";
 
-/* ---------- BG: รูป + overlay + fade-in ---------- */
+/* ---------- BG: รูป + overlay (เหมือน intro) ---------- */
 function BGWithImage() {
   const [show, setShow] = React.useState(false);
   React.useEffect(() => {
@@ -92,7 +92,7 @@ function FadeIn({
   );
 }
 
-/* ---------- แถบบน/ล่าง ---------- */
+/* ---------- แถบบน/ล่าง: เหมือนหน้า Introduction ---------- */
 function FixedHeader() {
   return (
     <div className="fixed inset-x-0 top-0 z-[60] border-b border-white/10 bg-black/40 backdrop-blur supports-[backdrop-filter]:bg-black/50">
@@ -133,8 +133,6 @@ function FixedHeader() {
   );
 }
 
-
-
 function FixedBottomBar() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-[60] border-t border-white/10 bg-black/40 backdrop-blur supports-[backdrop-filter]:bg-black/50 transition-colors duration-300">
@@ -160,8 +158,6 @@ function FixedBottomBar() {
     </div>
   );
 }
-
-/* ---------- หน้า Contact ---------- */
 export default function ContactPage() {
   const [copied, setCopied] = React.useState<string | null>(null);
   const copyToClipboard = (text: string, key: string) => {
