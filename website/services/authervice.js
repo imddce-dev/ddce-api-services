@@ -61,23 +61,33 @@ export const login = async (userLogin) => {
  * @param {string} userData.phone 
  * @param {string} userData.organizer
  * @param {string} userData.password
- * @param {boolean}userData.policy
- * @returns {Promise<{success: boolean, message?: string, data?: object}>}
+ * @param {boolean} userData.policy
+ * @returns {Promise<{success: boolean, message: string, data?: object}>}
  */
-export const register = async(userData) => {
-    try{
-        const response = await apiClient.post('/users/createusr',userData)
-        return response.data;
-    }catch(error){
-        if (error.response?.status !== 401){
-            console.error('An unexpected login error occurred:', error);
-        }
-        if (error.response && error.response.data) {
-            return error.response.data;
-        }
-        throw error;
+export const register = async (userData) => {
+  try {
+    const response = await apiClient.post("/users/createusr", userData);
+    return {
+      success: true,
+      message: response.data?.message || "ลงทะเบียนสำเร็จ",
+      data: response.data,
+    };
+  } catch (error) {
+    // console.error("Register error:", error);
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data?.message || "เกิดข้อผิดพลาดจากระบบ",
+        data: error.response.data || null,
+      };
     }
-}
+    return {
+      success: false,
+      message: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้",
+    };
+  }
+};
+
 /** 
  *@param {number} userId
  *@param {string} type

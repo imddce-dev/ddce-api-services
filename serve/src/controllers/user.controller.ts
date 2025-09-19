@@ -18,18 +18,21 @@ export const createUser = async (c: Context) => {
     try {
         const db = c.get('db') as DrizzleDB;
         const body = await c.req.json();
-        const newUser = await userModel.create(db, body);
-        return c.json(newUser, 201); 
-    } catch (error: any) { 
-        console.error(error);
-        if (error.message && error.message.includes('is already taken')) {
-            return c.json({ 
-                message: error.message 
-            }, 409); 
+        const result = await userModel.create(db, body)
+        if (result.success === false) {
+            if (result.code === 'USERNAME_TAKEN') {
+                return c.json(result, 409); 
+            }
+            return c.json(result, 400); 
         }
+        return c.json(result, 201); 
+    } catch (error: any) {
+        //console.error(error);
         return c.json({ 
+            success: false,
+            code: 'INTERNAL_SERVER_ERROR',
             message: 'An internal server error occurred.' 
-        }, 500); 
+        }, 500);
     }
 };
 
@@ -64,19 +67,19 @@ export const removeUser = async (c: Context) =>{
 }
 
 
-export const editUser = async (c: Context) =>{
-  try{
-    const db = c.get('db') as DrizzleDB;
-    const id = Number(c.req.param('id'))
-    const body = await c.req.json();
-    const result = await userModel.EditUser(db, id, body)
-    if (!result){
-      return c.json({ message: 'User not found' }, 404);
-    } 
-    return c.json(result);
-  }catch (error){
-    console.error(error);
-    return c.json({ message: 'Cannot edit user' }, 500);
-  }
-}
+// export const editUser = async (c: Context) =>{
+//   try{
+//     const db = c.get('db') as DrizzleDB;
+//     const id = Number(c.req.param('id'))
+//     const body = await c.req.json();
+//     const result = await userModel.EditUser(db, id, body)
+//     if (!result){
+//       return c.json({ message: 'User not found' }, 404);
+//     } 
+//     return c.json(result);
+//   }catch (error){
+//     console.error(error);
+//     return c.json({ message: 'Cannot edit user' }, 500);
+//   }
+// }
 
