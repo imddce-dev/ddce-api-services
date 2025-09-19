@@ -154,7 +154,7 @@ export default function APIForm({
       dataSource: undefined as unknown as DataSource,
       dataFormat: "json",
       authMethod: "client_credentials",
-      rateLimitPerMinute: 20,
+      rateLimitPerMinute: 60,
       authAttachment: [],
       ...defaultValues,
     },
@@ -200,8 +200,8 @@ export default function APIForm({
 
   /* STEP 1: submit ฟอร์ม -> แค่เปิดโมดัลสรุป (ยังไม่ยิงจริง) */
   const onSubmit = async (values: RequestFormValues) => {
-    if (values.rateLimitPerMinute !== 20) {
-      alert("Rate limit ต้องเป็น 20 ครั้งต่อนาทีเท่านั้น");
+    if (values.rateLimitPerMinute !== 60) {
+      alert("Rate limit ต้องเป็น 60 ครั้งต่อนาทีเท่านั้น");
       return;
     }
     if (values.dataFormat !== "json") {
@@ -442,7 +442,7 @@ export default function APIForm({
                 placeholder="อธิบายวัตถุประสงค์ ระบบที่จะเชื่อมต่อ ผู้ใช้งานปลายทาง ฯลฯ"
                 {...register("description", {
                   required: "กรอกรายละเอียด",
-                  minLength: { value: 20, message: "อย่างน้อย 20 ตัวอักษร" },
+                  minLength: { value: 60, message: "อย่างน้อย 60 ตัวอักษร" },
                 })}
               />
             </Field>
@@ -568,7 +568,7 @@ export default function APIForm({
                 placeholder="เหตุผลตามภารกิจ/กฎหมายที่ต้องใช้ข้อมูล และผลกระทบหากไม่ได้รับอนุญาต"
                 {...register("purpose", {
                   required: "กรอกวัตถุประสงค์",
-                  minLength: { value: 20, message: "อย่างน้อย 20 ตัวอักษร" },
+                  minLength: { value: 60, message: "อย่างน้อย 60 ตัวอักษร" },
                 })}
               />
             </Field>
@@ -580,11 +580,11 @@ export default function APIForm({
                   className="input w-32"
                   type="number"
                   readOnly
-                  value={20}
+                  value={60}
                   {...register("rateLimitPerMinute", {
                     valueAsNumber: true,
                     validate: (v) =>
-                      v === 20 || "Rate limit ต้องเป็น 20 ครั้งต่อนาทีเท่านั้น",
+                      v === 20 || "Rate limit ต้องเป็น 60 ครั้งต่อนาทีเท่านั้น",
                   })}
                 />
                 <span className="text-sm text-slate-300">ครั้ง/นาที</span>
