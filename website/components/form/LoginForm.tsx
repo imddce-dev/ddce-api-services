@@ -118,7 +118,7 @@ export default function LoginForm() {
             </Transition>
           </div>
           <div className="flex">
-            <a href="/auth/forgot-password" className="ml-auto text-xs text-cyan-300 hover:text-cyan-200">
+            <a href="/auth/forgotpassword" className="ml-auto text-xs text-cyan-300 hover:text-cyan-200">
               ลืมรหัสผ่าน?
             </a>
           </div>
