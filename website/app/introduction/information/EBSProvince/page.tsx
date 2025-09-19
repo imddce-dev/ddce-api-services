@@ -13,7 +13,7 @@ function BGWithImage() {
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       <div
-        className="absolute inset-0 bg-fixed bg-cover bg-center opacity-90"
+        className="absolute inset-0 bg-fixed bg-cover bg-center opacity-90 will-change-transform"
         style={{ backgroundImage: "url('/bgintroduction1.jpg')" }}
       />
       <div className="absolute inset-0 bg-[radial-gradient(80%_60%_at_50%_10%,rgba(34,211,238,.22),transparent_70%),radial-gradient(60%_40%_at_90%_0%,rgba(16,185,129,.18),transparent_70%)]" />
@@ -31,7 +31,7 @@ function BGWithImage() {
 /* ---------- บาร์บน/ล่าง ---------- */
 function FixedHeader() {
   return (
-    <div className="fixed inset-x-0 top-0 z-[60] border-b border-white/10 bg-black/40 backdrop-blur supports-[backdrop-filter]:bg-black/50">
+    <div className="fixed inset-x-0 top-0 z-[60] border-b border-white/10 bg-black/40 backdrop-blur supports-[backdrop-filter]:bg-black/50 transition-colors duration-300">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3 md:px-8">
         <Link href="/" className="flex items-center gap-2">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-gradient-to-br from-cyan-500 to-emerald-500 text-white ring-1 ring-white/20">
@@ -41,12 +41,12 @@ function FixedHeader() {
         </Link>
 
         <nav className="hidden items-center gap-4 sm:flex">
-          <Link className="text-slate-300 hover:text-white" href="/docs">Docs</Link>
-          <Link className="text-slate-300 hover:text-white" href="/introduction/contact">Contact</Link>
-          <Link href="/auth/register" className="rounded-md border border-white/10 bg-white/10 px-3 py-1.5 text-sm text-slate-100 hover:bg-white/20">
+          <Link className="text-slate-300 hover:text-white transition-colors duration-300" href="/docs">Docs</Link>
+          <Link className="text-slate-300 hover:text-white transition-colors duration-300" href="/introduction/contact">Contact</Link>
+          <Link href="/auth/register" className="rounded-md border border-white/10 bg-white/10 px-3 py-1.5 text-sm text-slate-100 hover:bg-white/20 transition-colors duration-300">
             สมัครใช้งาน
           </Link>
-          <Link href="/auth/login" className="rounded-md bg-gradient-to-r from-cyan-500 to-emerald-500 px-3 py-1.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/10">
+          <Link href="/auth/login" className="rounded-md bg-gradient-to-r from-cyan-500 to-emerald-500 px-3 py-1.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/10 active:scale-[0.98] transition-transform duration-200">
             Login
           </Link>
         </nav>
@@ -56,16 +56,16 @@ function FixedHeader() {
 }
 function FixedBottomBar() {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[60] border-t border-white/10 bg-black/40 backdrop-blur supports-[backdrop-filter]:bg-black/50">
+    <div className="fixed inset-x-0 bottom-0 z-[60] border-t border-white/10 bg-black/40 backdrop-blur supports-[backdrop-filter]:bg-black/50 transition-colors duration-300">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-3 md:px-8">
         <p className="hidden text-sm text-slate-300 md:block">
           Powered by <b>IM-DDCE Team</b>
         </p>
         <div className="ml-auto flex gap-2">
-          <Link href="/auth/register" className="rounded-md border border-white/10 bg-white/10 px-3 py-1.5 text-sm text-slate-100 hover:bg-white/20">
+          <Link href="/auth/register" className="rounded-md border border-white/10 bg-white/10 px-3 py-1.5 text-sm text-slate-100 hover:bg-white/20 transition-colors duration-300">
             สมัครใช้งาน
           </Link>
-          <Link href="/auth/login" className="rounded-md bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-1.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20">
+          <Link href="/auth/login" className="rounded-md bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-1.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition-transform duration-200">
             Login
           </Link>
         </div>
@@ -74,7 +74,7 @@ function FixedBottomBar() {
   );
 }
 
-/* ---------- หน้า EBS Province ---------- */
+/* ---------- หน้า EBS Province (เพิ่ม smooth transition) ---------- */
 export default function EbsProvinceDetailPage() {
   const [copiedCurl, setCopiedCurl] = React.useState(false);
   const [copiedJson, setCopiedJson] = React.useState(false);
@@ -115,17 +115,17 @@ export default function EbsProvinceDetailPage() {
         <section className="relative">
           <div className="mx-auto max-w-6xl px-5 py-10 md:px-8 md:py-16">
             <div className="grid gap-8 md:grid-cols-[380px,1fr]">
-              {/* โลโก้ (ใส่ไฟล์ /public/ebs-province-logo.png หรือเปลี่ยนชื่อได้) */}
-              <div className="relative">
-                <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-                  <div className="absolute -inset-px rounded-2xl opacity-50 blur-2xl [background:conic-gradient(from_180deg_at_50%_50%,rgba(34,211,238,.35),rgba(16,185,129,.35),transparent)]" />
+              {/* โลโก้ */}
+              <div className="anim-fade-up">
+                <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur transition-all duration-500 hover:border-white/20">
+                  <div className="pointer-events-none absolute -inset-px rounded-2xl opacity-50 blur-2xl [background:conic-gradient(from_180deg_at_50%_50%,rgba(34,211,238,.35),rgba(16,185,129,.35),transparent)]" />
                   <div className="relative flex h-56 items-center justify-center">
                     <Image
                       src="/ddclogo.png"
                       alt="EBS Province logo"
                       width={320}
                       height={160}
-                      className="h-28 w-auto md:h-75 drop-shadow-[0_8px_30px_rgba(16,185,129,.35)]"
+                      className="h-28 w-auto md:h-75 drop-shadow-[0_8px_30px_rgba(16,185,129,.35)] will-change-transform"
                       priority
                     />
                   </div>
@@ -137,7 +137,7 @@ export default function EbsProvinceDetailPage() {
               </div>
 
               {/* เนื้อหา */}
-              <div>
+              <div className="anim-fade-up-2">
                 <h1 className="text-balance text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
                   Modernized Event-based Surveillance for Province
                 </h1>
@@ -147,10 +147,10 @@ export default function EbsProvinceDetailPage() {
                   ส่งต่อเข้าสู่ workflow ของจังหวัดเพื่อการตอบโต้ที่รวดเร็วและแม่นยำ
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <Link href="/auth/register" className="inline-flex items-center gap-2 rounded-md bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-2 text-sm font-semibold text-white">
+                  <Link href="/auth/register" className="inline-flex items-center gap-2 rounded-md bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform duration-200">
                     <KeyRound className="h-4 w-4" /> ขอ API Key
                   </Link>
-                  <Link href="/docs" className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 py-2 text-sm text-slate-100 hover:bg-white/20">
+                  <Link href="/docs" className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 py-2 text-sm text-slate-100 hover:bg-white/20 transition-colors duration-300">
                     <BookOpen className="h-4 w-4" /> ดูเอกสารประกอบ
                   </Link>
                 </div>
@@ -171,8 +171,12 @@ export default function EbsProvinceDetailPage() {
             { icon: Globe2, title: "ดึงสัญญาณท้องถิ่น", desc: "ต่อยอดจากช่องทางจังหวัด/รพ.สต./รายงานภาคสนาม" },
             { icon: Activity, title: "ประเมินความเสี่ยง", desc: "คำนวณระดับเร่งด่วน/ผลกระทบ เพื่อกำหนดทีมตอบโต้" },
             { icon: Layers, title: "ข้อมูลพร้อมใช้", desc: "Normalize/Tagging รองรับ Dashboard จังหวัด & ส่วนกลาง" },
-          ].map((f) => (
-            <Card key={f.title} className="border-white/10 bg-slate-900/60">
+          ].map((f, i) => (
+            <Card
+              key={f.title}
+              className="border-white/10 bg-slate-900/60 transition-all duration-500 hover:border-white/20 hover:bg-slate-900/70 anim-fade-up"
+              style={{ animationDelay: `${0.06 + i * 0.06}s` }}
+            >
               <CardContent className="flex items-start gap-3 p-4">
                 <span className="rounded-xl bg-white/10 p-2 ring-1 ring-white/10">
                   <f.icon className="h-5 w-5" />
@@ -189,7 +193,7 @@ export default function EbsProvinceDetailPage() {
         {/* ตัวอย่างการเรียกใช้งาน */}
         <section className="mx-auto mt-8 max-w-6xl grid gap-5 px-5 md:grid-cols-2 md:px-8">
           {/* cURL */}
-          <Card className="border-white/10 bg-slate-900/60">
+          <Card className="border-white/10 bg-slate-900/60 transition-all duration-500 hover:border-white/20 anim-fade-up" style={{ animationDelay: ".24s" }}>
             <CardContent className="p-4">
               <div className="mb-2 flex items-center gap-2 text-sm text-slate-300">
                 <Server className="h-4 w-4" /> ตัวอย่าง cURL
@@ -198,19 +202,13 @@ export default function EbsProvinceDetailPage() {
                 <pre className="overflow-x-auto rounded-lg border border-white/10 bg-[#0a0f1e] p-4 text-sm leading-relaxed text-slate-200 shadow-inner">
 {curl}
                 </pre>
-                <button
-                  onClick={() => { navigator.clipboard.writeText(curl); setCopiedCurl(true); setTimeout(() => setCopiedCurl(false), 1200); }}
-                  className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/10 hover:bg-white/20"
-                  aria-label="คัดลอก cURL"
-                >
-                  {copiedCurl ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </button>
+                <CopyBtn onClick={() => { navigator.clipboard.writeText(curl); setCopiedCurl(true); setTimeout(() => setCopiedCurl(false), 1200); }} copied={copiedCurl} />
               </div>
             </CardContent>
           </Card>
 
           {/* JSON */}
-          <Card className="border-white/10 bg-slate-900/60">
+          <Card className="border-white/10 bg-slate-900/60 transition-all duration-500 hover:border-white/20 anim-fade-up" style={{ animationDelay: ".30s" }}>
             <CardContent className="p-4">
               <div className="mb-2 flex items-center gap-2 text-sm text-slate-300">
                 <FileJson className="h-4 w-4" /> ตัวอย่างผลลัพธ์ JSON
@@ -219,21 +217,15 @@ export default function EbsProvinceDetailPage() {
                 <pre className="overflow-x-auto rounded-lg border border-white/10 bg-[#0a0f1e] p-4 text-sm leading-relaxed text-slate-200 shadow-inner">
 {sampleJson}
                 </pre>
-                <button
-                  onClick={() => { navigator.clipboard.writeText(sampleJson); setCopiedJson(true); setTimeout(() => setCopiedJson(false), 1200); }}
-                  className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/10 hover:bg-white/20"
-                  aria-label="คัดลอก JSON"
-                >
-                  {copiedJson ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </button>
+                <CopyBtn onClick={() => { navigator.clipboard.writeText(sampleJson); setCopiedJson(true); setTimeout(() => setCopiedJson(false), 1200); }} copied={copiedJson} />
               </div>
             </CardContent>
           </Card>
         </section>
 
         {/* ความปลอดภัย & การเข้าถึง */}
-        <section className="mx-auto mt-8 max-w-6xl px-5 md:px-8">
-          <Card className="border-white/10 bg-slate-900/60">
+        <section className="mx-auto mt-8 max-w-6xl px-5 md:px-8 anim-fade-up" style={{ animationDelay: ".36s" }}>
+          <Card className="border-white/10 bg-slate-900/60 transition-all duration-500 hover:border-white/20">
             <CardContent className="p-4">
               <div className="mb-2 flex items-center gap-2 text-slate-100">
                 <Shield className="h-4 w-4" />
@@ -245,10 +237,10 @@ export default function EbsProvinceDetailPage() {
                 <li>มี Rate Limit เพื่อความเสถียรของระบบ</li>
               </ul>
               <div className="mt-4 flex gap-2">
-                <Link href="/docs" className="rounded-md border border-white/10 bg-white/10 px-3 py-1.5 text-sm text-slate-100 hover:bg-white/20">
+                <Link href="/docs" className="rounded-md border border-white/10 bg-white/10 px-3 py-1.5 text-sm text-slate-100 hover:bg-white/20 transition-colors duration-300">
                   อ่านเอกสาร API
                 </Link>
-                <Link href="/introduction/contact" className="rounded-md bg-gradient-to-r from-cyan-500 to-emerald-500 px-3 py-1.5 text-sm font-semibold text-white">
+                <Link href="/introduction/contact" className="rounded-md bg-gradient-to-r from-cyan-500 to-emerald-500 px-3 py-1.5 text-sm font-semibold text-white active:scale-[0.98] transition-transform duration-200">
                   ติดต่อทีมงาน
                 </Link>
               </div>
@@ -257,13 +249,15 @@ export default function EbsProvinceDetailPage() {
         </section>
 
         {/* ปุ่มย้อนกลับ */}
-        <div className="mx-auto mt-8 max-w-6xl px-5 md:px-8">
-          <Link href="/" className="text-sm text-cyan-300 hover:underline">← กลับไปหน้าแรก</Link>
+        <div className="mx-auto mt-8 max-w-6xl px-5 md:px-8 anim-fade-up" style={{ animationDelay: ".42s" }}>
+          <Link href="/" className="text-sm text-cyan-300 hover:underline transition-colors duration-300">← กลับไปหน้าแรก</Link>
         </div>
       </div>
 
       {/* keyframes (ถ้ายังไม่ได้ประกาศ global) */}
       <style jsx global>{`
+        :root { --ease-smooth: cubic-bezier(.22,.61,.36,1); }
+
         @keyframes grid-move { from { background-position: 0 0, 0 0; } to { background-position: 28px 28px, 28px 28px; } }
         @keyframes grain {
           0% { transform: translate(0,0); } 10% { transform: translate(-5%,-10%); }
@@ -273,11 +267,38 @@ export default function EbsProvinceDetailPage() {
           80% { transform: translate(3%,35%); } 90% { transform: translate(-10%,10%); }
           100% { transform: translate(0,0); }
         }
+
+        /* Smooth enter animations */
+        @keyframes fade-up {
+          0% { opacity: 0; transform: translateY(12px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .anim-fade-up { opacity: 0; animation: fade-up .65s var(--ease-smooth) .06s forwards; will-change: transform, opacity; }
+        .anim-fade-up-2 { opacity: 0; animation: fade-up .70s var(--ease-smooth) .12s forwards; will-change: transform, opacity; }
+
         @media (prefers-reduced-motion: reduce) {
           .animate-[grid-move_22s_linear_infinite],
-          .animate-[grain_1.8s_steps(6)_infinite] { animation: none !important; }
+          .animate-[grain_1.8s_steps(6)_infinite],
+          .anim-fade-up, .anim-fade-up-2 {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+          }
         }
       `}</style>
     </main>
+  );
+}
+
+/* ปุ่มคัดลอกเล็ก ๆ ใส่ transition */
+function CopyBtn({ onClick, copied }: { onClick: () => void; copied: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/10 hover:bg-white/20 active:scale-[0.97] transition-all duration-200"
+      aria-label="คัดลอก"
+    >
+      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+    </button>
   );
 }

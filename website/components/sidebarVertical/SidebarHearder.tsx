@@ -10,7 +10,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ setOpen }) => {
     <div className="mb-3 flex items-center justify-between">
       <div className="flex items-center gap-2">
         <PlugZap className=" w-5 text-cyan-300" />
-        <span className=" font-semibold">IM - DDCE • Emergency API</span>
+        <span className=" font-semibold">DDCE API Request</span>
       </div>
       <button
         onClick={() => setOpen(false)}

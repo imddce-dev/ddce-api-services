@@ -301,3 +301,20 @@ input[type="password"]::-ms-reveal {
 textarea::-webkit-scrollbar { width: 10px; }
 textarea::-webkit-scrollbar-thumb { background: rgba(148,163,184,.25); border-radius: 8px; }
 textarea::-webkit-scrollbar-track { background: transparent; }
+
+
+/* --- pretty scrollbar for side nav --- */
+.toc-scroll { scrollbar-width: thin; scrollbar-color: rgba(148,163,184,.45) transparent; }
+.toc-scroll:hover { scrollbar-color: rgba(148,163,184,.75) transparent; }
+/* Chrome/Edge/WebKit */
+.toc-scroll::-webkit-scrollbar { width: 10px; }
+.toc-scroll::-webkit-scrollbar-track { background: transparent; border-radius: 9999px; }
+.toc-scroll::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(34,211,238,.35), rgba(16,185,129,.35));
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.toc-scroll:hover::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(34,211,238,.55), rgba(16,185,129,.55));
+}

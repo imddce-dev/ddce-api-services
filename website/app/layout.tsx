@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata,Viewport } from "next";
 import { Noto_Sans_Thai } from "next/font/google";
 import "../styles/globals.css";
 
@@ -7,7 +7,8 @@ const notoSansThai = Noto_Sans_Thai({
   weight: ["100", "300", "400", "500", "700"],
   variable: "--font-noto-sans-thai",
   display: "swap",
-})
+});
+
 export const metadata: Metadata = {
    icons: {
     icon: '/mophlogo.png',
@@ -15,12 +16,12 @@ export const metadata: Metadata = {
 };
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="th">
-      <body className={`${notoSansThai.variable} antialiased`}>
+    <html lang="th" className="dark" suppressHydrationWarning>
+      <body className={`${notoSansThai.variable} antialiased bg-[#060913]`}>
         {children}
       </body>
     </html>
