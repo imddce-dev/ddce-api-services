@@ -32,7 +32,6 @@ export default function LoginForm() {
   setIsLoading(true);
   try {
     await loginService(data);
-    alert("Login Successfully");
     router.push("/dashboard/Dashboard");
   } catch (error: any) {
     setApiError(error.message);

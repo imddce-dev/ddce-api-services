@@ -17,24 +17,28 @@ export const users = mysqlTable('users', {
 });
 
 export const agency_types = mysqlTable('agency_types', {
-  id:         serial('id').primaryKey(),
-  name:       varchar('name',{ length:191}).notNull(),
-  creatAt:    timestamp('creat_at').defaultNow().notNull(),
-})
+  id: int('id', { unsigned: true }).autoincrement().primaryKey(),
+  name: varchar('name', { length: 191 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
 
 export const organizer_group = mysqlTable('organizer_group', {
-  id:         serial('id').primaryKey(),
-  name:       varchar('name',{ length:191}).notNull(),
-  type_id:    int('type_id').notNull(),
-  creatAt:    timestamp('creat_at').defaultNow().notNull(),
-})
+  id: int('id', { unsigned: true }).autoincrement().primaryKey(),
+  org_type: int('org_type'),
+  name: varchar('name', { length: 191 }).notNull(),
+  agency_type_id: int('agency_type_id', { unsigned: true })
+    .notNull()
+    .references(() => agency_types.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
 
-export const organizer = mysqlTable('organizer',{
-  id:         serial('id').primaryKey(),
-  parent_id:  int('parent_id').notNull(),
-  name:       varchar('name',{ length:191}).notNull(),
-  creatAt:    timestamp('creat_at').defaultNow().notNull(),
-})
+export const organizer = mysqlTable('organizer', {
+  id: int('id', { unsigned: true }).autoincrement().primaryKey(),
+  organizer_group_id: int('organizer_group_id', { unsigned: true })
+    .references(() => organizer_group.id),
+  name: varchar('name', { length: 191 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
 
 export const users_session = mysqlTable('users_session',{
   id:           serial('id').primaryKey(),

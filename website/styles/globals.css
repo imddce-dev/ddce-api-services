@@ -132,7 +132,132 @@
 input[type="password"]::-ms-reveal {
   display: none;
 }
-/* ---------- Base & keyframes ---------- */
+
+/* ✅ Base Popup */
+.my-swal-popup {
+  border-radius: 20px !important;
+  color: #fff !important;
+}
+
+.my-swal-title {
+  color: #fff !important;
+  font-size: 1.4em !important;
+  font-weight: 600 !important;
+}
+
+.swal2-html-container { 
+  color: #fff !important; 
+  font-size: 1em !important;
+}
+.animated-icon-wrapper {
+  display: flex;
+  justify-content: center; /* จัดกลางแนวนอน */
+  align-items: center;     /* จัดกลางแนวตั้ง (ถ้ามีพื้นที่สูง) */
+  margin: 10px 0;          /* เว้นระยะบน-ล่าง */
+}
+
+.animated-icon {
+  display: block;           /* ทำให้ img เป็น block เพื่อ margin auto ใช้งานได้ */
+  width: 150px;
+  height: 150px;
+  animation: shake 0.5s infinite;
+}
+
+@keyframes shake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-2px, 0) rotate(-5deg); }
+  50% { transform: translate(2px, 0) rotate(5deg); }
+  75% { transform: translate(-2px, 0) rotate(-5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.my-swal-popup.error {
+  border: 2px solid red;
+}
+
+@keyframes shake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-2px, 0) rotate(-5deg); }
+  50% { transform: translate(2px, 0) rotate(5deg); }
+  75% { transform: translate(-2px, 0) rotate(-5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.my-swal-popup.error {
+  border: 2px solid red;
+}
+/* ===================== SUCCESS ===================== */
+.my-swal-popup.success {
+  background-color: rgba(20, 153, 120, 0.95) !important; /* เขียว */
+}
+
+.swal2-icon.swal2-success {
+  border-color: transparent !important;
+  color: white !important;
+}
+
+.swal2-success-ring {
+  stroke: none !important;
+  background: transparent !important;
+}
+
+.swal2-success-line-tip,
+.swal2-success-line-long {
+  background-color: white !important;
+}
+
+.swal2-success-circular-line-left,
+.swal2-success-circular-line-right {
+  background-color: transparent !important;
+}
+.my-swal-confirm-button-success{
+  background-color: #076943 !important;
+  font-size: 1.1em !important;
+  padding: 12px 24px !important;
+  border-radius: 8px !important;
+}
+
+/* ===================== ERROR ===================== */
+.my-swal-popup.error {
+  background-color: rgba(220, 53, 69, 0.90) !important; /* แดง */
+}
+
+.swal2-icon.swal2-error {
+  border-color: transparent !important;
+}
+
+.swal2-x-mark-line-left,
+.swal2-x-mark-line-right {
+  background-color: white !important;
+}
+.my-swal-confirm-button-error{
+  background-color: #a31806 !important;
+  font-size: 1.1em !important;
+  padding: 12px 24px !important;
+  border-radius: 8px !important;
+}
+/* ===================== WARNING ===================== */
+.my-swal-popup.warning {
+  background-color: rgba(255, 193, 7, 0.95) !important; /* เหลือง */
+}
+
+.swal2-icon.swal2-warning {
+  border-color: transparent !important;
+  color: white !important;
+}
+.my-swal-confirm-button.warning{
+  background-color: #e29c93 !important;
+  font-size: 1.1em !important;
+  padding: 12px 24px !important;
+  border-radius: 8px !important;
+}
+/* ===================== BUTTONS ===================== */
+
+.my-swal-cancel-button {
+  background-color: #f0ad4e !important;
+  color: #fff !important;
+}
+
 @layer base {
   * { @apply border-border outline-ring/50; }
   body { @apply bg-background text-foreground; }

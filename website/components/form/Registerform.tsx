@@ -7,6 +7,8 @@ import { Combobox, Transition } from '@headlessui/react';
 import PrivacyDialog from "@/components/common/PrivacyDialog"; 
 import { register as registerService } from '@/services/authervice';
 import { getOrg as getOrgService} from '@/services/orgService'
+import { CustomAlertSuccess, CustomAlertError } from '../../lib/alerts';
+import { useRouter } from "next/navigation";
 
 type FormValues = {
   fullname: string;
@@ -138,6 +140,7 @@ export function Registerform() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [openPrivacy, setOpenPrivacy] = useState(false);
   const [query, setQuery] = useState('');
+  const router = useRouter()
   
   const pwd = watch("password");
   const username = watch("username");
@@ -147,14 +150,8 @@ export function Registerform() {
  useEffect(() => {
   const loadOrganizations = async () => {
     try {
-      // response คือ object { success: true, data: [...] }
       const response = await getOrgService();
-
-      // ดึง Array ออกมาจาก property 'data'
-      // เพิ่ม || [] เพื่อป้องกันกรณีที่ data เป็น null หรือ undefined
       const organizationsArray = response.data || []; 
-
-      // ทำการ .map() กับ Array ที่ดึงออกมา
       const formattedOptions = organizationsArray.map(org => ({
         value: org.id,
         label: org.name,
@@ -163,10 +160,9 @@ export function Registerform() {
       setOrgOptions(formattedOptions);
     } catch (error) {
       console.error("Failed to fetch organizations", error);
-      setOrgOptions([]); // หากเกิดข้อผิดพลาด ให้ตั้งค่าเป็น Array ว่าง
+      setOrgOptions([]); 
     }
   };
-
   loadOrganizations();
 }, []);
  
@@ -196,33 +192,42 @@ export function Registerform() {
     () => scorePassword(pwd ?? "", [username ?? "", ...(fullname?.split(/\s+/) ?? [])]),
     [pwd, username, fullname]
   );
-  
   const strengthLabel = score <= 2 ? "อ่อนแอ" : score <= 5 ? "ปานกลาง" : "ปลอดภัย";
+ const onSubmit = async (values: FormValues) => {
+  if (values.password !== values.confirm) {
+    CustomAlertError(
+      "เกิดข้อผิดพลาด",
+      "รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง"
+    );
+    return;
+  }
 
-  const onSubmit = async (values: FormValues) => {
-    if (values.password !== values.confirm) {
-        alert("รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง");
-        return;
+  const { confirm, ...payload } = values;
+  try {
+    const result = await registerService(payload);
+    if (!result.success) {
+      CustomAlertError("เกิดข้อผิดพลาด", result.message || "ไม่สามารถลงทะเบียนได้");
+      return;
     }
-    const { confirm, ...payload } = values;
-    console.log(payload);
-    try {
-        const result = await registerService(payload);
-        if (result && result.success) {
-            alert('Register Successfully');
-            reset(); 
-        } else {
-            alert(result.message || 'An unknown error occurred.');
-        }
-    } catch (error) {
-        console.error('Registration failed:', error);
-        if (error instanceof Error) {
-            alert(error.message);
-        } else {
-            alert('เกิดข้อผิดพลาดที่ไม่คาดคิด');
-        }
+
+    const alertAc = await CustomAlertSuccess("ลงทะเบียนสำเร็จแล้ว", result.message || "ลงทะเบียนสำเร็จแล้ว");
+    if(alertAc.isConfirmed){
+      reset()
+      router.push("/auth/login");
     }
-  };
+
+  } catch (error) {
+    //console.error("Registration failed:", error);
+
+    let errorMessage = "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
+    CustomAlertError("เกิดข้อผิดพลาด", errorMessage);
+  }
+};
+
  
   return (
     <>
