@@ -3,13 +3,26 @@ import SidebarHeader from './SidebarHearder';
 import Navigation from './Navigation';
 import ApiStatus from './ApiStatus';
 import UserProfile from './UserProfile';
-
+import { useUserStore } from '@/stores/useUserStore';
+interface UserProfileData {
+  id: number,
+  fullname: string,
+  username: string,
+  email: string,
+  phone: string,
+  organizerId: string,
+  organizerName: string ; 
+}
+interface UserResponse {
+  data: UserProfileData;
+}
 interface VerticalSidebarProps {
   open: boolean;
+  // user: UserResponse | null; 
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
-
 const VerticalSidebar: React.FC<VerticalSidebarProps> = ({ open, setOpen }) => {
+  const userProfile = useUserStore((state) => state.userProfile);
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-40 w-70 max-w-[330px] h-screen transform border-r border-white/10 bg-slate-950/95 p-3 ring-1 ring-white/5 transition-transform md:static md:h-11/12 md:mt-4 md:translate-x-0 md:rounded-2xl 
@@ -27,11 +40,10 @@ const VerticalSidebar: React.FC<VerticalSidebarProps> = ({ open, setOpen }) => {
           <ApiStatus />
         </div>
         <div>
-          <UserProfile />
+          <UserProfile/>
         </div>
       </div>
     </aside>
   );
 };
-
 export default VerticalSidebar;

@@ -73,41 +73,13 @@ export const create = async (
       success: false,
       code: "UNKNOWN_ERROR",
       message: "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่",
-      detail: process.env.NODE_ENV === "development" ? err.message : undefined, // dev เท่านั้น
+      detail: process.env.NODE_ENV === "development" ? err.message : undefined, 
     };
   }
 };
 
 
-export const findByUsername = async (db: DrizzleDB, username: string) => {
-  return await db
-    .select().from(users)
-    .where(eq(users.username, username))
-    .limit(1)
-    .then((res) => res[0]);
-}
 
 
-export const RemoveUser = async (db: DrizzleDB, id: number) => {
-  return await db
-    .delete(users)
-    .where(eq(users.id, id))
-    .then(() => ({ id })); 
-}
 
-
-// export const EditUser = async (db: DrizzleDB, id: number,
-//   data: {
-//     prename: string;
-//     surname: string;
-//     organizer: number;
-//     email: string;
-//   }
-// ) => {
-//   await db
-//     .update(users)
-//     .set({...data})
-//     .where(eq(users.id, id));
-//   return { id, ...data };
-// }
 

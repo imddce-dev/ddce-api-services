@@ -13,6 +13,7 @@ import { coreMiddleware } from './middlewares/core.middleware';
 import { secureHeadersMiddleware } from './middlewares/secure-headers.middleware';
 import *  as rateLimited from './middlewares/rate-limit.middleware';
 import { verifyCsrf } from './middlewares/csrf.middleware';
+import { authMiddleware } from './middlewares/auth.middleware'
 type AppContext = {
   Variables: {
     db: DrizzleDB;
@@ -30,26 +31,26 @@ const main = async () => {
     console.log('MySQL and Redis connected successfully.');
     const rateLimiterMiddleware = rateLimited.createRateLimiter();
 
-    //app.use('api/app/*', verifyCsrf);
     app.use('*', secureHeadersMiddleware);
     app.use('*', rateLimiterMiddleware); 
     app.use('*', coreMiddleware);
     app.use('*', contextMiddleware);
      
   
-    const application = app.basePath('api/app/');
+    const auth = app.basePath('api/auth/')
+    auth.post('login', rateLimited.createAuthRateLimiter(), authController.login);
+    auth.post('logout', authMiddleware, verifyCsrf, authController.Logout);
+    auth.post('refresh', verifyCsrf, authController.RefreshToken);
+    auth.get('profile', authMiddleware, authController.GetuserByToken);
+    auth.post('verifyjti',authMiddleware,authController.VerifyJti);
+
+    const application = app.basePath('api/');
     application.get('org', orgController.getOrg);
 
-    const api = app.basePath('api/users');
-    api.get('/get',userController.getAllUsers);
-    api.post('/createusr',rateLimited.createAuthRateLimiter(), userController.createUser);
-    api.delete('/:id', userController.removeUser);
-    api.put('/:id', userController.editUser);
-    api.get('/getusr/:username', userController.getuserByusername);
-    api.post('/login',rateLimited.createAuthRateLimiter(),authController.login);
-    api.post('/logout',rateLimited.createAuthRateLimiter(), authController.Logout);
-    api.post('/refreshtoken',authController.RefreshToken)
-
+    const userApi = app.basePath('api/users');
+    userApi.use('*',rateLimited.createAuthRateLimiter())
+    userApi.post('/createusr', userController.createUser);
+  
     const port = parseInt(process.env.SERVER_PORT || '8080');
     serve({
       fetch: app.fetch,

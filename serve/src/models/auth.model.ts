@@ -1,8 +1,8 @@
-import { users, users_session } from '../configs/mysql/schema';
+import { organizer, users, users_session } from '../configs/mysql/schema';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import { generateToken, JWTPayload } from '../utils/authToken';
+import { generateToken, JWTPayload, verifyToken } from '../utils/authToken';
 import { generateHmacToken } from '../utils/hmactoken'
 import { DrizzleDB } from '../configs/type';
 import { error } from 'console';
@@ -219,4 +219,49 @@ export const forgotPassword = async (db: DrizzleDB,userId: number, type: string,
   } else{
     return { success: false, message: 'Invalid type' };
   }
+}
+
+export const getUserById = async (db: DrizzleDB, userId: string) => {
+    try {
+        const userIdAsNumber = parseInt(userId, 10);
+        const userRecord = await db
+            .select({
+                id: users.id,
+                name: users.fullname, 
+                email: users.email,
+                organizer: users.organizer,
+                organizerName: organizer.name,
+            })
+            .from(users)
+            .leftJoin(organizer, eq(users.organizer, organizer.id)) 
+            .where(eq(users.id, userIdAsNumber))
+            .limit(1);
+
+        return userRecord[0] || null;
+
+    } catch (error) {
+        console.error('getUserById Model Error:', error);
+        throw error; 
+    }
+};
+
+export const verifyJti = async(db:DrizzleDB, jti:string) => {
+    try{
+      const ResultJti = await db 
+       .select ({
+          id: users_session.id
+       })
+       .from(users_session)
+       .where(eq(users_session.jti,jti))
+
+       if(ResultJti.length === 0){
+        return {success: false}
+       }
+
+       return {success:true}
+
+    }catch (error){
+      console.error('GetUserByToken Error:', error);
+      return { success: false, message: 'Invalid or expired token', data: null };
+    }
 }

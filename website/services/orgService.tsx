@@ -10,6 +10,6 @@ export interface OrgApiResponse {
 }
 
 export const getOrg = async (): Promise<OrgApiResponse> => {
-  const apiResponse = await apiClient.get<OrgApiResponse>('/app/org');
+  const apiResponse = await apiClient.get<OrgApiResponse>('/org');
   return apiResponse.data;
 };

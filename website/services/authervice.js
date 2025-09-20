@@ -22,7 +22,7 @@ class ApiError extends Error {
 
 export const login = async (userLogin) => {
   try {
-    const response = await apiClient.post('/users/login', userLogin);
+    const response = await apiClient.post('/auth/login', userLogin);
     return response.data;
     
   } catch (error) {
@@ -94,7 +94,7 @@ export const register = async (userData) => {
 */
 export const forgetpassword = async(userId, type) =>{
     try{
-        const response = await apiClient.post('/users/logout',{
+        const response = await apiClient.post('/auth/logout',{
             userId,
             type
         })
@@ -114,7 +114,7 @@ export const forgetpassword = async(userId, type) =>{
  */
 export const logout = async(userId) => {
     try{
-
+       
     }catch (error) {
         if (error.response?.status !== 401){
             console.error('An unexpected login error occurred:', error)
@@ -123,5 +123,65 @@ export const logout = async(userId) => {
             return error.response.data
         }
         throw error;
+    }
+}
+/**
+ * ดึงข้อมูลโปรไฟล์ผู้ใช้จากเซิร์ฟเวอร์
+ * @param {string} token - Access Token ของผู้ใช้
+ * @returns {Promise<object>} ข้อมูลโปรไฟล์ หรือ object error
+ */
+export const getUserProfile = async (token) => {
+  try {
+    const response = await apiClient.get('/auth/profile', { 
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Cache-Control': 'no-cache', 
+      },
+    });
+    return response.data; 
+  } catch (error) {
+    if (error.response) {
+      console.error('API Error:', error.response.data);
+      return {
+        success: false,
+        message: error.response.data?.message || "เกิดข้อผิดพลาดจากระบบ",
+        data: error.response.data || null,
+      };
+    } else {
+      console.error('Network Error:', error.message);
+      return {
+        success: false,
+        message: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้",
+      };
+    }
+  }
+};
+
+/**
+ * 
+ * @param {string} jti 
+ * @returns {Promise<{success: boolean}>}
+ */
+export const verifyJti =  async (jti) => {
+    try{
+      const response = await apiClient.post('/auth/verifyjti',{
+        jti
+      })
+      return response.data
+    }catch (error){
+      if (error.response) {
+      console.error('API Error:', error.response.data);
+      return {
+        success: false,
+        message: error.response.data?.message || "เกิดข้อผิดพลาดจากระบบ",
+        data: error.response.data || null,
+      };
+    } else {
+      console.error('Network Error:', error.message);
+      return {
+        success: false,
+        message: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้",
+      };
+    }
     }
 }

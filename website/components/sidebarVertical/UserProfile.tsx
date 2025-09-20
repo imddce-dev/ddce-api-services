@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { LogOut, ChevronDown, User, KeyRound, Edit } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUserStore } from '@/stores/useUserStore';
 function useOnClickOutside(ref: React.RefObject<HTMLDivElement | null>, handler: () => void) {
   React.useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
@@ -19,15 +20,27 @@ function useOnClickOutside(ref: React.RefObject<HTMLDivElement | null>, handler:
     };
   }, [ref, handler]);
 }
-const UserProfile: React.FC = () => {
+interface UserInfo {
+  fullname?: string; 
+  org?: string;      
+}
+const UserProfile: React.FC<UserInfo> = ({fullname, org}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const userProfile = useUserStore((state) => state.userProfile);
   useOnClickOutside(dropdownRef, () => setIsOpen(false));
   const dropdownVariants = {
-    hidden: { opacity: 0, y: 10, scale: 0.95 }, // <-- เปลี่ยนจาก -10 เป็น 10
+    hidden: { opacity: 0, y: 10, scale: 0.95 }, 
     visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 300, damping: 25 } },
-    exit: { opacity: 0, y: 10, scale: 0.95, transition: { duration: 0.15 } } // <-- เปลี่ยนจาก -10 เป็น 10
+    exit: { opacity: 0, y: 10, scale: 0.95, transition: { duration: 0.15 } } 
   } as const;
+
+
+  const handleLogout = async () => {
+    
+  }
+
+
 
   return (
     <div ref={dropdownRef} className="relative mt-auto border-t border-white/10 pt-3">
@@ -40,8 +53,8 @@ const UserProfile: React.FC = () => {
             <User className="h-5 w-5 text-cyan-300"/>
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-100">ออม น้อยม่วง</p>
-            <p className="text-xs text-slate-400">Administrator</p>
+            <p className="text-sm font-semibold text-slate-100">{userProfile?.name}</p>
+            <p className="text-xs text-slate-400">{userProfile?.organizerName}</p>
           </div>
         </div>
         <motion.div
@@ -72,7 +85,9 @@ const UserProfile: React.FC = () => {
                 </a>
               </li>
               <li className="border-t border-white/10 pt-1 mt-1">
-                <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-rose-400 hover:bg-rose-500/10">
+                <button 
+                onClick={handleLogout}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-rose-400 hover:bg-rose-500/10 cursor-pointer">
                   <LogOut className="h-4 w-4" /> ออกจากระบบ
                 </button>
               </li>
