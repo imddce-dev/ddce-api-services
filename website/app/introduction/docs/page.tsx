@@ -381,8 +381,9 @@ export default function DocsHome() {
                 DDCE API Request
               </h1>
               <p className="mt-4 max-w-3xl text-lg text-slate-200/90">
-                ระบบบริการข้อมูลเหตุการณ์โรคและภัยสุขภาพ (EBS) ของกรมควบคุมโรค
-                โดยกลุ่มงาน IM — โปร่งใส ปลอดภัย นำไปต่อยอดได้ง่าย
+           ระบบบริการข้อมูลเหตุการณ์โรคและภัยสุขภาพ (Event Based Surveillance) <br/>กรมควบคุมโรค
+                ผ่านระบบ API โดยกลุ่มงานการจัดการข้อมูลภาวะฉุกเฉินทางสาธารณสุข  <br/>Information
+                Management (IM) <br/>กองควบคุมโรคและภัยสุขภาพในภาวะฉุกเฉิน กรมควบคุมโรค
               </p>
             </FadeIn>
           </div>
