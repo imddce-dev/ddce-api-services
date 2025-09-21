@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useMemo, useState, useRef, useEffect } from "react";
-// ลบ: import Link from "next/link";
 import { ChevronDown, Check as CheckIcon, X, FileDown } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import {
@@ -57,7 +56,7 @@ export type RequestFormValues = {
   // แนบไฟล์เพื่อการพิสูจน์ตัวตน (ใช้ Array เพื่อให้ลบได้)
   authAttachment?: File[];
 
-  // บังคับ 20 req/นาที เท่านั้น
+  // บังคับ 60 req/นาที เท่านั้น
   rateLimitPerMinute: number;
 
   agree: boolean;
@@ -143,7 +142,7 @@ export default function APIForm({
     watch,
     setValue,
     control,
-    trigger, // <-- ใช้กระตุ้น validation ของ authAttachment
+    trigger,
     formState: { errors, isValid, isSubmitting },
     reset,
   } = useForm<RequestFormValues>({
@@ -154,7 +153,7 @@ export default function APIForm({
       dataSource: undefined as unknown as DataSource,
       dataFormat: "json",
       authMethod: "client_credentials",
-      rateLimitPerMinute: 60,
+      rateLimitPerMinute: 60, // <-- 60
       authAttachment: [],
       ...defaultValues,
     },
@@ -189,7 +188,7 @@ export default function APIForm({
   const validateAllowedIPs = (v?: string) => {
     if (!v) return true;
     const lines = v
-      .split(/\น+/)
+      .split(/\n+/) // <-- แก้เป็น \n
       .map((l) => l.trim())
       .filter(Boolean);
     return (
@@ -209,11 +208,11 @@ export default function APIForm({
       return;
     }
     // บังคับแนบ PDF อย่างน้อย 1 ไฟล์
-   if (authFiles.length === 0) {
-  setFileError("ต้องแนบเอกสาร DSA (PDF) อย่างน้อย 1 ไฟล์");
-  await trigger("authAttachment");
-  return;
-}
+    if (authFiles.length === 0) {
+      setFileError("ต้องแนบไฟล์ PDF อย่างน้อย 1 ไฟล์");
+      await trigger("authAttachment");
+      return;
+    }
     if (fileError) return;
 
     setSubmitted(values);
@@ -242,34 +241,31 @@ export default function APIForm({
 
   /* -------- แนบไฟล์: PDF เท่านั้น + ลบได้ -------- */
   const onPickFiles: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-  const list = e.target.files;
-  if (!list || list.length === 0) return;
+    const list = e.target.files;
+    if (!list || list.length === 0) return;
 
-  const incoming = Array.from(list);
+    const incoming = Array.from(list);
 
-  // เอาเฉพาะไฟล์ .pdf ที่ชื่อไฟล์มี "dsa" (ไม่สนตัวพิมพ์เล็ก-ใหญ่)
-  const onlyDsaPdf = incoming.filter(
-    (f) =>
-      (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) &&
-      /dsa/i.test(f.name)
-  );
-  const rejected = incoming.filter((f) => !onlyDsaPdf.includes(f));
+    // เอาเฉพาะไฟล์ .pdf (ไม่บังคับว่าชื่อมี dsa)
+    const onlyPdf = incoming.filter(
+      (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name)
+    );
+    const rejected = incoming.filter((f) => !onlyPdf.includes(f));
 
-  if (rejected.length > 0) {
-    setFileError("อนุญาตเฉพาะไฟล์เอกสาร DSA (PDF) เท่านั้น");
-  } else {
-    setFileError(null);
-  }
+    if (rejected.length > 0) {
+      setFileError("อนุญาตเฉพาะไฟล์ PDF เท่านั้น");
+    } else {
+      setFileError(null);
+    }
 
-  // รวมไฟล์ + กันซ้ำด้วยชื่อ+ขนาด
-  const map = new Map<string, File>();
-  [...authFiles, ...onlyDsaPdf].forEach((f) => map.set(`${f.name}:${f.size}`, f));
-  setAuthFiles(Array.from(map.values()));
+    // รวมไฟล์ + กันซ้ำด้วยชื่อ+ขนาด
+    const map = new Map<string, File>();
+    [...authFiles, ...onlyPdf].forEach((f) => map.set(`${f.name}:${f.size}`, f));
+    setAuthFiles(Array.from(map.values()));
 
-  // reset ค่า input เพื่อเลือกไฟล์ซ้ำได้
-  e.currentTarget.value = "";
-};
-
+    // reset ค่า input เพื่อเลือกไฟล์ซ้ำได้
+    e.currentTarget.value = "";
+  };
 
   const removeFile = (key: string) => {
     setAuthFiles((prev) => prev.filter((f) => `${f.name}:${f.size}` !== key));
@@ -584,7 +580,7 @@ export default function APIForm({
                   {...register("rateLimitPerMinute", {
                     valueAsNumber: true,
                     validate: (v) =>
-                      v === 20 || "Rate limit ต้องเป็น 60 ครั้งต่อนาทีเท่านั้น",
+                      v === 60 || "Rate limit ต้องเป็น 60 ครั้งต่อนาทีเท่านั้น",
                   })}
                 />
                 <span className="text-sm text-slate-300">ครั้ง/นาที</span>
@@ -593,7 +589,7 @@ export default function APIForm({
                 </Badge>
               </div>
               <p className="mt-1 text-[11px] text-slate-400">
-                คำขอทั้งหมดในสัญญานี้ถูกจำกัดที่ 20 ครั้งต่อนาที (per client)
+                คำขอทั้งหมดในสัญญานี้ถูกจำกัดที่ <strong>60 ครั้งต่อนาที</strong> (per client)
               </p>
             </Field>
           </SectionCard>
@@ -662,62 +658,60 @@ export default function APIForm({
             )}
 
             {/* แนบไฟล์การพิสูจน์ตัวตน (PDF เท่านั้น) */}
-          <Field
-  label="แนบไฟล์เอกสาร DSA * (PDF เท่านั้น, แนบหลายไฟล์ได้)"
-  hint="รองรับไฟล์ .pdf ที่เป็นเอกสาร DSA เท่านั้น เช่น แบบฟอร์ม/หนังสือ DSA"
-  error={fileError || ((errors.authAttachment?.message as string) ?? undefined)}
->
-  <input
-    type="file"
-    multiple
-    accept="application/pdf,.pdf"
-    onChange={onPickFiles}
-    className="block w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-slate-200 file:mr-3 file:rounded-lg file:border-0 file:bg-cyan-500/20 file:px-3 file:py-1.5 file:text-cyan-200 hover:bg-white/10 focus:outline-none focus:ring-4 focus:ring-cyan-400/20"
-  />
-
-  {/* ฟิลด์ซ่อนเพื่อผูก validation กับ react-hook-form */}
-  <input
-    type="hidden"
-    {...register("authAttachment", {
-      validate: (arr) => {
-        const files = (arr as File[]) || [];
-        if (files.length === 0) {
-          return "ต้องแนบเอกสาร DSA (PDF) อย่างน้อย 1 ไฟล์";
-        }
-        const ok = files.every(
-          (f) => /\.pdf$/i.test(f.name) && /dsa/i.test(f.name)
-        );
-        return ok || "ต้องแนบเฉพาะเอกสาร DSA (PDF) เท่านั้น";
-      },
-    })}
-  />
-
-  {authFiles.length > 0 && (
-    <div className="mt-2 flex max-h-40 flex-wrap gap-2 overflow-auto">
-      {authFiles.map((f) => {
-        const key = `${f.name}:${f.size}`;
-        return (
-          <span
-            key={key}
-            className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-200"
-            title={f.name}
-          >
-            <Paperclip className="h-3.5 w-3.5 text-slate-400" />
-            <span className="max-w-[220px] truncate">{f.name}</span>
-            <button
-              type="button"
-              onClick={() => removeFile(key)}
-              className="rounded-md p-1 text-slate-400 hover:bg-white/10 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-white/20"
-              aria-label={`นำออก ${f.name}`}
+            <Field
+              label="แนบไฟล์เอกสาร * (PDF เท่านั้น, แนบหลายไฟล์ได้)"
+              hint="รองรับไฟล์ .pdf เท่านั้น เช่น หนังสือ/แบบฟอร์มที่เกี่ยวข้อง"
+              error={fileError || ((errors.authAttachment?.message as string) ?? undefined)}
             >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </span>
-        );
-      })}
-    </div>
-  )}
-</Field>
+              <input
+                type="file"
+                multiple
+                accept="application/pdf,.pdf"
+                onChange={onPickFiles}
+                className="block w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-slate-200 file:mr-3 file:rounded-lg file:border-0 file:bg-cyan-500/20 file:px-3 file:py-1.5 file:text-cyan-200 hover:bg-white/10 focus:outline-none focus:ring-4 focus:ring-cyan-400/20"
+              />
+
+              {/* ฟิลด์ซ่อนเพื่อผูก validation กับ react-hook-form */}
+              <input
+                type="hidden"
+                {...register("authAttachment", {
+                  validate: (arr) => {
+                    const files = (arr as File[]) || [];
+                    if (files.length === 0) {
+                      return "ต้องแนบไฟล์ PDF อย่างน้อย 1 ไฟล์";
+                    }
+                    const ok = files.every((f) => /\.pdf$/i.test(f.name));
+                    return ok || "ต้องแนบเฉพาะไฟล์ PDF เท่านั้น";
+                  },
+                })}
+              />
+
+              {authFiles.length > 0 && (
+                <div className="mt-2 flex max-h-40 flex-wrap gap-2 overflow-auto">
+                  {authFiles.map((f) => {
+                    const key = `${f.name}:${f.size}`;
+                    return (
+                      <span
+                        key={key}
+                        className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-200"
+                        title={f.name}
+                      >
+                        <Paperclip className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="max-w-[220px] truncate">{f.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(key)}
+                          className="rounded-md p-1 text-slate-400 hover:bg-white/10 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-white/20"
+                          aria-label={`นำออก ${f.name}`}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </Field>
 
             <Field
               label="IP / CIDR ที่อนุญาต (ถ้ามี)"
@@ -785,7 +779,7 @@ export default function APIForm({
               ล้างแบบฟอร์ม
             </button>
 
-            {/* ปุ่มเปิดเอกสาร DSA แทนปุ่มกลับหน้าหลัก */}
+            {/* ปุ่มเปิดเอกสารตัวอย่าง/แนบ */}
             <a
               href="https://drive.google.com/drive/folders/1cpPBejMWzIhgMDsXr4tmZj1G6bUEf2vj?usp=sharing"
               target="_blank"
@@ -793,7 +787,7 @@ export default function APIForm({
               className="inline-flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 text-sm font-medium text-slate-200 hover:bg-white/10 focus:outline-none focus:ring-4 focus:ring-white/20"
             >
               <FileDown className="mr-2 h-4 w-4" />
-             Download เอกสาร DSA
+              Download เอกสารตัวอย่าง (PDF)
             </a>
           </div>
           <p className="mt-2 text-[11px] text-slate-400">
@@ -1096,28 +1090,7 @@ function SummaryModal({
           </div>
 
           {/* Explanations in dialog */}
-          <div className="mt-4 space-y-2">
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">
-              คำขอนี้จะได้รับการพิจารณาผลใน <strong>7–15 วันทำการ</strong> และทีมงานจะติดต่อกลับทางอีเมลที่ระบุ
-            </div>
-            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-3 text-sm text-cyan-200">
-              โดยสัญญาการขอมีระยะเวลา <strong>1 ปี</strong> นับจาก{" "}
-              <span className="mx-1 underline decoration-cyan-300">{formatDate(contractStart)}</span>
-              ถึง{" "}
-              <span className="mx-1 underline decoration-cyan-300">{formatDate(contractEnd)}</span>
-              รวมเป็นเวลา 1 ปีเต็ม
-            </div>
-            {values.authMethod === "apikey" && (
-              <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-200">
-                อายุ <strong>API Key</strong> อยู่ได้ <strong>6 เดือน</strong> นับจากวันที่อนุมัติ
-                (ประมาณ{" "}
-                <span className="underline decoration-amber-300">
-                  {formatDate(apiKeyExpire)}
-                </span>
-                ) หลังจากนั้นสามารถต่ออายุ/ออกคีย์ใหม่ได้
-              </div>
-            )}
-          </div>
+          <DialogNotes authMethod={values.authMethod} />
         </div>
 
         {/* Footer ติดล่าง */}
@@ -1144,6 +1117,37 @@ function SummaryModal({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function DialogNotes({ authMethod }: { authMethod: AuthMethod }) {
+  const today = useMemo(() => new Date(), []);
+  const contractStart = today;
+  const contractEnd = addYears(today, 1);
+  const apiKeyExpire = addMonths(today, 6);
+  return (
+    <div className="mt-4 space-y-2">
+      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+        คำขอนี้จะได้รับการพิจารณาผลใน <strong>7–15 วันทำการ</strong> และทีมงานจะติดต่อกลับทางอีเมลที่ระบุ
+      </div>
+      <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-3 text-sm text-cyan-200">
+        โดยสัญญาการขอมีระยะเวลา <strong>1 ปี</strong> นับจาก{" "}
+        <span className="mx-1 underline decoration-cyan-300">{formatDate(contractStart)}</span>
+        ถึง{" "}
+        <span className="mx-1 underline decoration-cyan-300">{formatDate(contractEnd)}</span>
+        รวมเป็นเวลา 1 ปีเต็ม
+      </div>
+      {authMethod === "apikey" && (
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-200">
+          อายุ <strong>API Key</strong> อยู่ได้ <strong>6 เดือน</strong> นับจากวันที่อนุมัติ
+          (ประมาณ{" "}
+          <span className="underline decoration-amber-300">
+            {formatDate(apiKeyExpire)}
+          </span>
+          ) หลังจากนั้นสามารถต่ออายุ/ออกคีย์ใหม่ได้
+        </div>
+      )}
     </div>
   );
 }

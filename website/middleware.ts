@@ -13,7 +13,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-   
     const secretKey = process.env.JWT_SECRET;
     if (!secretKey) {
       console.error("[Middleware] JWT_SECRET not set in environment");
@@ -21,15 +20,14 @@ export async function middleware(request: NextRequest) {
     }
     const secret = new TextEncoder().encode(secretKey);
 
-    
     const { payload } = await jwtVerify(accessToken, secret);
 
     const jti = payload.jti;
     if (!jti || typeof jti !== "string") {
       throw new Error("JTI not found in token payload");
     }
-
-    const baseURL = process.env.NEXT_PUBLIC_API_HONO_URL;
+    
+    const baseURL = process.env.NEXT_PUBLIC_API_URL;
     const verifyUrl = new URL("/api/auth/verifyjti", baseURL);
     console.log("[Middleware] Fetching token verification:", verifyUrl.toString());
 
@@ -68,7 +66,6 @@ export async function middleware(request: NextRequest) {
   }
 }
 
-// 7️⃣ กำหนด matcher สำหรับ middleware
 export const config = {
   matcher: ["/dashboard/:path*"],
 };

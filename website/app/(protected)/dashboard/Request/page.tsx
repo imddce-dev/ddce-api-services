@@ -12,7 +12,7 @@ export default function RequestPage() {
     });
   }, [setPageInfo]);
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-screen  p-4 text-slate-100">
         <APIForm />
     </div>
   );

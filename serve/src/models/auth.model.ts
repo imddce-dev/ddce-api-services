@@ -97,14 +97,11 @@ export const Login = async (db: DrizzleDB, username : string, password: string) 
 
 export const Logout = async (db: DrizzleDB, userId: number) =>{
   try{
-
     await db.delete(users_session).where(eq(users_session.user_id, userId))
-    return {status: true, message: 'Logout successful'}
-
-
+    return {succes: true, message: 'Logout successful'}
   }catch(error){
     console.error(error);
-    return {status: false, message: 'Connot Logout user'}
+    return {succes: false, message: 'Connot Logout user'}
   }
 }
 

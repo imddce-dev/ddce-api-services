@@ -81,7 +81,7 @@ export const Logout = async (c: Context) => {
         return c.json({ success: false, message: 'User ID is required' }, 400);
       }
       const result = await authModel.Logout(db, userId)
-      if (result.status === true){
+      if (result.succes){
         deleteCookie(c, 'accessToken', { path: '/' });
         deleteCookie(c, 'refreshToken', { path: '/api/auth/refresh' });
         deleteCookie(c, 'csrf_token', { path: '/' });

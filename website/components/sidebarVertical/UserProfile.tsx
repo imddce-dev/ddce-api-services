@@ -4,6 +4,11 @@ import React, { useState, useRef } from 'react';
 import { LogOut, ChevronDown, User, KeyRound, Edit } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserStore } from '@/stores/useUserStore';
+import { CustomAlertError } from '@/lib/alerts';
+import { logout } from '@/services/authervice';
+import { useRouter } from "next/navigation";
+
+
 function useOnClickOutside(ref: React.RefObject<HTMLDivElement | null>, handler: () => void) {
   React.useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
@@ -24,7 +29,10 @@ interface UserInfo {
   fullname?: string; 
   org?: string;      
 }
+
+
 const UserProfile: React.FC<UserInfo> = ({fullname, org}) => {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userProfile = useUserStore((state) => state.userProfile);
@@ -36,11 +44,24 @@ const UserProfile: React.FC<UserInfo> = ({fullname, org}) => {
   } as const;
 
 
+ const handleedit =async () =>{
+     CustomAlertError("","ยังไม่เปิดใช้บริการ")
+ }
+
+ const handlepassword =async () =>{
+     CustomAlertError("","ยังไม่เปิดใช้บริการ")
+ }
+
   const handleLogout = async () => {
-    
+     const id = userProfile?.id || 0
+     const result = await logout(id)
+     if(result.success){
+        router.push("/auth/login");
+        return
+     }else{
+        CustomAlertError("เกิดความผิดพลาด","ไม่สามารถออกจากระบบได้")
+     }
   }
-
-
 
   return (
     <div ref={dropdownRef} className="relative mt-auto border-t border-white/10 pt-3">
@@ -75,12 +96,12 @@ const UserProfile: React.FC<UserInfo> = ({fullname, org}) => {
           >
             <ul className="space-y-1 text-sm text-slate-300">
               <li>
-                <a href="/profile/edit" className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-white/5">
+                <a href="#" onClick={handleedit} className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-white/5">
                   <Edit className="h-4 w-4 text-slate-400" /> แก้ไขโปรไฟล์
                 </a>
               </li>
               <li>
-                <a href="/profile/change-password" className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-white/5">
+                <a href="#" onClick={handlepassword} className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-white/5">
                   <KeyRound className="h-4 w-4 text-slate-400" /> เปลี่ยนรหัสผ่าน
                 </a>
               </li>

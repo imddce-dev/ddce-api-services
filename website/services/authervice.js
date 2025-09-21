@@ -110,19 +110,30 @@ export const forgetpassword = async(userId, type) =>{
     }
 }
 /**
- * @param {number} userId
+ * @param {number} userId - 
+ * @returns {Promise<{success: boolean, message: string, data?: object}>}
  */
 export const logout = async(userId) => {
     try{
-       
+       const response = await apiClient.post('auth/logout',{
+        userId
+       })
+       return response.data
     }catch (error) {
-        if (error.response?.status !== 401){
-            console.error('An unexpected login error occurred:', error)
-        }
-        if (error.response && error.response.data){
-            return error.response.data
-        }
-        throw error;
+        if (error.response) {
+      console.error('API Error:', error.response.data);
+      return {
+        success: false,
+        message: error.response.data?.message || "เกิดข้อผิดพลาดจากระบบ",
+        data: error.response.data || null,
+      };
+    } else {
+      console.error('Network Error:', error.message);
+      return {
+        success: false,
+        message: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้",
+      };
+    }
     }
 }
 /**
