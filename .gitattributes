@@ -1,4 +1,4 @@
-
+.env
 * text=auto
 *.js      text
 *.ts      text

@@ -52,16 +52,16 @@ export default function LoginForm() {
   return (
     <>
       <CardContent>
-      <div className="h-auto"> {/* 2. สร้างพื้นที่ว่างสำหรับ Error Message */}
+      <div className="h-auto"> 
         <AnimatePresence>
           {apiError && (
             <motion.div
-              key={apiError} // 3. Key สำหรับ AnimatePresence
-              className="flex items-center justify-center gap-2 rounded-md border border-red-500/30 bg-red-500/60 p-1 text-sm  text-white" // 4. ปรับ Style ให้สวยขึ้น
-              initial={{ opacity: 0, y: -10, scale: 0.95 }} // 5. Style เริ่มต้น (โปร่งใส, อยู่สูงกว่าปกติเล็กน้อย)
-              animate={{ opacity: 1, y: 0, scale: 1 }}     // 6. Style ตอนปรากฏ (ทึบแสง, กลับมาตำแหน่งปกติ)
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}      // 7. Style ตอนหายไป
-              transition={{ duration: 0.2, ease: "easeInOut" }} // 8. กำหนดความเร็วและสไตล์ของ Animation
+              key={apiError} 
+              className="flex items-center justify-center gap-2 rounded-md border border-red-500/30 bg-red-500/60 p-1 text-sm  text-white" 
+              initial={{ opacity: 0, y: -10, scale: 0.95 }} 
+              animate={{ opacity: 1, y: 0, scale: 1 }}     
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}      
+              transition={{ duration: 0.2, ease: "easeInOut" }} 
             >
               <MessageSquareWarning className="h-4 w-4 flex-shrink-0" />
               <span>{apiError}</span>

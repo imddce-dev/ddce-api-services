@@ -1,51 +1,74 @@
 import { NextResponse } from "next/server";
-import { NextRequest } from "next/server";
-import { jwtVerify } from 'jose';
-import * as authModel from "@/services/authervice"; 
+import type { NextRequest } from "next/server";
+import { jwtVerify } from "jose";
 
 export async function middleware(request: NextRequest) {
-    const accessToken = request.cookies.get('accessToken')?.value;
+  try {
+    
+    const accessToken = request.cookies.get("accessToken")?.value;
+
     if (!accessToken) {
-        const loginUrl = new URL('/auth/login', request.url);
-        return NextResponse.redirect(loginUrl);
+      console.log("[Middleware] No accessToken cookie found");
+      const loginUrl = new URL("/auth/login", request.url);
+      return NextResponse.redirect(loginUrl);
     }
-    try {
-        const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-        const { payload } = await jwtVerify(accessToken, secret); 
 
-        const jti = payload.jti;
+   
+    const secretKey = process.env.JWT_SECRET;
+    if (!secretKey) {
+      console.error("[Middleware] JWT_SECRET not set in environment");
+      throw new Error("JWT_SECRET not configured");
+    }
+    const secret = new TextEncoder().encode(secretKey);
 
-        if (!jti || typeof jti !== 'string') {
-            throw new Error("JTI not found in token");
-        }
-        const baseURL =  process.env.NEXT_PUBLIC_API_URL || '/api'
-        const verifyUrl = new URL(baseURL+"/auth/verifyjti", request.url);
-        const response = await fetch(verifyUrl, {
-        method: 'POST',
-        headers: {
-            'Cookie': `accessToken=${accessToken}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ jti: jti }),
+    
+    const { payload } = await jwtVerify(accessToken, secret);
+
+    const jti = payload.jti;
+    if (!jti || typeof jti !== "string") {
+      throw new Error("JTI not found in token payload");
+    }
+
+    const baseURL = process.env.NEXT_PUBLIC_API_HONO_URL;
+    const verifyUrl = new URL("/api/auth/verifyjti", baseURL);
+    console.log("[Middleware] Fetching token verification:", verifyUrl.toString());
+
+    const response = await fetch(verifyUrl.toString(),{
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": `accessToken=${accessToken}`, 
+      },
+      body: JSON.stringify({ jti }),
     });
+     console.log(response)
     if (!response.ok) {
-        throw new Error(`API responded with status: ${response.status}`);
+      console.error(`[Middleware] API responded with status ${response.status}`);
+      const text = await response.text();
+      console.error("[Middleware] API response text:", text);
+      throw new Error("API verification failed");
     }
-    const data = await response.json(); 
+
+    const data = await response.json();
     if (data.success) {
-        return NextResponse.next();
+      console.log("[Middleware] Token verified successfully");
+      return NextResponse.next();
     }
-    throw new Error("Token verification failed (success: false)");
 
-} catch (error) {
-    console.error("Middleware Error:");
-    const loginUrl = new URL('/auth/login', request.url);
+    console.error("[Middleware] Token verification returned success=false");
+    throw new Error("Token verification failed");
+
+  } catch (error: any) {
+    console.error("[Middleware Error]", error.message);
+
+    const loginUrl = new URL("/auth/login", request.url);
     const response = NextResponse.redirect(loginUrl);
-    response.cookies.delete('accessToken');
+    response.cookies.delete("accessToken");
     return response;
-}
+  }
 }
 
+// 7️⃣ กำหนด matcher สำหรับ middleware
 export const config = {
-    matcher: ['/dashboard/:path*'],
+  matcher: ["/dashboard/:path*"],
 };
