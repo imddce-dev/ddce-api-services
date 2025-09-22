@@ -28,21 +28,21 @@ const ApiStatus: React.FC = () => {
             </div>
             <ul className="space-y-1">
                 <li className="flex items-center justify-between">
-                    <span>Gateway</span>
-                    <StatusBadge status="ปกติ" color="green" />
+                    <span>M-ebs</span>
+                    <StatusBadge status="หยุดทำงาน" color="red" />
                 </li>
                 <li className="flex items-center justify-between">
-                    <span>Events</span>
-                    <StatusBadge status="ปกติ" color="green" />
+                    <span>EBS-DDC</span>
+                    <StatusBadge status="หยุดทำงาน" color="red" />
                 </li>
                 <li className="flex items-center justify-between">
-                    <span>Lab</span>
-                    <StatusBadge status="ชะลอตัว" color="yellow" />
+                    <span>EBS-Province</span>
+                    <StatusBadge status="หยุดทำงาน" color="red" />
                 </li>
             </ul>
-            <Link href="/status" className="mt-2 inline-flex items-center gap-1 text-cyan-300 hover:text-cyan-200">
+            {/* <Link href="/status" className="mt-2 inline-flex items-center gap-1 text-cyan-300 hover:text-cyan-200">
                 รายงานสถานะทั้งหมด <ChevronRight className="h-4 w-4" />
-            </Link>
+            </Link> */}
         </div>
     );
 };

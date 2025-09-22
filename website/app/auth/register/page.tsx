@@ -17,10 +17,10 @@ export default function RegisterPage() {
             </div>
             <CardHeader className="pb-1 px-6 md:px-8">
               <CardTitle className="font-semibold text-slate-100 text-center text-2xl">
-                Application Program Interface(API)
+                DDCE Application Program Interface
               </CardTitle>
               <CardTitle className="text-white text-center text-[16px]">
-                บริการเชื่อโยงข้อมูล การจัดการข้อมูลภาวะฉุกเฉินทางสาธารณสุข
+                ระบบบริการข้อมูล การจัดการข้อมูลภาวะฉุกเฉินทางสาธารณสุข
               </CardTitle>
             </CardHeader>
             <div className="px-6 md:px-8 pb-5">

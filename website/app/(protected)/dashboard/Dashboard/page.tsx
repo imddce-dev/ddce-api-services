@@ -1,6 +1,9 @@
 "use client";
 import React, { useEffect } from "react";
 import Link from "next/link";
+import Head from "next/head";
+
+
 import {
   Menu, X,  Bell, LogOut, ChevronRight, ChevronDown,
   LayoutDashboard, BookOpen, FileText, Library, Inbox, Settings, Shield, LifeBuoy,
@@ -16,9 +19,9 @@ type RequestRow = {
 };
 
 const recent: RequestRow[] = [
-  { id: "REQ-25-0009", system: "EBS Sync Chiangmai", createdAt: "2025-09-15 10:22", scope: ["read:events", "notify:send"], status: "pending" },
-  { id: "REQ-25-0008", system: "M-EBS Dashboard", createdAt: "2025-09-12 14:05", scope: ["read:events"], status: "approved" },
-  { id: "REQ-25-0007", system: "Provincial Lab Bridge", createdAt: "2025-09-10 09:10", scope: ["read:lab"], status: "rejected" },
+  // { id: "REQ-25-0009", system: "EBS Sync Chiangmai", createdAt: "2025-09-15 10:22", scope: ["read:events", "notify:send"], status: "pending" },
+  // { id: "REQ-25-0008", system: "M-EBS Dashboard", createdAt: "2025-09-12 14:05", scope: ["read:events"], status: "approved" },
+  // { id: "REQ-25-0007", system: "Provincial Lab Bridge", createdAt: "2025-09-10 09:10", scope: ["read:lab"], status: "rejected" },
 ];
 
 function StatusPill({ s }: { s: RequestRow["status"] }) {
@@ -76,9 +79,9 @@ export default function DashboardPage() {
       <div className="mx-auto flex max-w-[1280px] gap-5 px-4 py-5 md:px-6">
         <main className="relative flex-1">
           <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <Stat title="คำขอทั้งหมด" value="12" foot="+2 ภายใน 7 วัน" icon={<FileText className="h-4 w-4" />} />
-            <Stat title="รอตรวจสอบ" value="4" foot="เฉลี่ย 2-3 วันทำการ" icon={<Clock className="h-4 w-4" />} />
-            <Stat title="คีย์ที่ใช้งานอยู่" value="3" foot="อัปเดตล่าสุด 2 ชม." icon={<KeyRound className="h-4 w-4" />} />
+            <Stat title="คำขอทั้งหมด" value="0" foot="+2 ภายใน 7 วัน" icon={<FileText className="h-4 w-4" />} />
+            <Stat title="รอตรวจสอบ" value="0" foot="เฉลี่ย 2-3 วันทำการ" icon={<Clock className="h-4 w-4" />} />
+            <Stat title="คีย์ที่ใช้งานอยู่" value="0" foot="อัปเดตล่าสุด 2 ชม." icon={<KeyRound className="h-4 w-4" />} />
           </section>
           <section className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
             <QuickCard
@@ -123,9 +126,9 @@ export default function DashboardPage() {
                 </svg>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-slate-300">
-                <span className="inline-flex items-center gap-1"><Cpu className="h-4 w-4 text-cyan-300" /> Gateway</span>
-                <span className="inline-flex items-center gap-1"><Activity className="h-4 w-4 text-emerald-300" /> Events</span>
-                <span className="inline-flex items-center gap-1"><Database className="h-4 w-4 text-amber-300" /> Lab</span>
+                <span className="inline-flex items-center gap-1"><Cpu className="h-4 w-4 text-cyan-300" /> Mebs</span>
+                <span className="inline-flex items-center gap-1"><Activity className="h-4 w-4 text-emerald-300" /> EbS-DDC</span>
+                <span className="inline-flex items-center gap-1"><Database className="h-4 w-4 text-amber-300" /> EbS-Pro..</span>
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-0 ring-1 ring-inset ring-white/5 lg:col-span-2 overflow-hidden">
