@@ -1,4 +1,4 @@
-import { mysqlTable, serial, varchar, timestamp, int, boolean } from 'drizzle-orm/mysql-core';
+import { mysqlTable, serial, varchar, timestamp, int, boolean, text } from 'drizzle-orm/mysql-core';
 
 export const users = mysqlTable('users', {
   id:         serial('id').primaryKey(),
@@ -15,6 +15,16 @@ export const users = mysqlTable('users', {
   appoveAt:   timestamp('appoveAt'),
   status:     varchar('status',{length:100}).notNull().default('pedding'),
 });
+
+export const users_session = mysqlTable('users_session',{
+  id:           int('id').autoincrement().primaryKey(),
+  user_id:      int('user_id').references(() => users.id).notNull(),
+  jti:          varchar('jti',{length:191}).notNull().unique(),
+  refreshtoken: varchar('refreshtoken',{length:191}),
+  createAt:     timestamp('create_at').defaultNow().notNull(),
+  expireAt:   timestamp('expire_at').notNull(),
+})
+
 
 export const agency_types = mysqlTable('agency_types', {
   id: int('id', { unsigned: true }).autoincrement().primaryKey(),
@@ -40,11 +50,64 @@ export const organizer = mysqlTable('organizer', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const users_session = mysqlTable('users_session',{
-  id:           serial('id').primaryKey(),
-  user_id:      int('user_id').notNull(),
-  jti:          varchar('jti',{length:191}).notNull().unique(),
-  refreshtoken: varchar('refreshtoken',{length:191}),
-  createAt:     timestamp('create_at').defaultNow().notNull(),
-  expireAt:   timestamp('expire_at').notNull(),
+export const apiRequests = mysqlTable("api_requests", {
+  id:                 int("id").autoincrement().primaryKey(),
+  requesterName:      varchar("requester_name", { length: 100 }).notNull(),
+  requesterEmail:     varchar("requester_email", { length: 255 }).notNull(),
+  requesterPhone:     varchar("requester_phone", { length: 20 }),
+  organizerName:      varchar("organizer_name", { length: 191 }),
+  agree:              boolean("agree").notNull().default(false),
+  allowedIPs:         text("allowed_ips"), 
+  authMethod:         varchar("auth_method", { length: 50 }).notNull(),
+  callbackUrl:        varchar("callback_url", { length: 500 }),
+  dataFormat:         varchar("data_format", { length: 50 }).default("json"),
+  dataSource:         varchar("data_source", { length: 100 }),
+  description:        text("description"),
+  projectName:        varchar("project_name", { length: 100 }),
+  purpose:            text("purpose"),
+  rateLimitPerMinute: int("rate_limit_per_minute").default(60),
+  retentionDays:      int("retention_days").default(30),
+  userRecord:         int("user_record").references(() => users.id).notNull(),
+  status:             varchar('status',{length: 191}).notNull().default("sending"),
+  createdAt:          timestamp("created_at").defaultNow().notNull(),
+  updatedAt:          timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export const apiRequestAttachments = mysqlTable("api_request_attachments", {
+  id:               int("id").autoincrement().primaryKey(),
+  apiRequestId:     int("api_request_id")
+                       .references(() => apiRequests.id, { onDelete: "cascade" })
+                       .notNull(),
+  fileName:         varchar("file_name", { length: 255 }).notNull(),
+  fileSize:         int("file_size"),
+  fileLastModified: timestamp("file_last_modified"),
+  filePath:         varchar("file_path", { length: 500 }),
+  createdAt:        timestamp("created_at").defaultNow().notNull(),
+});
+
+export const api_key_ips = mysqlTable('api_key_ips',{
+  id:                  int('id').autoincrement().primaryKey(),
+  api_key_id:          int('api_key_id').references(()=>api_keys.id).notNull(),
+  ip_pattern:          varchar('ip_pattern',{length:64}).notNull(),
+  createdAt:           timestamp('created_at').defaultNow().notNull(),
+})
+
+export const api_key_limits = mysqlTable('api_key_limits',{
+  id:                 int('id').autoincrement().primaryKey(),
+  api_key_id:         int('api_key_id').references(()=>api_keys.id).notNull(),
+  route_prefix:       varchar('route_prefix',{ length:191 }).notNull(),
+  per_min:            int('per_min').notNull(),
+  bust:               int('bust').notNull(),
+  createdAt:          timestamp('created_at').defaultNow().notNull()
+})  
+
+export const api_keys = mysqlTable('api_key',{
+  id:                int('id').autoincrement().primaryKey(), 
+  user_id:           int('user_id').notNull(),
+  client_key:        varchar('client_key',{ length:191}).notNull(),
+  secret_key:        varchar('secret_key',{ length:191}).notNull(),
+  status:            int('status').notNull(),
+  createdAt:         timestamp('created_at').defaultNow().notNull(),
+  expiresAt:         timestamp('expires_at').defaultNow().notNull(),
+  last_used_at:      timestamp('last_used_at')
 })

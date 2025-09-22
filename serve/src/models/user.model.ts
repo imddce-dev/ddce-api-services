@@ -68,7 +68,7 @@ export const create = async (
       message: "กรุณารอผลอนุมัติภายใน 7 วันทำการ",
     };
   } catch (err: any) {
-    console.error("Error creating user:", err);
+    console.log("Error creating user:", err);
     return {
       success: false,
       code: "UNKNOWN_ERROR",

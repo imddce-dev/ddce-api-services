@@ -4,6 +4,7 @@ import { serve } from '@hono/node-server';
 import * as userController from './controllers/user.controller';
 import * as authController from './controllers/auth.controller';
 import * as orgController from './controllers/org.controller'
+import * as apiController from './controllers/api.controller'
 import { db } from './configs/mysql';
 import { DrizzleDB } from './configs/type';
 import { sql } from 'drizzle-orm';
@@ -43,6 +44,11 @@ const main = async () => {
     auth.post('refresh', verifyCsrf, authController.RefreshToken);
     auth.get('profile', authMiddleware, authController.GetuserByToken);
     auth.post('verifyjti',authMiddleware,authController.VerifyJti);
+
+
+    const options = app.basePath('api/options/')
+    options.post('api-request',apiController.creatApiReq)
+
 
     const application = app.basePath('api/');
     application.get('org', orgController.getOrg);

@@ -5,7 +5,7 @@ import * as crypto from 'crypto';
 import { generateToken, JWTPayload, verifyToken } from '../utils/authToken';
 import { generateHmacToken } from '../utils/hmactoken'
 import { DrizzleDB } from '../configs/type';
-import { error } from 'console';
+
 
 
 const DAMMY_HASH = crypto.randomBytes(32).toString('hex');

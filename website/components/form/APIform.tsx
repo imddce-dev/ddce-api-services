@@ -4,6 +4,11 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { ChevronDown, Check as CheckIcon, X, FileDown } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
+import { useUserStore } from "@/stores/useUserStore";
+import { createApiRequest} from "@/services/apiService";
+import { CustomAlertSuccess, CustomAlertError } from "@/lib/alerts";
+import { useRouter } from "next/navigation";
+
 import {
   Check,
   Loader2,
@@ -20,7 +25,6 @@ import {
 } from "lucide-react";
 
 /* --------------------------------- Types --------------------------------- */
-type OrgType = "central" | "odpc" | "ppho" | "hospital" | "other";
 type AuthMethod = "oauth2" | "client_credentials" | "apikey";
 type DataSource = "mebs2" | "ebs_ddc" | "ebs_province";
 type DataFormat = "json";
@@ -30,7 +34,9 @@ export type RequestFormValues = {
   requesterName: string;
   requesterEmail: string;
   requesterPhone: string;
-  orgType: OrgType;
+
+  // 🔹 เพิ่มฟิลด์จากฐาน
+  organizerName: string;
 
   // โครงการ/ระบบ
   projectName: string;
@@ -63,14 +69,6 @@ export type RequestFormValues = {
 };
 
 /* ------------------------------- Const lists ------------------------------ */
-const ORG_OPTIONS: { value: OrgType; label: string }[] = [
-  { value: "central", label: "ส่วนกลาง (กรม/กอง)" },
-  { value: "odpc", label: "เขต (สคร./ODPC)" },
-  { value: "ppho", label: "จังหวัด (สสจ./PPHO)" },
-  { value: "hospital", label: "หน่วยบริการ/โรงพยาบาล" },
-  { value: "other", label: "อื่น ๆ" },
-];
-
 const SCOPE_OPTIONS = [
   { value: "Methods Get", label: "Methods Get" },
   { value: "Methods Post", label: "Methods Post" },
@@ -124,7 +122,11 @@ function filesToText(list?: File[]) {
   return list.map((f) => f.name).join(", ");
 }
 
-/* --------------------------------- UI ------------------------------------ */
+// 🔹 กำหนดเพดานไฟล์
+const MAX_FILES = 2;
+const MAX_SIZE_MB = 2;
+const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
 export default function APIForm({
   onSubmit: onSubmitProp,
   defaultValues,
@@ -136,6 +138,11 @@ export default function APIForm({
   const [authFiles, setAuthFiles] = useState<File[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
 
+  // 🔹 ดึงโปรไฟล์จากฐาน
+  const userProfile = useUserStore((s) => s.userProfile);
+  const fetchUserProfile = useUserStore((s) => s.fetchUserProfile);
+  const isLoadingProfile = useUserStore((s) => s.isLoading);
+  const router = useRouter()
   const {
     register,
     handleSubmit,
@@ -148,16 +155,37 @@ export default function APIForm({
   } = useForm<RequestFormValues>({
     mode: "onChange",
     defaultValues: {
+      requesterName: "",
+      requesterEmail: "",
+      requesterPhone: "",
+      organizerName: "",
       scopes: [],
       retentionDays: 30,
       dataSource: undefined as unknown as DataSource,
       dataFormat: "json",
       authMethod: "client_credentials",
-      rateLimitPerMinute: 60, // <-- 60
+      rateLimitPerMinute: 60,
       authAttachment: [],
       ...defaultValues,
     },
   });
+
+  // 🔹 โหลดโปรไฟล์ครั้งแรก
+  useEffect(() => {
+    if (!userProfile && !isLoadingProfile) {
+      fetchUserProfile().catch(() => void 0);
+    }
+  }, [userProfile, isLoadingProfile, fetchUserProfile]);
+
+  // 🔹 พรีฟิลค่าจากโปรไฟล์เข้าฟอร์ม
+  useEffect(() => {
+    if (!userProfile) return;
+    if (userProfile.name) setValue("requesterName", userProfile.name, { shouldValidate: true });
+    if (userProfile.email) setValue("requesterEmail", userProfile.email, { shouldValidate: true });
+    if (userProfile.phone) setValue("requesterPhone", userProfile.phone, { shouldValidate: true });
+    if (userProfile.organizerName)
+      setValue("organizerName", userProfile.organizerName, { shouldValidate: true });
+  }, [userProfile, setValue]);
 
   // sync local -> form state + trigger validate เมื่อ authFiles เปลี่ยน
   useEffect(() => {
@@ -188,7 +216,7 @@ export default function APIForm({
   const validateAllowedIPs = (v?: string) => {
     if (!v) return true;
     const lines = v
-      .split(/\n+/) // <-- แก้เป็น \n
+      .split(/\น+/)
       .map((l) => l.trim())
       .filter(Boolean);
     return (
@@ -207,7 +235,6 @@ export default function APIForm({
       alert("รูปแบบข้อมูลต้องเป็น JSON เท่านั้น");
       return;
     }
-    // บังคับแนบ PDF อย่างน้อย 1 ไฟล์
     if (authFiles.length === 0) {
       setFileError("ต้องแนบไฟล์ PDF อย่างน้อย 1 ไฟล์");
       await trigger("authAttachment");
@@ -223,7 +250,7 @@ export default function APIForm({
     "requesterName",
     "requesterEmail",
     "requesterPhone",
-    "orgType",
+    "organizerName",
     "projectName",
     "description",
     "dataSource",
@@ -239,31 +266,43 @@ export default function APIForm({
   }).length;
   const progress = Math.round((doneCount / requiredKeys.length) * 100);
 
-  /* -------- แนบไฟล์: PDF เท่านั้น + ลบได้ -------- */
+  /* -------- แนบไฟล์: PDF เท่านั้น + ลบได้ + จำกัดจำนวน/ขนาด -------- */
   const onPickFiles: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const list = e.target.files;
     if (!list || list.length === 0) return;
 
     const incoming = Array.from(list);
 
-    // เอาเฉพาะไฟล์ .pdf (ไม่บังคับว่าชื่อมี dsa)
+    // 1) อนุญาตเฉพาะ PDF
     const onlyPdf = incoming.filter(
       (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name)
     );
-    const rejected = incoming.filter((f) => !onlyPdf.includes(f));
+    const rejectedType = incoming.filter((f) => !onlyPdf.includes(f));
 
-    if (rejected.length > 0) {
-      setFileError("อนุญาตเฉพาะไฟล์ PDF เท่านั้น");
-    } else {
-      setFileError(null);
+    // 2) ตัดไฟล์ที่เกินขนาด
+    const oversize = onlyPdf.filter((f) => f.size > MAX_SIZE_BYTES);
+    const validBySize = onlyPdf.filter((f) => f.size <= MAX_SIZE_BYTES);
+
+    // 3) รวมกับไฟล์เดิม + ไม่ให้ซ้ำ
+    const map = new Map<string, File>();
+    [...authFiles, ...validBySize].forEach((f) => map.set(`${f.name}:${f.size}`, f));
+    let merged = Array.from(map.values());
+
+    // 4) จำกัดจำนวนสูงสุด
+    if (merged.length > MAX_FILES) {
+      merged = merged.slice(0, MAX_FILES);
     }
 
-    // รวมไฟล์ + กันซ้ำด้วยชื่อ+ขนาด
-    const map = new Map<string, File>();
-    [...authFiles, ...onlyPdf].forEach((f) => map.set(`${f.name}:${f.size}`, f));
-    setAuthFiles(Array.from(map.values()));
+    // 5) สร้างข้อความ error ตามเหตุผล
+    const reasons: string[] = [];
+    if (rejectedType.length > 0) reasons.push("อนุญาตเฉพาะไฟล์ PDF เท่านั้น");
+    if (oversize.length > 0) reasons.push(`ขนาดไฟล์ละไม่เกิน ${MAX_SIZE_MB} MB`);
+    if (authFiles.length + validBySize.length > MAX_FILES) {
+      reasons.push(`อัปโหลดได้สูงสุด ${MAX_FILES} ไฟล์`);
+    }
+    setFileError(reasons.length ? reasons.join(" • ") : null);
 
-    // reset ค่า input เพื่อเลือกไฟล์ซ้ำได้
+    setAuthFiles(merged);
     e.currentTarget.value = "";
   };
 
@@ -278,57 +317,79 @@ export default function APIForm({
         <SummaryModal
           values={submitted}
           onConfirm={async () => {
-            if (onSubmitProp) {
-              await onSubmitProp(submitted);
-            } else {
-              console.log("request payload:", submitted);
-              alert("ส่งคำขอเรียบร้อย (ตัวอย่าง)");
-            }
-            reset();
-            setAuthFiles([]);
-            setFileError(null);
-            setSubmitted(null);
-          }}
-          onClose={() => setSubmitted(null)}
-        />
+            try {
+                if (onSubmitProp) {
+                  await onSubmitProp(submitted);
+                } else {
+                  const formData = new FormData();
+                  Object.entries(submitted).forEach(([key, value]) => {
+                    if (key === "authAttachment") return; 
+                    if (key === "scopes") return;        
+
+                    if (Array.isArray(value)) {
+                      value.forEach((v) => formData.append(`${key}[]`, v.toString()));
+                    } else if (value !== undefined && value !== null) {
+                      formData.append(key, value.toString());
+                    }
+                  });
+                    if (userProfile?.id) {
+                      formData.append("userRecord", userProfile.id.toString());
+                    }
+                  if (submitted.authAttachment?.length) {
+                    submitted.authAttachment.forEach((file) => {
+                      formData.append("authAttachment[]", file);
+                    });
+                  }
+                  const res = await createApiRequest(formData);
+
+                  if (res.success) {
+                    const alertSucc = await CustomAlertSuccess("บันทึกข้อมูลสำเร็จ","กรุณารอผลอนุมัติภายใน 7 วันทำการ")
+                    if(alertSucc.isConfirmed){
+                      router.push('/dashboard')
+                      reset();
+                      setAuthFiles([]);
+                      setFileError(null);
+                      setSubmitted(null);
+                    }
+                  } else {
+                    CustomAlertError("",`ผิดพลาด: ${res.code}`)
+                  }
+                }
+            } catch (err) {
+              CustomAlertError("","เกิดข้อผิดพลาดในการส่งข้อมูล");
+            } 
+  }}
+  onClose={() => setSubmitted(null)}
+/>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* QuickNav + Progress */}
         <div className="sticky top-0 z-10 -mx-4 mb-1 border-b border-white/10 bg-slate-900/60 px-4 py-3 backdrop-blur md:rounded-xl">
           <div className="flex flex-wrap items-center gap-2">
-            <QuickLink
-              href="#sec-applicant"
-              done={isSectionDone(
-                ["requesterName", "requesterEmail", "requesterPhone", "orgType"],
-                watch
-              )}
-            >
+            <QuickLink href="#sec-applicant" done={isSectionDone(
+              ["requesterName","requesterEmail","requesterPhone","organizerName"],
+              watch
+            )}>
               ผู้ยื่น
             </QuickLink>
-            <QuickLink
-              href="#sec-project"
-              done={isSectionDone(["projectName", "description", "dataSource"], watch)}
-            >
+            <QuickLink href="#sec-project" done={isSectionDone(
+              ["projectName","description","dataSource"],
+              watch
+            )}>
               โครงการ/ฐานข้อมูล
             </QuickLink>
-            <QuickLink
-              href="#sec-scope"
-              done={isSectionDone(
-                ["scopes", "purpose", "retentionDays", "dataFormat"],
-                watch
-              )}
-            >
+            <QuickLink href="#sec-scope" done={isSectionDone(
+              ["scopes","purpose","retentionDays","dataFormat"],
+              watch
+            )}>
               Scopes/Format
             </QuickLink>
-            <QuickLink
-              href="#sec-auth"
-              done={isSectionDone(
-                ["authMethod", "redirectUris", "callbackUrl"],
-                watch,
-                watch("authMethod")
-              )}
-            >
+            <QuickLink href="#sec-auth" done={isSectionDone(
+              ["authMethod","redirectUris","callbackUrl"],
+              watch,
+              watch("authMethod")
+            )}>
               Auth/Connect
             </QuickLink>
 
@@ -398,20 +459,19 @@ export default function APIForm({
               />
             </Field>
 
-            <Field label="หน่วยงาน *" error={errors.orgType?.message}>
-              <Controller
-                name="orgType"
-                control={control}
-                rules={{ required: "เลือกหน่วยงาน" }}
-                render={({ field }) => (
-                  <FancySelect
-                    placeholder="เลือกหน่วยงาน"
-                    options={ORG_OPTIONS}
-                    value={field.value}
-                    onChange={(v) => field.onChange(v as OrgType)}
-                  />
-                )}
+            {/* 🔹 หน่วยงานจากฐาน: แสดงแบบอ่านอย่างเดียว */}
+            <Field label="หน่วยงาน *" error={errors.organizerName?.message}>
+              <input
+                className="input"
+                readOnly
+                placeholder="ระบบจะเติมจากโปรไฟล์"
+                {...register("organizerName", { required: "ระบบไม่พบหน่วยงานในโปรไฟล์" })}
               />
+              {userProfile?.organizerName && (
+                <p className="mt-1 text-[11px] text-slate-400">
+                  จากโปรไฟล์: {userProfile.organizerName}
+                </p>
+              )}
             </Field>
           </SectionCard>
 
@@ -474,39 +534,30 @@ export default function APIForm({
 
           {/* ----------------------------- Scopes ------------------------------ */}
           <SectionCard
-            id="sec-scope"
-            title="ขอบเขตการเข้าถึง (Scopes) และรูปแบบข้อมูล"
-            icon={<KeyRound className="h-4 w-4 text-amber-300" />}
-          >
-            <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {SCOPE_OPTIONS.map((s) => (
-                  <label
-                    key={s.value}
-                    className="flex items-center gap-3 text-sm text-slate-200"
-                  >
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 rounded border-white/20 bg-slate-900/60"
-                      value={s.value}
-                      {...register("scopes", {
-                        validate: (arr) =>
-                          (arr && arr.length > 0) || "เลือกอย่างน้อย 1 ขอบเขต",
-                      })}
-                    />
-                    <span>{s.label}</span>
-                  </label>
-                ))}
+              id="sec-scope"
+              title="ขอบเขตการเข้าถึง (Scopes) และรูปแบบข้อมูล"
+              icon={<KeyRound className="h-4 w-4 text-amber-300" />}
+            >
+              <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {SCOPE_OPTIONS.map((s) => (
+                    <label
+                      key={s.value}
+                      className="flex items-center gap-3 text-sm text-slate-200"
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-white/20 bg-slate-900/60"
+                        value={s.value}
+                        checked
+                        readOnly   
+                      />
+                      <span>{s.label}</span>
+                    </label>
+                  ))}
+                </div>
+                
               </div>
-              <p className="mt-2 flex items-center gap-1 text-xs text-slate-400">
-                <Info className="h-3.5 w-3.5" /> เลือกเฉพาะสิทธิ์ที่จำเป็น (least privilege)
-              </p>
-              {errors.scopes && (
-                <p className="mt-1 text-xs text-rose-300">
-                  {errors.scopes.message as string}
-                </p>
-              )}
-            </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field
@@ -659,8 +710,8 @@ export default function APIForm({
 
             {/* แนบไฟล์การพิสูจน์ตัวตน (PDF เท่านั้น) */}
             <Field
-              label="แนบไฟล์เอกสาร * (PDF เท่านั้น, แนบหลายไฟล์ได้)"
-              hint="รองรับไฟล์ .pdf เท่านั้น เช่น หนังสือ/แบบฟอร์มที่เกี่ยวข้อง"
+              label={`แนบไฟล์เอกสาร * (PDF เท่านั้น, สูงสุด ${MAX_FILES} ไฟล์, ไฟล์ละ ≤ ${MAX_SIZE_MB} MB)`} // 🔹
+              hint="เช่น หนังสือ/แบบฟอร์มที่เกี่ยวข้อง"
               error={fileError || ((errors.authAttachment?.message as string) ?? undefined)}
             >
               <input
@@ -677,11 +728,12 @@ export default function APIForm({
                 {...register("authAttachment", {
                   validate: (arr) => {
                     const files = (arr as File[]) || [];
-                    if (files.length === 0) {
-                      return "ต้องแนบไฟล์ PDF อย่างน้อย 1 ไฟล์";
-                    }
-                    const ok = files.every((f) => /\.pdf$/i.test(f.name));
-                    return ok || "ต้องแนบเฉพาะไฟล์ PDF เท่านั้น";
+                    if (files.length === 0) return "ต้องแนบไฟล์ PDF อย่างน้อย 1 ไฟล์";
+                    if (files.length > MAX_FILES) return `อัปโหลดได้สูงสุด ${MAX_FILES} ไฟล์`;
+                    const overs = files.filter((f) => f.size > MAX_SIZE_BYTES);
+                    if (overs.length > 0) return `ขนาดไฟล์ละไม่เกิน ${MAX_SIZE_MB} MB`;
+                    const okType = files.every((f) => /\.pdf$/i.test(f.name));
+                    return okType || "ต้องแนบเฉพาะไฟล์ PDF เท่านั้น";
                   },
                 })}
               />
@@ -697,7 +749,9 @@ export default function APIForm({
                         title={f.name}
                       >
                         <Paperclip className="h-3.5 w-3.5 text-slate-400" />
-                        <span className="max-w-[220px] truncate">{f.name}</span>
+                        <span className="max-w-[220px] truncate">
+                          {f.name} ({(f.size / (1024 * 1024)).toFixed(2)} MB)
+                        </span>
                         <button
                           type="button"
                           onClick={() => removeFile(key)}
@@ -711,6 +765,9 @@ export default function APIForm({
                   })}
                 </div>
               )}
+              <p className="mt-2 text-[11px] text-slate-400">
+                อัปโหลดแล้ว {authFiles.length}/{MAX_FILES} ไฟล์
+              </p>
             </Field>
 
             <Field
@@ -779,7 +836,6 @@ export default function APIForm({
               ล้างแบบฟอร์ม
             </button>
 
-            {/* ปุ่มเปิดเอกสารตัวอย่าง/แนบ */}
             <a
               href="https://drive.google.com/drive/folders/1cpPBejMWzIhgMDsXr4tmZj1G6bUEf2vj?usp=sharing"
               target="_blank"
@@ -929,11 +985,7 @@ function QuickLink({
           : "bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10",
       ].join(" ")}
     >
-      {done ? (
-        <CircleCheck className="h-3.5 w-3.5" />
-      ) : (
-        <Circle className="h-3.5 w-3.5" />
-      )}
+      {done ? <CircleCheck className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
       {children}
     </a>
   );
@@ -962,9 +1014,6 @@ function Row({ k, v }: { k: string; v?: string | number | boolean }) {
   );
 }
 
-function humanOrg(t?: OrgType) {
-  return ORG_OPTIONS.find((o) => o.value === t)?.label ?? "-";
-}
 function humanDS(ds?: DataSource) {
   return DATA_SOURCE_OPTIONS.find((o) => o.value === ds)?.label ?? "-";
 }
@@ -982,7 +1031,6 @@ function SummaryModal({
   const [loading, setLoading] = React.useState(false);
   const [show, setShow] = React.useState(false);
 
-  // วันที่อ้างอิง = วันที่เปิด dialog
   const today = React.useMemo(() => new Date(), []);
   const contractStart = today;
   const contractEnd = addYears(today, 1);
@@ -1025,13 +1073,13 @@ function SummaryModal({
           show ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-1",
         ].join(" ")}
       >
-        {/* Header ติดบน */}
+        {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-white/10 bg-slate-900/90 px-4 py-3">
           <h3 className="text-base font-semibold text-slate-100">สรุปคำขอใช้งาน API</h3>
           <Badge tone="cyan">ตรวจสอบข้อมูล</Badge>
         </div>
 
-        {/* Body เลื่อนแนวตั้งได้ */}
+        {/* Body */}
         <div className="overflow-y-auto px-4 py-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {/* Applicant */}
@@ -1041,7 +1089,7 @@ function SummaryModal({
                 <Row k="ชื่อ-สกุล" v={values.requesterName} />
                 <Row k="อีเมล" v={values.requesterEmail} />
                 <Row k="เบอร์" v={values.requesterPhone} />
-                <Row k="หน่วยงาน" v={humanOrg(values.orgType)} />
+                <Row k="หน่วยงาน" v={values.organizerName} />
               </div>
             </div>
 
@@ -1058,7 +1106,7 @@ function SummaryModal({
 
             {/* Detail */}
             <div className="rounded-xl border border-white/10 bg-white/5 p-3 sm:col-span-2">
-              <h4 className="mb-2 text-xs font-semibold text-slate-300">รายละเอียด</h4>
+              <h4 className="mb-2 text-xs text-slate-300 font-semibold">รายละเอียด</h4>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Row k="Scopes" v={(values.scopes || []).join(", ") || "-"} />
@@ -1089,11 +1137,10 @@ function SummaryModal({
             </div>
           </div>
 
-          {/* Explanations in dialog */}
           <DialogNotes authMethod={values.authMethod} />
         </div>
 
-        {/* Footer ติดล่าง */}
+        {/* Footer */}
         <div className="sticky bottom-0 z-10 flex flex-col gap-2 border-t border-white/10 bg-slate-900/90 px-4 py-3 sm:flex-row">
           <button
             onClick={handleConfirm}
@@ -1152,7 +1199,7 @@ function DialogNotes({ authMethod }: { authMethod: AuthMethod }) {
   );
 }
 
-/* ------------------------ FancySelect (dropdown + transition) ---------------------- */
+/* ------------------------ FancySelect ---------------------- */
 type FancyOption<T extends string> = { value: T; label: string };
 
 function FancySelect<T extends string>({
@@ -1173,7 +1220,6 @@ function FancySelect<T extends string>({
   const ref = useRef<HTMLDivElement>(null);
   const selected = options.find((o) => o.value === value);
 
-  // ปิดเมื่อคลิกนอก
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (!ref.current) return;
@@ -1183,7 +1229,6 @@ function FancySelect<T extends string>({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // คีย์บอร์ด
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (readOnly) return;
     if (!open && (e.key === "Enter" || e.key === " " || e.key === "ArrowDown")) {
@@ -1238,7 +1283,6 @@ function FancySelect<T extends string>({
         </div>
       </button>
 
-      {/* ใช้ absolute + transition-all ให้เปิด/ปิดนุ่มนวล */}
       <div
         role="listbox"
         className={[
