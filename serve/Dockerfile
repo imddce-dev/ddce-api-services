@@ -15,4 +15,4 @@ COPY --from=builder /app ./
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "DRIZZLE_NO_CONFIRM=1 bun run migrate && bun run start"]
+CMD ["bun", "run", "start"]
