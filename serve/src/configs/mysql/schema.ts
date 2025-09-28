@@ -1,4 +1,5 @@
-import { mysqlTable, serial, varchar, timestamp, int, boolean, text } from 'drizzle-orm/mysql-core';
+import { mysqlTable, serial, varchar, timestamp, int, boolean, text, index, unique } from 'drizzle-orm/mysql-core';
+import { ref } from 'process';
 
 export const users = mysqlTable('users', {
   id:         int('id').autoincrement().primaryKey(),
@@ -108,3 +109,14 @@ export const api_key_limits = mysqlTable('api_key_limits',{
   burst:              int('burst').notNull(),
   createdAt:          timestamp('created_at').defaultNow().notNull(),
 });  
+export const otp_code = mysqlTable('otp_code',{
+  id:                 int('id').autoincrement().primaryKey(),
+  userId:             int('userId').references(()=> users.id, {onDelete : 'cascade'}).notNull(),
+  code:               varchar('code',{length:6}).notNull(),
+  ref:                varchar('ref',{length:50}).notNull(),
+  createdAt:          timestamp('created_at').defaultNow().notNull(),       
+  expiredAt:          timestamp('expired_at').notNull()
+}, (table) => ({
+      userIdx: unique('uniq_user_id').on(table.userId), 
+      refIdx: index('idx_ref').on(table.ref),
+}))

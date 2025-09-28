@@ -15,6 +15,7 @@ import { secureHeadersMiddleware } from './middlewares/secure-headers.middleware
 import *  as rateLimited from './middlewares/rate-limit.middleware';
 import { verifyCsrf } from './middlewares/csrf.middleware';
 import { authMiddleware } from './middlewares/auth.middleware'
+import { sendMail } from './utils/nodemailer'
 type AppContext = {
   Variables: {
     db: DrizzleDB;
@@ -52,6 +53,20 @@ const main = async () => {
 
     const application = app.basePath('api/');
     application.get('org', orgController.getOrg);
+    application.get("test-mail", async (c) => {
+      try {
+        const info = await sendMail(
+          "thiramesths95@gmail.com", // ผู้รับ
+          "ทดสอบ",                   // หัวข้อ
+          "<p>ทดสอบ</p>"             // เนื้อหา
+        );
+
+        return c.json({ ok: true, messageId: info.messageId });
+      } catch (err: any) {
+        console.error("Mail error:", err);
+        return c.json({ ok: false, error: err.message }, 500);
+      }
+    });
 
     const userApi = app.basePath('api/users');
     userApi.use('*',rateLimited.createAuthRateLimiter())

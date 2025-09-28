@@ -4,6 +4,7 @@ import * as authModel from '../models/auth.model';
 import { DrizzleDB } from '../configs/type';
 import type { StatusCode } from 'hono/utils/http-status';
 import { UserPayload } from '../middlewares/auth.middleware';
+import { GenerOtp } from '../models/otp.model';
 
 type MyContext = Context<{
   Variables: {
@@ -11,7 +12,6 @@ type MyContext = Context<{
     user: UserPayload;
   };
 }>;
-
 
 export const login = async (c: Context) => {
     try {
@@ -37,6 +37,7 @@ export const login = async (c: Context) => {
                 errorCode: result.errorCode
             },{status : statusCode});
         }
+        await GenerOtp(username)
         setCookie(c, 'accessToken', result.token || '', {
             httpOnly: true,
             secure: true, 
