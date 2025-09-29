@@ -228,6 +228,7 @@ export const getUserById = async (db: DrizzleDB, userId: string) => {
                 email: users.email,
                 organizer: users.organizer,
                 organizerName: organizer.name,
+                perm: users.root,
             })
             .from(users)
             .leftJoin(organizer, eq(users.organizer, organizer.id)) 

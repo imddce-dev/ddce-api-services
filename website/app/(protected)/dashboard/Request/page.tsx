@@ -2,7 +2,6 @@
 import React, { useEffect } from "react";
 import APIForm from "@/components/form/APIform";
 import { usePage } from "@/contexts/PageContext";
-import Head from "next/head";
 
 export default function RequestPage() {
   const { setPageInfo } = usePage();
@@ -15,10 +14,7 @@ export default function RequestPage() {
 
   return (
     <>
-      <Head>
-        <title>ฟอร์มขอใช้ API | DDCE API Request</title>
-      </Head>
-      <div className="min-h-screen p-4 text-slate-100">
+      <div className="min-h-dvh antialiased p-4 text-slate-100">
         <APIForm />
       </div>
     </>

@@ -862,19 +862,12 @@ export default function UserManager() {
   }
 
   return (
-    <main className="relative mx-auto max-w-7xl p-4 sm:p-6">
+    <main className="relative w-full">
       {/* Background */}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(50%_40%_at_50%_0%,rgba(16,185,129,0.10),transparent),radial-gradient(60%_50%_at_100%_0%,rgba(34,211,238,0.07),transparent)]" />
 
       <header className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-white">
-            จัดการผู้ใช้งาน (User Manager)
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            ค้นหา • กรอง • แก้ไขผ่าน Dialog • ลบ • ส่งออก CSV
-          </p>
-        </div>
+       
         <div className="flex items-center gap-2">
           <button
             className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 hover:bg-white/5"
