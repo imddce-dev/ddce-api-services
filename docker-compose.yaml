@@ -40,22 +40,6 @@ services:
     networks:
       - app-network
 
-  nginx:
-    image: 'jc21/nginx-proxy-manager:latest'
-    container_name: nginx-proxy-manager
-    restart: unless-stopped
-    ports:
-      - '80:80'
-      - '81:81'
-      - '443:443'
-    depends_on:
-      - next-app
-    volumes:
-      - ./data:/data
-      - ./letsencrypt:/etc/letsencrypt
-    networks:
-      - app-network
-
 networks:
   app-network:
     driver: bridge

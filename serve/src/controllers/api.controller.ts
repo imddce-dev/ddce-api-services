@@ -49,7 +49,7 @@ export const creatApiReq = async (c: Context) => {
       const base = path.basename(newname, ext) || 'upload';
       const filename = `${base}-${Date.now()}${ext}`;
       const buffer = await f.arrayBuffer();
-      const key = `file_uploads/${filename}`;
+      const key = `attachments/${filename}`;
 
       await minioClient.putObject('documents', key, Buffer.from(buffer));
 
