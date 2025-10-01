@@ -1,0 +1,62 @@
+[
+  {
+    "id": "USR-0001",
+    "fullname": "สุเมธ ชาญชัย",
+    "username": "sumet.c",
+    "email": "sumet.c@example.org",
+    "phone": "+66-81-234-5678",
+    "password": "$2b$10$h1GvN7Vt3o1o0G3qvFv7Qe3g6y0M9nI1Q2wE7pS3rA8uJkLmNoPqS", 
+    "organizer": "สสจ. เชียงใหม่",
+    "policy": "admin",
+    "root": true,
+    "createdAt": "2025-01-10T09:15:00+07:00",
+    "appove": true,
+    "appoveAt": "2025-01-10T10:00:00+07:00",
+    "status": "active"
+  },
+  {
+    "id": "USR-0002",
+    "fullname": "กมลพร ศิริวงศ์",
+    "username": "kamonporn.s",
+    "email": "kamonporn.s@example.org",
+    "phone": "+66-82-987-6543",
+    "password": "$2b$10$3H0qk8s9P2v4IuF1yZb7ke5cIh4rRk8oVn7YyQwXz2M1nAbCdEfGa",
+    "organizer": "สคร. 1 เชียงใหม่",
+    "policy": "editor",
+    "root": false,
+    "createdAt": "2025-02-03T13:40:00+07:00",
+    "appove": true,
+    "appoveAt": "2025-02-03T14:05:00+07:00",
+    "status": "active"
+  },
+  {
+    "id": "USR-0003",
+    "fullname": "ประวีณ ทองแท้",
+    "username": "praveen.t",
+    "email": "praveen.t@example.org",
+    "phone": "+66-80-111-2233",
+    "password": "$2b$10$JkLmNoPqS1tU2vW3xYz4aB5cD6eF7gH8iJ9kL0mN1oP2qR3sT4uV",
+    "organizer": "ศูนย์ Lab กลาง",
+    "policy": "viewer",
+    "root": false,
+    "createdAt": "2025-03-12T08:05:00+07:00",
+    "appove": false,
+    "appoveAt": null,
+    "status": "pending"
+  },
+  {
+    "id": "USR-0004",
+    "fullname": "ชนกานต์ มงคลดี",
+    "username": "chanokkan.m",
+    "email": "chanokkan.m@example.org",
+    "phone": "+66-86-555-4444",
+    "password": "$2b$10$ZxCvBnMmAsDfGhJkLqWeRtYuIoPpOiUyTrEwQvBnMzLkJhGfDsAa",
+    "organizer": "สสจ. ขอนแก่น",
+    "policy": "editor",
+    "root": false,
+    "createdAt": "2025-03-25T16:20:00+07:00",
+    "appove": true,
+    "appoveAt": "2025-03-25T17:00:00+07:00",
+    "status": "suspended"
+  }
+]
