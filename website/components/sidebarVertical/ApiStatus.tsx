@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 import { Shield, ChevronRight } from 'lucide-react';
 
 interface StatusBadgeProps {
@@ -28,7 +27,7 @@ const ApiStatus: React.FC = () => {
             </div>
             <ul className="space-y-1">
                 <li className="flex items-center justify-between">
-                    <span>M-ebs</span>
+                    <span>M-EBS</span>
                     <StatusBadge status="หยุดทำงาน" color="red" />
                 </li>
                 <li className="flex items-center justify-between">
