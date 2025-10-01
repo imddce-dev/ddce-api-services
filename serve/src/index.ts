@@ -70,7 +70,7 @@ const main = async () => {
       }
     });
 
-    const userApi = app.basePath('api/users');
+    const userApi = app.basePath('web-api/users');
     userApi.use('*',rateLimited.createAuthRateLimiter())
     userApi.post('/createusr', userController.createUser);
   

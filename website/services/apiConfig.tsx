@@ -49,11 +49,9 @@ apiClient.interceptors.response.use(
         if (error.response?.status === 401 && !originalRequest._retry) {
             
             if (isRefreshing) {
-                // ถ้ากำลัง refresh อยู่ ให้เก็บ request นี้ไว้ในคิวแล้วรอ
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
                 }).then(() => {
-                    // เมื่อ refresh เสร็จแล้ว ให้ retry request นี้
                     return apiClient(originalRequest);
                 }).catch(err => {
                     return Promise.reject(err);
@@ -65,17 +63,10 @@ apiClient.interceptors.response.use(
 
             try {
                 await apiClient.post('/auth/refresh');
-                
-                // เมื่อ refresh สำเร็จ ให้สั่ง retry request ทั้งหมดที่รออยู่ในคิว
                 processQueue(null, null);
-
-                // และ retry request ปัจจุบัน
                 return apiClient(originalRequest);
-
             } catch (refreshError) {
-                // ถ้า refresh ล้มเหลว ให้เคลียร์คิวและส่ง error ออกไป
                 processQueue(refreshError, null);
-                
                 if (typeof window !== 'undefined') {
                     window.location.href = '/auth/login';
                 }
