@@ -55,6 +55,8 @@ const main = async () => {
     // No Middle..
     const application = app.basePath('web-api/');
     application.get('org', orgController.getOrg);
+    application.get('getallusers',userController.getAllUsers)
+    application.post('approve',userController.appoveUser)
     application.get("test-mail", async (c) => {
       try {
         const info = await sendMail(
