@@ -862,10 +862,6 @@ export default function UserManager() {
     setForm((f) => ({ ...f, open: false }));
   }
 
-  return (
-    <main className="relative mx-auto max-w-7xl p-4 sm:p-6">
-      {/* Background */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(50%_40%_at_50%_0%,rgba(16,185,129,0.10),transparent),radial-gradient(60%_50%_at_100%_0%,rgba(34,211,238,0.07),transparent)]" />
 
   return (
     <main className="relative mx-auto max-w-[1320px] w-full px-4 sm:px-6 lg:px-8 pb-10">
