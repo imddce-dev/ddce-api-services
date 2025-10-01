@@ -1,4 +1,3 @@
-// components/UserManager.tsx
 "use client";
 
 import React from "react";
@@ -20,11 +19,11 @@ import {
 /* =============================================================================
    TYPES
 ============================================================================= */
-export type Role = "manager" | "editor" | "viewer"; // ❗ ไม่มี admin
-export type Status = "active" | "suspended";
+export type Role = "manager" | "editor" | "viewer";
+export type Status = "active" | "suspended" | "pending";
 
 export type UserRow = {
-  id: number;
+  id: string; // JSON ใช้ string เช่น USR-0001
   name: string;
   username: string;
   email: string;
@@ -36,7 +35,7 @@ export type UserRow = {
 };
 
 const ROLES: Role[] = ["manager", "editor", "viewer"];
-const STATUSES: Status[] = ["active", "suspended"];
+const STATUSES: Status[] = ["active", "suspended", "pending"];
 const ORGS = [
   "สสจ.นนทบุรี",
   "กองควบคุมโรค",
@@ -70,7 +69,69 @@ export type FetchState = {
 };
 
 /* =============================================================================
-   MOCK API (แทนที่ด้วย service จริงของคุณได้)
+   JSON SOURCE (อ่านจาก public/*)
+============================================================================= */
+type RawUser = {
+  id: string;
+  fullname: string;
+  username: string;
+  email: string;
+  phone?: string;
+  password?: string;
+  organizer?: string;
+  policy?: string; // admin/editor/viewer ...
+  root?: boolean;
+  createdAt: string;
+  appove?: boolean;
+  appoveAt?: string | null;
+  status?: string; // active/suspended/pending ฯลฯ
+};
+
+// เผื่อบางโปรเจกต์ใส่ไว้ต่างตำแหน่ง
+const CANDIDATES = ["/website/stores/Data/User.json", "/stores/Data/User.json"];
+
+async function fetchUsersFromJson(): Promise<RawUser[]> {
+  let lastErr: any = null;
+  for (const url of CANDIDATES) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) {
+        lastErr = new Error(`HTTP ${res.status}`);
+        continue;
+      }
+      return (await res.json()) as RawUser[];
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  console.error("User.json not found at:", CANDIDATES, lastErr);
+  throw new Error(`ไม่พบไฟล์ User.json (ลองที่: ${CANDIDATES.join(", ")})`);
+}
+
+function mapRawToUser(r: RawUser): UserRow {
+  const pol = (r.policy || "").toLowerCase();
+  const role: Role =
+    r.root || pol === "admin" ? "manager" : pol === "editor" ? "editor" : "viewer";
+
+  const st = (r.status || "active").toLowerCase();
+  const status: Status =
+    st === "suspended" ? "suspended" : st === "pending" ? "pending" : "active";
+
+  return {
+    id: r.id,
+    name: r.fullname || r.username || r.email,
+    username: r.username,
+    email: r.email,
+    phone: r.phone || "",
+    organization: r.organizer || "",
+    role,
+    status,
+    createdAt: r.createdAt || new Date().toISOString(),
+  };
+}
+
+/* =============================================================================
+   API (อ่าน JSON จริง + จัดการผลในหน่วยความจำ)
 ============================================================================= */
 export async function apiListUsers(params: {
   page: number;
@@ -81,34 +142,25 @@ export async function apiListUsers(params: {
   sortBy?: SortKey;
   sortDir?: "asc" | "desc";
 }): Promise<{ items: UserRow[]; total: number }> {
-  await new Promise((r) => setTimeout(r, 250));
-  const seeds: UserRow[] = Array.from({ length: 60 }).map((_, i) => ({
-    id: i + 1,
-    name: `ผู้ใช้หมายเลข ${i + 1}`,
-    username: `user${i + 1}`,
-    email: `user${i + 1}@example.com`,
-    phone: `08${(Math.random() * 1_0000_0000).toFixed(0).padStart(8, "0")}`.slice(0, 10),
-    organization: ORGS[i % ORGS.length],
-    role: ROLES[i % ROLES.length],
-    status: i % 7 === 0 ? "suspended" : "active",
-    createdAt: new Date(Date.now() - i * 86400000).toISOString(),
-  }));
+  const raw = await fetchUsersFromJson();
+  let arr = raw.map(mapRawToUser);
 
-  let arr = seeds;
-  if (params.q) {
-    const q = params.q.toLowerCase();
+  const { q, role, status } = params;
+  if (q) {
+    const qq = q.toLowerCase();
     arr = arr.filter(
       (u) =>
-        u.name.toLowerCase().includes(q) ||
-        u.username.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        (u.organization || "").toLowerCase().includes(q)
+        u.name.toLowerCase().includes(qq) ||
+        u.username.toLowerCase().includes(qq) ||
+        u.email.toLowerCase().includes(qq) ||
+        (u.organization || "").toLowerCase().includes(qq)
     );
   }
-  if (params.role) arr = arr.filter((u) => u.role === params.role);
-  if (params.status) arr = arr.filter((u) => u.status === params.status);
+  if (role) arr = arr.filter((u) => u.role === role);
+  if (status) arr = arr.filter((u) => u.status === status);
 
-  const { sortBy = "createdAt", sortDir = "desc" } = params;
+  const sortBy = params.sortBy ?? "createdAt";
+  const sortDir = params.sortDir ?? "desc";
   arr.sort((a: any, b: any) => {
     const A = a[sortBy];
     const B = b[sortBy];
@@ -123,24 +175,27 @@ export async function apiListUsers(params: {
   return { items, total };
 }
 
-export async function apiCreateUser(payload: Omit<UserRow, "id" | "createdAt">) {
-  await new Promise((r) => setTimeout(r, 250));
-  const id = Math.floor(Math.random() * 10_000) + 1000;
+export async function apiCreateUser(
+  payload: Omit<UserRow, "id" | "createdAt">
+): Promise<{ success: true; user: UserRow }> {
+  // mock: เพิ่มใน state เท่านั้น (ไม่ได้เขียนลงไฟล์)
+  await new Promise((r) => setTimeout(r, 120));
+  const rand = (Math.floor(Math.random() * 10000) + "").padStart(4, "0");
   return {
     success: true,
     user: {
-      id,
+      id: `USR-${rand}`,
       createdAt: new Date().toISOString(),
       ...payload,
-    } as UserRow,
+    },
   };
 }
-export async function apiUpdateUser(id: number, patch: Partial<UserRow>) {
-  await new Promise((r) => setTimeout(r, 250));
+export async function apiUpdateUser(id: string, patch: Partial<UserRow>) {
+  await new Promise((r) => setTimeout(r, 120));
   return { success: true, patch, id };
 }
-export async function apiDeleteUsers(_ids: number[]) {
-  await new Promise((r) => setTimeout(r, 250));
+export async function apiDeleteUsers(_ids: string[]) {
+  await new Promise((r) => setTimeout(r, 120));
   return { success: true };
 }
 
@@ -175,10 +230,10 @@ export function exportCSV(rows: UserRow[]) {
     "status",
     "createdAt",
   ];
-  const csv = [header.join(",")]
-    .concat(
-      rows
-        .map((r) =>
+  const csv =
+    [header.join(",")]
+      .concat(
+        rows.map((r) =>
           [
             r.id,
             r.name,
@@ -193,9 +248,8 @@ export function exportCSV(rows: UserRow[]) {
             .map((x) => `"${String(x).replace(/"/g, '""')}"`)
             .join(",")
         )
-        .join("\n")
-    )
-    .join("\n");
+      )
+      .join("\n");
   const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -209,12 +263,9 @@ export function exportCSV(rows: UserRow[]) {
 
 function RolePill({ role }: { role: Role }) {
   const m: Record<Role, string> = {
-    manager:
-      "bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-400/30",
-    editor:
-      "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/30",
-    viewer:
-      "bg-sky-500/15 text-sky-300 ring-1 ring-sky-400/30",
+    manager: "bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-400/30",
+    editor: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/30",
+    viewer: "bg-sky-500/15 text-sky-300 ring-1 ring-sky-400/30",
   };
   return (
     <span className={clsx("inline-flex items-center rounded-full px-2 py-0.5 text-xs", m[role])}>
@@ -224,24 +275,20 @@ function RolePill({ role }: { role: Role }) {
 }
 
 function StatusPill({ s }: { s: Status }) {
-  const m = {
+  const m: Record<Status, string> = {
     active: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/30",
     suspended: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/30",
-  } as const;
+    pending: "bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/30",
+  };
   return (
-    <span
-      className={clsx(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-xs",
-        m[s]
-      )}
-    >
+    <span className={clsx("inline-flex items-center rounded-full px-2 py-0.5 text-xs", m[s])}>
       {s}
     </span>
   );
 }
 
 /* =============================================================================
-   FORM DIALOG (เพิ่ม/แก้ไข ผู้ใช้) — หน่วยงาน/บทบาท เป็น dropdown
+   FORM DIALOG
 ============================================================================= */
 type UserFormState = {
   open: boolean;
@@ -305,43 +352,38 @@ function UserFormDialog({
                     <input
                       className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-slate-900/70 px-3 text-sm outline-none focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/20"
                       value={local.name ?? ""}
-                      onChange={(e) =>
-                        setLocal((s) => ({ ...s, name: e.target.value }))
-                      }
+                      onChange={(e) => setLocal((s) => ({ ...s, name: e.target.value }))}
                       placeholder="เช่น สมชาย ใจดี"
                     />
                   </label>
+
                   <label className="text-xs text-slate-300">
                     Username <span className="text-rose-400">*</span>
                     <input
                       className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-slate-900/70 px-3 text-sm outline-none focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/20"
                       value={local.username ?? ""}
-                      onChange={(e) =>
-                        setLocal((s) => ({ ...s, username: e.target.value }))
-                      }
+                      onChange={(e) => setLocal((s) => ({ ...s, username: e.target.value }))}
                       placeholder="เช่น somchai01"
                     />
                   </label>
+
                   <label className="text-xs text-slate-300">
                     อีเมล <span className="text-rose-400">*</span>
                     <input
                       type="email"
                       className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-slate-900/70 px-3 text-sm outline-none focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/20"
                       value={local.email ?? ""}
-                      onChange={(e) =>
-                        setLocal((s) => ({ ...s, email: e.target.value }))
-                      }
+                      onChange={(e) => setLocal((s) => ({ ...s, email: e.target.value }))}
                       placeholder="name@example.com"
                     />
                   </label>
+
                   <label className="text-xs text-slate-300">
                     เบอร์โทร
                     <input
                       className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-slate-900/70 px-3 text-sm outline-none focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/20"
                       value={local.phone ?? ""}
-                      onChange={(e) =>
-                        setLocal((s) => ({ ...s, phone: e.target.value }))
-                      }
+                      onChange={(e) => setLocal((s) => ({ ...s, phone: e.target.value }))}
                       placeholder="0812345678"
                     />
                   </label>
@@ -351,12 +393,7 @@ function UserFormDialog({
                     <select
                       className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-slate-900/70 px-3 text-sm outline-none focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/20"
                       value={local.organization ?? ""}
-                      onChange={(e) =>
-                        setLocal((s) => ({
-                          ...s,
-                          organization: e.target.value,
-                        }))
-                      }
+                      onChange={(e) => setLocal((s) => ({ ...s, organization: e.target.value }))}
                     >
                       <option value="" disabled>
                         — เลือกหน่วยงาน —
@@ -374,9 +411,7 @@ function UserFormDialog({
                     <select
                       className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-slate-900/70 px-3 text-sm outline-none focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/20"
                       value={(local.role as Role) ?? "viewer"}
-                      onChange={(e) =>
-                        setLocal((s) => ({ ...s, role: e.target.value as Role }))
-                      }
+                      onChange={(e) => setLocal((s) => ({ ...s, role: e.target.value as Role }))}
                     >
                       {ROLES.map((r) => (
                         <option key={r} value={r}>
@@ -391,12 +426,7 @@ function UserFormDialog({
                     <select
                       className="mt-1 h-9 w-full rounded-lg border border-white/10 bg-slate-900/70 px-3 text-sm outline-none"
                       value={(local.status as Status) ?? "active"}
-                      onChange={(e) =>
-                        setLocal((s) => ({
-                          ...s,
-                          status: e.target.value as Status,
-                        }))
-                      }
+                      onChange={(e) => setLocal((s) => ({ ...s, status: e.target.value as Status }))}
                     >
                       {STATUSES.map((s) => (
                         <option key={s} value={s}>
@@ -419,9 +449,7 @@ function UserFormDialog({
                     onClick={() => onSubmit(local)}
                     className={clsx(
                       "rounded-xl px-4 py-2 text-sm text-white",
-                      disabled
-                        ? "bg-emerald-600/50"
-                        : "bg-emerald-600 hover:bg-emerald-500"
+                      disabled ? "bg-emerald-600/50" : "bg-emerald-600 hover:bg-emerald-500"
                     )}
                   >
                     บันทึก
@@ -453,8 +481,8 @@ function TableHeader({
         setState((s) => ({
           ...s,
           sortBy: key,
-          sortDir:
-            s.sortBy === key ? (s.sortDir === "asc" ? "desc" : "asc") : "asc",
+          sortDir: s.sortBy === key ? (s.sortDir === "asc" ? "desc" : "asc") : "asc",
+          page: 1,
         }))
       }
       className="cursor-pointer px-3 py-2 text-left text-xs font-semibold text-slate-300 hover:text-white"
@@ -474,9 +502,9 @@ function TableHeader({
   );
 
   return (
-    <thead className="sticky top-0 z-[1] bg-slate-800/80 backdrop-blur">
+    <thead className="sticky top-0 z-[1] bg-slate-900/85 backdrop-blur border-b border-white/10">
       <tr>
-        <th className="w-10 px-3 py-2" />
+        <th className="w-2 px-1 py-2" />
         {th("name", "ชื่อ-สกุล / หน่วยงาน")}
         {th("email", "ติดต่อ")}
         {th("role", "บทบาท")}
@@ -490,21 +518,21 @@ function TableHeader({
   );
 }
 
-function RowMenu({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
+function RowMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
   const [open, setOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      const el = e.target as HTMLElement;
+      if (!el.closest?.("[data-rowmenu]")) setOpen(false);
+    }
+    document.addEventListener("click", onDoc);
+    return () => document.removeEventListener("click", onDoc);
+  }, []);
+
   return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="rounded-lg p-2 hover:bg-white/5"
-        aria-label="more"
-      >
+    <div className="relative" data-rowmenu>
+      <button onClick={() => setOpen((v) => !v)} className="rounded-lg p-2 hover:bg-white/5" aria-label="more">
         <MoreVertical className="h-4 w-4" />
       </button>
       {open && (
@@ -555,6 +583,7 @@ function UserRowItem({
           className="h-4 w-4 rounded border-white/20 bg-slate-900/70"
           checked={selected}
           onChange={onToggle}
+          aria-label="เลือกแถว"
         />
       </td>
       <td className="px-3 py-2">
@@ -562,7 +591,6 @@ function UserRowItem({
         <div className="mt-0.5 inline-flex items-center gap-1 rounded-lg bg-white/5 px-2 py-0.5 text-[11px] text-slate-200 ring-1 ring-white/10">
           <Building2 className="h-3 w-3" /> {u.organization || "-"}
         </div>
-        <div className="mt-1 text-xs text-slate-400">@{u.username}</div>
       </td>
       <td className="px-3 py-2">
         <div className="flex items-center gap-2 text-slate-200">
@@ -581,7 +609,7 @@ function UserRowItem({
         <StatusPill s={u.status} />
       </td>
       <td className="px-3 py-2 text-slate-300">{formatDate(u.createdAt)}</td>
-      <td className="px-3 py-2 text-right">
+      <td className="px-3 py-2 text-center">
         <RowMenu onEdit={onEdit} onDelete={onDelete} />
       </td>
     </tr>
@@ -589,15 +617,9 @@ function UserRowItem({
 }
 
 /* =============================================================================
-   TOOLBAR (Bulk ลบ + เพิ่มผู้ใช้)
+   TOOLBAR
 ============================================================================= */
-function BulkDelete({
-  selected,
-  onBulkDelete,
-}: {
-  selected: number[];
-  onBulkDelete: () => void;
-}) {
+function BulkDelete({ selected, onBulkDelete }: { selected: string[]; onBulkDelete: () => void }) {
   const disabled = selected.length === 0;
   return (
     <button
@@ -621,7 +643,7 @@ function Toolbar({
 }: {
   state: FetchState;
   setState: React.Dispatch<React.SetStateAction<FetchState>>;
-  selected: number[];
+  selected: string[];
   loading: boolean;
   onRefresh: () => void;
   onCreate: () => void;
@@ -630,10 +652,7 @@ function Toolbar({
   const [q, setQ] = React.useState(state.query);
 
   React.useEffect(() => {
-    const t = setTimeout(
-      () => setState((s) => ({ ...s, page: 1, query: q })),
-      300
-    );
+    const t = setTimeout(() => setState((s) => ({ ...s, page: 1, query: q })), 300);
     return () => clearTimeout(t);
   }, [q, setState]);
 
@@ -647,6 +666,7 @@ function Toolbar({
             onChange={(e) => setQ(e.target.value)}
             placeholder="ค้นหาชื่อ, อีเมล, หน่วยงาน, username"
             className="h-10 w-full rounded-xl border border-white/10 bg-slate-900/70 pl-9 pr-3 text-sm text-slate-100 outline-none ring-emerald-400/30 transition focus:border-emerald-400/40 focus:ring-4"
+            aria-label="ค้นหาผู้ใช้"
           />
         </div>
 
@@ -657,17 +677,14 @@ function Toolbar({
             loading && "opacity-70"
           )}
         >
-          <RefreshCcw className={clsx("h-4 w-4", loading && "animate-spin")} />{" "}
-          รีเฟรช
+          <RefreshCcw className={clsx("h-4 w-4", loading && "animate-spin")} /> รีเฟรช
         </button>
       </div>
 
       <div className="flex items-center gap-2">
         <select
           value={state.role}
-          onChange={(e) =>
-            setState((s) => ({ ...s, page: 1, role: e.target.value as any }))
-          }
+          onChange={(e) => setState((s) => ({ ...s, page: 1, role: e.target.value as any }))}
           className="h-10 rounded-xl border border-white/10 bg-slate-900/70 px-3 text-sm text-slate-100"
         >
           <option value="all">บทบาททั้งหมด</option>
@@ -677,11 +694,10 @@ function Toolbar({
             </option>
           ))}
         </select>
+
         <select
           value={state.status}
-          onChange={(e) =>
-            setState((s) => ({ ...s, page: 1, status: e.target.value as any }))
-          }
+          onChange={(e) => setState((s) => ({ ...s, page: 1, status: e.target.value as any }))}
           className="h-10 rounded-xl border border-white/10 bg-slate-900/70 px-3 text-sm text-slate-100"
         >
           <option value="all">สถานะทั้งหมด</option>
@@ -691,6 +707,7 @@ function Toolbar({
             </option>
           ))}
         </select>
+
         <select
           value={state.pageSize}
           onChange={(e) =>
@@ -729,7 +746,7 @@ function Toolbar({
 }
 
 /* =============================================================================
-   PAGE
+   PAGE CONTAINER
 ============================================================================= */
 export default function UserManager() {
   const [state, setState] = React.useState<FetchState>({
@@ -744,7 +761,7 @@ export default function UserManager() {
     sortDir: "desc",
   });
   const [loading, setLoading] = React.useState(true);
-  const [selected, setSelected] = React.useState<number[]>([]);
+  const [selected, setSelected] = React.useState<string[]>([]);
   const [refreshTick, setRefreshTick] = React.useState(0);
 
   const [form, setForm] = React.useState<UserFormState>({
@@ -753,15 +770,11 @@ export default function UserManager() {
     draft: { role: "viewer", status: "active" },
   });
 
-  const [confirm, setConfirm] = React.useState<{
-    open: boolean;
-    ids: number[];
-  }>({
+  const [confirm, setConfirm] = React.useState<{ open: boolean; ids: string[] }>({
     open: false,
     ids: [],
   });
 
-  // โหลดข้อมูล
   React.useEffect(() => {
     let cancelled = false;
     async function run() {
@@ -771,10 +784,8 @@ export default function UserManager() {
           page: state.page,
           pageSize: state.pageSize,
           q: state.query || undefined,
-          role:
-            state.role === "all" ? undefined : (state.role as Role),
-          status:
-            state.status === "all" ? undefined : (state.status as Status),
+          role: state.role === "all" ? undefined : (state.role as Role),
+          status: state.status === "all" ? undefined : (state.status as Status),
           sortBy: state.sortBy,
           sortDir: state.sortDir,
         });
@@ -800,18 +811,14 @@ export default function UserManager() {
     refreshTick,
   ]);
 
-  // helpers
   function toggleAll(v: boolean) {
     setSelected(v ? state.items.map((u) => u.id) : []);
   }
-  function toggleOne(id: number) {
-    setSelected((sel) =>
-      sel.includes(id) ? sel.filter((x) => x !== id) : sel.concat(id)
-    );
+  function toggleOne(id: string) {
+    setSelected((sel) => (sel.includes(id) ? sel.filter((x) => x !== id) : sel.concat(id)));
   }
 
-  // delete
-  function openDelete(ids?: number[]) {
+  function openDelete(ids?: string[]) {
     const target = ids ?? selected;
     if (!target.length) return;
     setConfirm({ open: true, ids: target });
@@ -823,13 +830,12 @@ export default function UserManager() {
     setState((s) => ({
       ...s,
       items: s.items.filter((u) => !ids.includes(u.id)),
-      total: s.total - ids.length,
+      total: Math.max(0, s.total - ids.length),
     }));
     setSelected((x) => x.filter((id) => !ids.includes(id)));
     setConfirm((c) => ({ ...c, open: false }));
   }
 
-  // submit เพิ่ม/แก้ไข
   async function submitForm(draft: Partial<UserRow>) {
     if (form.mode === "create") {
       const res = await apiCreateUser({
@@ -840,40 +846,31 @@ export default function UserManager() {
         organization: draft.organization!,
         role: (draft.role as Role) ?? "viewer",
         status: (draft.status as Status) ?? "active",
-        createdAt: new Date().toISOString(),
-      } as UserRow);
-      if (res.success) {
-        setState((s) => ({
-          ...s,
-          items: [res.user, ...s.items],
-          total: s.total + 1,
-        }));
-      }
+      });
+      setState((s) => ({
+        ...s,
+        items: [res.user, ...s.items],
+        total: s.total + 1,
+      }));
     } else if (form.mode === "edit" && draft.id) {
       await apiUpdateUser(draft.id, draft);
       setState((s) => ({
         ...s,
-        items: s.items.map((u) =>
-          u.id === draft.id ? ({ ...u, ...draft } as UserRow) : u
-        ),
+        items: s.items.map((u) => (u.id === draft.id ? ({ ...u, ...draft } as UserRow) : u)),
       }));
     }
     setForm((f) => ({ ...f, open: false }));
   }
 
-  return (
-    <main className="relative mx-auto max-w-7xl p-4 sm:p-6">
-      {/* Background */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(50%_40%_at_50%_0%,rgba(16,185,129,0.10),transparent),radial-gradient(60%_50%_at_100%_0%,rgba(34,211,238,0.07),transparent)]" />
+  const totalPages = Math.max(1, Math.ceil(state.total / state.pageSize));
 
+  return (
+    <main className="relative mx-auto max-w-[1320px] w-full px-4 sm:px-6 lg:px-8 pb-10">
+      {/* Header */}
       <header className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-white">
-            จัดการผู้ใช้งาน (User Manager)
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            ค้นหา • กรอง • แก้ไขผ่าน Dialog • ลบ • ส่งออก CSV
-          </p>
+          <h1 className="text-xl font-semibold text-white">จัดการผู้ใช้งาน (User Manager)</h1>
+          <p className="mt-1 text-sm text-slate-400">ค้นหา • กรอง • แก้ไขผ่าน Dialog • ลบ • ส่งออก CSV</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -885,61 +882,36 @@ export default function UserManager() {
         </div>
       </header>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-3 shadow-xl backdrop-blur">
+      <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 sm:p-5 shadow-xl backdrop-blur">
         <Toolbar
           state={state}
           setState={setState}
           selected={selected}
           loading={loading}
           onRefresh={() => setRefreshTick((t) => t + 1)}
-          onCreate={() =>
-            setForm({
-              open: true,
-              mode: "create",
-              draft: { role: "viewer", status: "active" },
-            })
-          }
+          onCreate={() => setForm({ open: true, mode: "create", draft: { role: "viewer", status: "active" } })}
           onBulkDelete={() => openDelete()}
         />
 
-        <div className="mt-3 overflow-auto rounded-xl border border-white/10">
-          <table className="min-w-full text-sm">
+        <div className="mt-3 overflow-x-auto sm:overflow-x-visible rounded-xl border border-white/10">
+          <table className="w-full table-auto text-sm">
             <TableHeader state={state} setState={setState} />
             <tbody className="divide-y divide-white/5">
               {loading ? (
                 Array.from({ length: state.pageSize }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="px-3 py-2">
-                      <div className="h-4 w-4 rounded bg-white/20" />
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="h-4 w-64 rounded bg-white/20" />
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="h-4 w-56 rounded bg-white/20" />
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="h-4 w-20 rounded bg-white/20" />
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="h-4 w-24 rounded bg-white/20" />
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="h-4 w-28 rounded bg-white/20" />
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <div className="ml-auto h-8 w-8 rounded bg-white/20" />
-                    </td>
+                    <td className="px-3 py-2"><div className="h-4 w-4 rounded bg-white/20" /></td>
+                    <td className="px-3 py-2"><div className="h-4 w-64 rounded bg-white/20" /></td>
+                    <td className="px-3 py-2"><div className="h-4 w-56 rounded bg-white/20" /></td>
+                    <td className="px-3 py-2"><div className="h-4 w-20 rounded bg-white/20" /></td>
+                    <td className="px-3 py-2"><div className="h-4 w-24 rounded bg-white/20" /></td>
+                    <td className="px-3 py-2"><div className="h-4 w-28 rounded bg-white/20" /></td>
+                    <td className="px-3 py-2 text-right"><div className="ml-auto h-8 w-8 rounded bg-white/20" /></td>
                   </tr>
                 ))
               ) : state.items.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-3 py-10 text-center text-slate-400"
-                  >
-                    ไม่พบข้อมูลผู้ใช้
-                  </td>
+                  <td colSpan={7} className="px-3 py-10 text-center text-slate-400">ไม่พบข้อมูลผู้ใช้</td>
                 </tr>
               ) : (
                 state.items.map((u) => (
@@ -948,9 +920,7 @@ export default function UserManager() {
                     u={u}
                     selected={selected.includes(u.id)}
                     onToggle={() => toggleOne(u.id)}
-                    onEdit={() =>
-                      setForm({ open: true, mode: "edit", draft: u })
-                    }
+                    onEdit={() => setForm({ open: true, mode: "edit", draft: u })}
                     onDelete={() => openDelete([u.id])}
                   />
                 ))
@@ -964,10 +934,7 @@ export default function UserManager() {
             <input
               type="checkbox"
               className="h-4 w-4 rounded border-white/20 bg-slate-900/70"
-              checked={
-                selected.length === state.items.length &&
-                state.items.length > 0
-              }
+              checked={selected.length === state.items.length && state.items.length > 0}
               onChange={(e) => toggleAll(e.target.checked)}
             />
             <span>เลือกทั้งหมด (เลือกอยู่ {selected.length} รายการ)</span>
@@ -976,26 +943,20 @@ export default function UserManager() {
           <div className="flex items-center gap-2 text-sm text-slate-300">
             <button
               disabled={state.page <= 1}
-              onClick={() =>
-                setState((s) => ({ ...s, page: Math.max(1, s.page - 1) }))
-              }
+              onClick={() => setState((s) => ({ ...s, page: Math.max(1, s.page - 1) }))}
               className="rounded-xl border border-white/10 px-3 py-1.5 disabled:opacity-50"
             >
               ก่อนหน้า
             </button>
             <span>
-              หน้า {state.page} /{" "}
-              {Math.max(1, Math.ceil(state.total / state.pageSize))}
+              หน้า {state.page} / {Math.max(1, Math.ceil(state.total / state.pageSize))}
             </span>
             <button
               disabled={state.page >= Math.ceil(state.total / state.pageSize)}
               onClick={() =>
                 setState((s) => ({
                   ...s,
-                  page: Math.min(
-                    Math.max(1, Math.ceil(state.total / state.pageSize)),
-                    s.page + 1
-                  ),
+                  page: Math.min(Math.max(1, Math.ceil(state.total / state.pageSize)), s.page + 1),
                 }))
               }
               className="rounded-xl border border-white/10 px-3 py-1.5 disabled:opacity-50"
@@ -1042,18 +1003,14 @@ export default function UserManager() {
                 leaveTo="opacity-0 scale-95"
               >
                 <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl border border-white/10 bg-slate-900 p-6 text-slate-100 shadow-xl">
-                  <Dialog.Title className="text-lg font-semibold">
-                    ลบผู้ใช้
-                  </Dialog.Title>
+                  <Dialog.Title className="text-lg font-semibold">ลบผู้ใช้</Dialog.Title>
                   <p className="mt-2 text-sm text-slate-300">
                     คุณต้องการลบผู้ใช้จำนวน {confirm.ids.length} รายการหรือไม่?
                     การกระทำนี้ไม่สามารถย้อนกลับได้
                   </p>
                   <div className="mt-5 flex justify-end gap-2">
                     <button
-                      onClick={() =>
-                        setConfirm((c) => ({ ...c, open: false }))
-                      }
+                      onClick={() => setConfirm((c) => ({ ...c, open: false }))}
                       className="rounded-xl border border-white/10 px-4 py-2 text-sm hover:bg-white/5"
                     >
                       ยกเลิก

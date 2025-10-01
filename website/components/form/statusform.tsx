@@ -5,12 +5,11 @@ import React from "react";
 import Link from "next/link";
 import { Dialog, Transition } from "@headlessui/react";
 import {
-  Search, Filter, RefreshCw, Calendar,
-  CheckCircle2, Clock, XCircle, Server, Slash,
-  KeySquare, Copy, Check, ChevronRight,
+  Search, CheckCircle2, Clock, XCircle,
+  KeySquare, Copy, Check, ChevronRight, Slash,
 } from "lucide-react";
 
-/* ---------- types & mock ---------- */
+// ==== 1) Types (UI ใช้จริง) =================================================
 type Status = "pending" | "approved" | "rejected";
 type Row = {
   id: string;
@@ -23,18 +22,68 @@ type Row = {
   status: Status;
 };
 
-const rows: Row[] = [
-  { id:"REQ-25-0010", system:"EBS Sync Chiangmai", requester:"สสจ. เชียงใหม่", createdAt:"2025-09-16 09:30", environment:"sandbox",    auth:"apikey", scopes:["read:events","notify:send"], status:"pending" },
-  { id:"REQ-25-0009", system:"M-EBS Dashboard",    requester:"สคร. 1 เชียงใหม่", createdAt:"2025-09-15 10:22", environment:"production", auth:"apikey", scopes:["read:events"],              status:"approved" },
-  { id:"REQ-25-0008", system:"Provincial Lab Bridge", requester:"ศูนย์ Lab กลาง", createdAt:"2025-09-12 14:05", environment:"sandbox",    auth:"apikey", scopes:["read:lab"],                 status:"rejected" },
-  { id:"REQ-25-0007", system:"Notification Relay", requester:"สสจ. ขอนแก่น", createdAt:"2025-09-11 08:15", environment:"production", auth:"apikey", scopes:["notify:send"],            status:"pending" },
-];
+// ==== 2) อ่าน JSON + ปรับสกีมาให้ตรง UI =====================================
+// - ต้องเปิด tsconfig: "resolveJsonModule": true และตั้ง alias "@/..."
+import rawJson from "@/stores/data/Request.json";
 
-/* ---------- helpers ---------- */
+// สกีมดิบที่อาจมาจากฐานข้อมูล/ไฟล์ (ตามภาพตัวอย่างคอลัมน์)
+type Raw = {
+  id: string;
+  requester_name?: string;
+  requester_email?: string;
+  requester_phone?: string;
+  organizer_name?: string;
+  agree?: boolean;
+  allowed_ips?: string[] | string;
+  auth_method?: string;           // เราใช้ "apikey"
+  callback_url?: string;
+  data_format?: string;
+  data_source?: string;
+  description?: string;
+  project_name?: string;
+  purpose?: string;
+  rate_limit_per_minute?: number;
+  retention_days?: number;
+  user_record?: string;
+  status?: string;                // pending/approved/rejected
+  environment?: string;           // sandbox/production
+  scopes?: string[] | string;     // array หรือ 'a,b,c'
+  api_key?: string | null;
+  note?: string | null;
+  created_at?: string;            // ISO หรือ 'YYYY-MM-DD HH:mm'
+  updated_at?: string;
+};
+
+// helpers แปลงค่า
+const asStatus = (s?: string): Status => {
+  const v = (s || "").toLowerCase();
+  return v === "approved" || v === "rejected" ? (v as Status) : "pending";
+};
+const asEnv = (e?: string): "sandbox" | "production" =>
+  e === "production" ? "production" : "sandbox";
+const toArray = (x?: string[] | string): string[] =>
+  Array.isArray(x) ? x.filter(Boolean) : (x ? x.split(",").map(s => s.trim()).filter(Boolean) : []);
+const fmtDate = (s?: string) =>
+  !s ? "" : s.includes("T") ? s.replace("T", " ").slice(0, 16) : s.slice(0, 16);
+
+function normalize(r: Raw): Row {
+  return {
+    id: r.id,
+    system: r.project_name || r.description || r.data_source || "-",
+    requester: r.requester_name || "-",
+    createdAt: fmtDate(r.created_at),
+    environment: asEnv(r.environment),
+    auth: "apikey",
+    scopes: toArray(r.scopes),
+    status: asStatus(r.status),
+  };
+}
+
+// ==== 3) UI helpers ==========================================================
 const cx = (...xs: Array<string | false | null | undefined>) => xs.filter(Boolean).join(" ");
-const genApiKey = (r: Row) =>
+const genApiKey = (row: Row) =>
   `APIK-${
-    Array.from(new TextEncoder().encode(`${r.id}|${r.environment}|${r.auth}`))
+    Array.from(new TextEncoder().encode(`${row.id}|${row.environment}|${row.auth}`))
       .map(b => b.toString(16).padStart(2,"0")).join("").slice(0,24).toUpperCase()
       .replace(/(.{6})(.{6})(.{6})(.{6})/, "$1-$2-$3-$4")
   }`;
@@ -47,6 +96,7 @@ function StatusPill({ s }: { s: Status }) {
   }[s];
   return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ring-1 ${m.c}`}>{m.i}{m.t}</span>;
 }
+
 const EnvPill = ({ env }: { env: Row["environment"] }) => (
   <span className={cx(
     "rounded-full px-2 py-0.5 text-[11px] ring-1",
@@ -54,7 +104,22 @@ const EnvPill = ({ env }: { env: Row["environment"] }) => (
   )}>{env}</span>
 );
 
-/* ---------- dialog ---------- */
+function Chip({ active, onClick, icon, children }: { active?: boolean; onClick?: () => void; icon?: React.ReactNode; children: React.ReactNode; }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cx(
+        "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs ring-1 transition",
+        active ? "bg-cyan-500/15 text-cyan-300 ring-cyan-400/30" : "bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10"
+      )}
+    >
+      {icon}{children}
+    </button>
+  );
+}
+
+// ==== 4) Dialog (ดู/คัดลอก API Key) =========================================
 function ApiKeyDialog({ open, onClose, row }: { open: boolean; onClose: () => void; row: Row | null }) {
   const [copied, setCopied] = React.useState(false);
   React.useEffect(() => setCopied(false), [open]);
@@ -111,24 +176,15 @@ function ApiKeyDialog({ open, onClose, row }: { open: boolean; onClose: () => vo
   );
 }
 
-/* ---------- small ---------- */
-function Chip({ active, onClick, icon, children }: { active?: boolean; onClick?: () => void; icon?: React.ReactNode; children: React.ReactNode; }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cx(
-        "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs ring-1 transition",
-        active ? "bg-cyan-500/15 text-cyan-300 ring-cyan-400/30" : "bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10"
-      )}
-    >
-      {icon}{children}
-    </button>
-  );
-}
-
-/* ---------- main (USER) ---------- */
+// ==== 5) Main (USER) =========================================================
 export default function StatusForm() {
+  // อ่าน JSON และ normalize เป็น Row[]
+  const seed = React.useMemo<Row[]>(
+    () => (rawJson as unknown as Raw[]).map(normalize),
+    []
+  );
+
+  const [rows, setRows] = React.useState<Row[]>(seed);
   const [q, setQ] = React.useState("");
   const [status, setStatus] = React.useState<Status | "all">("all");
   const [env, setEnv] = React.useState<"all" | "sandbox" | "production">("all");
@@ -145,11 +201,8 @@ export default function StatusForm() {
 
   return (
     <section className="w-full max-w-[1180px] mx-auto px-0 sm:px-0 overflow-x-hidden">
-<div className="overflow-clip rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-inset ring-white/5">
-
-
-
-        {/* Toolbar (ติดในกรอบ, ซ่อนสกรอลบาร์เอง) */}
+      <div className="overflow-clip rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-inset ring-white/5">
+        {/* Toolbar */}
         <div className="sticky top-0 z-10 rounded-t-2xl border-b border-white/10 bg-slate-900/80 px-4 sm:px-5 py-4 backdrop-blur">
           <div className="flex flex-wrap items-center gap-2">
             <label className="relative flex-1 min-w-[220px]" aria-label="กล่องค้นหา">
@@ -169,24 +222,15 @@ export default function StatusForm() {
               <Chip active={status==="rejected"} onClick={()=>setStatus("rejected")} icon={<XCircle className="h-4 w-4" />}>ปฏิเสธ</Chip>
             </div>
 
-            <div className="ml-auto flex flex-wrap items-center gap-2">
-              {/* <Chip active={env==="sandbox"} onClick={()=>setEnv(env==="sandbox"?"all":"sandbox")} icon={<Server className="h-4 w-4" />}>Sandbox</Chip>
-              <Chip active={env==="production"} onClick={()=>setEnv(env==="production"?"all":"production")} icon={<Server className="h-4 w-4" />}>Production</Chip> */}
-
-              {/* <button className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs hover:bg-white/10" aria-label="เลือกช่วงวัน">
-                <Calendar className="mr-1 inline h-4 w-4" /> ช่วงวัน
-              </button>
-              <button onClick={()=>{ setQ(""); setStatus("all"); setEnv("all"); }} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs hover:bg-white/10">
-                <Filter className="mr-1 inline h-4 w-4" /> ล้างฟิลเตอร์
-              </button>
-              <button className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs hover:bg-white/10">
-                <RefreshCw className="mr-1 inline h-4 w-4" /> รีเฟรช
-              </button> */}
-            </div>
+            {/* ถ้าต้องการกรองตาม env เปิดสองบรรทัดด้านล่างได้ */}
+            {/* <div className="ml-auto flex flex-wrap items-center gap-2">
+              <Chip active={env==="sandbox"} onClick={()=>setEnv(env==="sandbox"?"all":"sandbox")}>Sandbox</Chip>
+              <Chip active={env==="production"} onClick={()=>setEnv(env==="production"?"all":"production")}>Production</Chip>
+            </div> */}
           </div>
         </div>
 
-        {/* Cards (auto-fit กันล้น) */}
+        {/* Cards */}
         <div className="p-5 sm:p-6">
           {list.length === 0 ? (
             <div className="grid place-items-center rounded-xl border border-dashed border-white/10 p-10 text-sm text-slate-400">
