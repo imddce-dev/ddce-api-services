@@ -200,9 +200,9 @@ export default function StatusForm() {
   });
 
   return (
-    <section className="w-full max-w-[1180px] mx-auto px-0 sm:px-0 overflow-x-hidden">
-      <div className="overflow-clip rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-inset ring-white/5">
-        {/* Toolbar */}
+    <section className="w-full max-w-[1180px] mx-auto px-0 sm:px-0 no-scrollbar">
+      <div className=" rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-inset ring-white/5">
+        {/* Toolbar (ติดในกรอบ, ซ่อนสกรอลบาร์เอง) */}
         <div className="sticky top-0 z-10 rounded-t-2xl border-b border-white/10 bg-slate-900/80 px-4 sm:px-5 py-4 backdrop-blur">
           <div className="flex flex-wrap items-center gap-2">
             <label className="relative flex-1 min-w-[220px]" aria-label="กล่องค้นหา">

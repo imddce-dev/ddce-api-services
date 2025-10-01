@@ -138,8 +138,8 @@ export const logout = async(userId) => {
 }
 /**
  * ดึงข้อมูลโปรไฟล์ผู้ใช้จากเซิร์ฟเวอร์
- * @param {string} token - Access Token ของผู้ใช้
- * @returns {Promise<object>} ข้อมูลโปรไฟล์ หรือ object error
+ * @param {string} token 
+ * @returns {Promise<object>} 
  */
 export const getUserProfile = async (token) => {
   try {

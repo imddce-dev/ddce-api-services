@@ -1,9 +1,8 @@
 import * as crypto from 'crypto';
 
 /**
- * สร้าง CSRF token โดยใช้หลักการ HMAC (Stateless)
- * @param {string} csrfKey - คีย์ลับสำหรับสร้าง HMAC signature
- * @returns {string} CSRF token ในรูปแบบ 'nonce.signature'
+ * @param {string} csrfKey 
+ * @returns {string} 
  */
 
 
@@ -16,10 +15,9 @@ export function generateHmacToken(csrfKey : string) {
 }
 
 /**
- * ตรวจสอบความถูกต้องของ CSRF token ที่สร้างจาก HMAC
- * @param {string} csrfKey - คีย์ลับที่ใช้ในการสร้าง token
- * @param {string} token - Token ที่ได้รับมาจาก client
- * @returns {boolean} - คืนค่า true หาก token ถูกต้อง, มิฉะนั้นคืนค่า false
+ * @param {string} csrfKey 
+ * @param {string} token 
+ * @returns {boolean} 
  */
 
 export function verifyHmacToken(csrfKey : string, token : string) {

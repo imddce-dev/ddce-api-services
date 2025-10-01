@@ -4,7 +4,6 @@ import { jwtVerify } from "jose";
 
 export async function middleware(request: NextRequest) {
   try {
-    
     const accessToken = request.cookies.get("accessToken")?.value;
 
     if (!accessToken) {
@@ -20,41 +19,11 @@ export async function middleware(request: NextRequest) {
     }
     const secret = new TextEncoder().encode(secretKey);
 
-    const { payload } = await jwtVerify(accessToken, secret);
+    // ✅ ตรวจสอบ JWT อย่างเดียว ไม่ต้อง verify jti
+    await jwtVerify(accessToken, secret);
 
-    const jti = payload.jti;
-    if (!jti || typeof jti !== "string") {
-      throw new Error("JTI not found in token payload");
-    }
-    
-    const baseURL = process.env.NEXT_PUBLIC_API_URL;
-    const verifyUrl = new URL("/api/auth/verifyjti", baseURL);
-    console.log("[Middleware] Fetching token verification:", verifyUrl.toString());
-
-    const response = await fetch(verifyUrl.toString(),{
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cookie": `accessToken=${accessToken}`, 
-      },
-      body: JSON.stringify({ jti }),
-    });
-     console.log(response)
-    if (!response.ok) {
-      console.error(`[Middleware] API responded with status ${response.status}`);
-      const text = await response.text();
-      console.error("[Middleware] API response text:", text);
-      throw new Error("API verification failed");
-    }
-
-    const data = await response.json();
-    if (data.success) {
-      console.log("[Middleware] Token verified successfully");
-      return NextResponse.next();
-    }
-
-    console.error("[Middleware] Token verification returned success=false");
-    throw new Error("Token verification failed");
+    console.log("[Middleware] Token verified successfully");
+    return NextResponse.next();
 
   } catch (error: any) {
     console.error("[Middleware Error]", error.message);

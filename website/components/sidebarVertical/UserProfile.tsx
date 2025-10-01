@@ -95,16 +95,21 @@ const UserProfile: React.FC<UserInfo> = ({fullname, org}) => {
             className="absolute bottom-full mb-2 w-full origin-bottom rounded-2xl border border-white/10 bg-slate-800 p-2 shadow-2xl ring-1 ring-white/5"
           >
             <ul className="space-y-1 text-sm text-slate-300">
-                 <li>
-                <a href="apiformmanager" className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-white/5">
-                  <Edit className="h-4 w-4 text-slate-400" /> จัดการร้องคำขอ API
-                </a>
-              </li>
-                            <li>
-                <a href="Usermanager" className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-white/5">
-                  <Edit className="h-4 w-4 text-slate-400" /> จัดการผู้ใช้งาน
-                </a>
-              </li>
+
+            {userProfile?.perm ? (
+              <>
+                <li>
+                  <a href="apiformmanager" className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-white/5">
+                    <Edit className="h-4 w-4 text-slate-400" /> จัดการร้องคำขอ API
+                  </a>
+                </li>
+                <li>
+                  <a href="Usermanager" className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-white/5">
+                    <Edit className="h-4 w-4 text-slate-400" /> จัดการผู้ใช้งาน
+                  </a>
+                </li>
+              </>
+            ) : null}
               <li>
                 <a href="#" onClick={handleedit} className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-white/5">
                   <Edit className="h-4 w-4 text-slate-400" /> แก้ไขโปรไฟล์

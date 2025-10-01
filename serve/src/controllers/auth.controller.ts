@@ -37,7 +37,7 @@ export const login = async (c: Context) => {
                 errorCode: result.errorCode
             },{status : statusCode});
         }
-        await GenerOtp(username)
+        //await GenerOtp(username)
         setCookie(c, 'accessToken', result.token || '', {
             httpOnly: true,
             secure: true, 

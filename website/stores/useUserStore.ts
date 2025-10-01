@@ -9,6 +9,7 @@ interface UserProfile {
   phone: string,
   organizerId: string,
   organizerName: string ; 
+  perm: boolean;
 }
 
 interface UserState {

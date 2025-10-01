@@ -9,10 +9,8 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=mysql://thirames.t:@Thi504595@10.100.84.47:3306/api_service-dev
-      - REDIS_URL=redis://redis:6379
+    env_file:
+      - .env
     depends_on:
       - redis
     networks:
