@@ -9,7 +9,6 @@ import {
   ChevronDown,
   Mail,
   Phone,
-  Download,
   UserPlus,
   MoreVertical,
   Pencil,
@@ -23,7 +22,7 @@ export type Role = "manager" | "editor" | "viewer";
 export type Status = "active" | "suspended" | "pending";
 
 export type UserRow = {
-  id: string; // JSON ใช้ string เช่น USR-0001
+  id: string;
   name: string;
   username: string;
   email: string;
@@ -31,19 +30,12 @@ export type UserRow = {
   organization?: string;
   role: Role;
   status: Status;
-  createdAt: string; // ISO
+  createdAt: string;
 };
 
 const ROLES: Role[] = ["manager", "editor", "viewer"];
 const STATUSES: Status[] = ["active", "suspended", "pending"];
-const ORGS = [
-  "สสจ.นนทบุรี",
-  "กองควบคุมโรค",
-  "รพ.ตัวอย่าง",
-  "กรมดิจิทัลเพื่อเศรษฐกิจและสังคม",
-  "สปสช.",
-  "ศบค.",
-];
+const ORGS = ["สสจ.นนทบุรี", "กองควบคุมโรค", "รพ.ตัวอย่าง", "สปสช.", "ศบค."];
 
 /* =============================================================================
    STATE TYPES
@@ -69,70 +61,33 @@ export type FetchState = {
 };
 
 /* =============================================================================
-   JSON SOURCE (อ่านจาก public/*)
+   MOCK API (ไม่อ่าน JSON ภายนอกแล้ว)
 ============================================================================= */
-type RawUser = {
-  id: string;
-  fullname: string;
-  username: string;
-  email: string;
-  phone?: string;
-  password?: string;
-  organizer?: string;
-  policy?: string; // admin/editor/viewer ...
-  root?: boolean;
-  createdAt: string;
-  appove?: boolean;
-  appoveAt?: string | null;
-  status?: string; // active/suspended/pending ฯลฯ
-};
+const MOCK_USERS: UserRow[] = [
+  {
+    id: "USR-0001",
+    name: "สมชาย ใจดี",
+    username: "somchai01",
+    email: "somchai@example.com",
+    phone: "0812345678",
+    organization: "สสจ.นนทบุรี",
+    role: "manager",
+    status: "active",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "USR-0002",
+    name: "สมศรี ใจงาม",
+    username: "somsri02",
+    email: "somsri@example.com",
+    phone: "0899999999",
+    organization: "กองควบคุมโรค",
+    role: "editor",
+    status: "pending",
+    createdAt: new Date().toISOString(),
+  },
+];
 
-// เผื่อบางโปรเจกต์ใส่ไว้ต่างตำแหน่ง
-const CANDIDATES = ["/website/stores/Data/User.json", "/stores/Data/User.json"];
-
-async function fetchUsersFromJson(): Promise<RawUser[]> {
-  let lastErr: any = null;
-  for (const url of CANDIDATES) {
-    try {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) {
-        lastErr = new Error(`HTTP ${res.status}`);
-        continue;
-      }
-      return (await res.json()) as RawUser[];
-    } catch (err) {
-      lastErr = err;
-    }
-  }
-  console.error("User.json not found at:", CANDIDATES, lastErr);
-  throw new Error(`ไม่พบไฟล์ User.json (ลองที่: ${CANDIDATES.join(", ")})`);
-}
-
-function mapRawToUser(r: RawUser): UserRow {
-  const pol = (r.policy || "").toLowerCase();
-  const role: Role =
-    r.root || pol === "admin" ? "manager" : pol === "editor" ? "editor" : "viewer";
-
-  const st = (r.status || "active").toLowerCase();
-  const status: Status =
-    st === "suspended" ? "suspended" : st === "pending" ? "pending" : "active";
-
-  return {
-    id: r.id,
-    name: r.fullname || r.username || r.email,
-    username: r.username,
-    email: r.email,
-    phone: r.phone || "",
-    organization: r.organizer || "",
-    role,
-    status,
-    createdAt: r.createdAt || new Date().toISOString(),
-  };
-}
-
-/* =============================================================================
-   API (อ่าน JSON จริง + จัดการผลในหน่วยความจำ)
-============================================================================= */
 export async function apiListUsers(params: {
   page: number;
   pageSize: number;
@@ -142,10 +97,9 @@ export async function apiListUsers(params: {
   sortBy?: SortKey;
   sortDir?: "asc" | "desc";
 }): Promise<{ items: UserRow[]; total: number }> {
-  const raw = await fetchUsersFromJson();
-  let arr = raw.map(mapRawToUser);
-
+  let arr = [...MOCK_USERS];
   const { q, role, status } = params;
+
   if (q) {
     const qq = q.toLowerCase();
     arr = arr.filter(
@@ -178,7 +132,6 @@ export async function apiListUsers(params: {
 export async function apiCreateUser(
   payload: Omit<UserRow, "id" | "createdAt">
 ): Promise<{ success: true; user: UserRow }> {
-  // mock: เพิ่มใน state เท่านั้น (ไม่ได้เขียนลงไฟล์)
   await new Promise((r) => setTimeout(r, 120));
   const rand = (Math.floor(Math.random() * 10000) + "").padStart(4, "0");
   return {
@@ -190,10 +143,12 @@ export async function apiCreateUser(
     },
   };
 }
+
 export async function apiUpdateUser(id: string, patch: Partial<UserRow>) {
   await new Promise((r) => setTimeout(r, 120));
   return { success: true, patch, id };
 }
+
 export async function apiDeleteUsers(_ids: string[]) {
   await new Promise((r) => setTimeout(r, 120));
   return { success: true };
@@ -217,50 +172,10 @@ function formatDate(iso: string) {
     return iso;
   }
 }
-export function exportCSV(rows: UserRow[]) {
-  if (!rows.length) return;
-  const header = [
-    "id",
-    "name",
-    "username",
-    "email",
-    "phone",
-    "organization",
-    "role",
-    "status",
-    "createdAt",
-  ];
-  const csv =
-    [header.join(",")]
-      .concat(
-        rows.map((r) =>
-          [
-            r.id,
-            r.name,
-            r.username,
-            r.email,
-            r.phone || "",
-            r.organization || "",
-            r.role,
-            r.status,
-            r.createdAt,
-          ]
-            .map((x) => `"${String(x).replace(/"/g, '""')}"`)
-            .join(",")
-        )
-      )
-      .join("\n");
-  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `users-${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
 
+/* =============================================================================
+   PILL COMPONENTS
+============================================================================= */
 function RolePill({ role }: { role: Role }) {
   const m: Record<Role, string> = {
     manager: "bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-400/30",
@@ -268,7 +183,12 @@ function RolePill({ role }: { role: Role }) {
     viewer: "bg-sky-500/15 text-sky-300 ring-1 ring-sky-400/30",
   };
   return (
-    <span className={clsx("inline-flex items-center rounded-full px-2 py-0.5 text-xs", m[role])}>
+    <span
+      className={clsx(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs",
+        m[role]
+      )}
+    >
       {role}
     </span>
   );
@@ -281,11 +201,23 @@ function StatusPill({ s }: { s: Status }) {
     pending: "bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/30",
   };
   return (
-    <span className={clsx("inline-flex items-center rounded-full px-2 py-0.5 text-xs", m[s])}>
+    <span
+      className={clsx(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs",
+        m[s]
+      )}
+    >
       {s}
     </span>
   );
 }
+
+/* =============================================================================
+   (โค้ดส่วน Dialog, Toolbar, TableHeader, RowMenu, UserRowItem, BulkDelete,
+    Toolbar, UserManager ยังเหมือนเดิม ไม่ต้องแก้ไข)
+============================================================================= */
+
+/* ... วางต่อโค้ด Dialog / Toolbar / UserManager จากไฟล์เดิม ... */
 
 /* =============================================================================
    FORM DIALOG
@@ -505,7 +437,7 @@ function TableHeader({
     <thead className="sticky top-0 z-[1] bg-slate-900/85 backdrop-blur border-b border-white/10">
       <tr>
         <th className="w-2 px-1 py-2" />
-        {th("name", "ชื่อ-สกุล / หน่วยงาน")}
+        {th("name", "ชื่อ-สกุล / หน่วยงาน77")}
         {th("email", "ติดต่อ")}
         {th("role", "บทบาท")}
         {th("status", "สถานะ")}
@@ -863,32 +795,7 @@ export default function UserManager() {
   }
 
   return (
-    <main className="relative mx-auto max-w-7xl p-4 sm:p-6">
-      {/* Background */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(50%_40%_at_50%_0%,rgba(16,185,129,0.10),transparent),radial-gradient(60%_50%_at_100%_0%,rgba(34,211,238,0.07),transparent)]" />
-
-  return (
-    <main className="relative mx-auto max-w-[1320px] w-full px-4 sm:px-6 lg:px-8 pb-10">
-      {/* Header */}
-      <header className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-white">
-            จัดการผู้ใช้งาน (User Manager)
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            ค้นหา • กรอง • แก้ไขผ่าน Dialog • ลบ • ส่งออก CSV
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 hover:bg-white/5"
-            onClick={() => exportCSV(state.items)}
-          >
-            <Download className="h-4 w-4" /> ส่งออก CSV
-          </button>
-        </div>
-      </header>
-
+    <main className="w-full">
       <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 sm:p-5 shadow-xl backdrop-blur">
         <Toolbar
           state={state}
@@ -918,7 +825,7 @@ export default function UserManager() {
                 ))
               ) : state.items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-3 py-10 text-center text-slate-400">ไม่พบข้อมูลผู้ใช้</td>
+                  <td colSpan={3} className="px-3 py-10 text-center text-slate-400">ไม่พบข้อมูลผู้ใช้</td>
                 </tr>
               ) : (
                 state.items.map((u) => (
