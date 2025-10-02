@@ -1,5 +1,7 @@
 import { DrizzleDB } from '../configs/type';
 import { apiRequests, apiRequestAttachments } from '../configs/mysql/schema';
+import { db } from '../configs/mysql';
+import { eq } from 'drizzle-orm';
 
 export type ApiRequestData = {
   requesterName: string;
@@ -84,6 +86,53 @@ export const createApiRequest = async (
     };
   }
 };
+
+export const fetchRequestById = async(db: DrizzleDB, currentId:number) => {
+  try{
+      const result = await db
+       .select({
+         id: apiRequests.id,
+         requester_name: apiRequests.requesterName,
+         requester_email: apiRequests.requesterEmail,
+         requester_phone: apiRequests.requesterPhone,
+         organizer_name: apiRequests.organizerName,
+         agree: apiRequests.agree,
+         allowed_ips: apiRequests.allowedIPs,
+         auth_method: apiRequests.authMethod,
+         callback_url: apiRequests.callbackUrl,
+         data_format: apiRequests.dataFormat,
+         data_source: apiRequests.dataSource,
+         description: apiRequests.description,
+         project_name: apiRequests.projectName,
+         purpose: apiRequests.purpose,
+         rate_limit_per_minute: apiRequests.rateLimitPerMinute,
+         retention_days: apiRequests.retentionDays,
+         user_record: apiRequests.userRecord,
+         status: apiRequests.status,
+         created_at: apiRequests.createdAt,
+         updated_at: apiRequests.updatedAt,
+       })
+       .from(apiRequests)
+       .where(eq(apiRequests.userRecord,currentId))
+
+      return {
+        success: true,
+        data: result
+      }
+
+  }catch (err){
+      console.log("Error Fetch events Request:", err)
+      return {
+        success: false,
+        code: "UNKNOWN_ERROR",
+        message: "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่",
+      }
+  }
+}
+
+
+
+
 
 
 

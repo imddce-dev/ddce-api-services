@@ -110,9 +110,7 @@ export const deleteUser = async (c:Context) => {
     const db = c.get('db') as DrizzleDB
     const body = await c.req.json();
     const UserId = body.userId
-
     const result = await userModel.removeUser(db, UserId)
-
     if(result.success === false){
        if(result.code === "NOT_FOUND"){
         return c.json({
@@ -131,7 +129,6 @@ export const deleteUser = async (c:Context) => {
           },500)
        }
     }
-
     return c.json({
        success: true,
        message: result.message

@@ -51,25 +51,12 @@ const main = async () => {
 
     const options = app.basePath('web-api/options/')
     options.post('api-request',apiController.creatApiReq)
+    options.get('api-request/:id',apiController.EvenApiByID)
 
     // No Middle..
     const application = app.basePath('web-api/');
     application.get('org', orgController.getOrg);
-    application.get("test-mail", async (c) => {
-      try {
-        const info = await sendMail(
-          "thiramesths95@gmail.com", // ผู้รับ
-          "ทดสอบ",                   // หัวข้อ
-          "<p>ทดสอบ</p>"             // เนื้อหา
-        );
-
-        return c.json({ ok: true, messageId: info.messageId });
-      } catch (err: any) {
-        console.error("Mail error:", err);
-        return c.json({ ok: false, error: err.message }, 500);
-      }
-    });
-
+    
     const userApi = app.basePath('web-api/users');
     userApi.use('*',rateLimited.createAuthRateLimiter())
     userApi.post('/createusr', userController.createUser);
