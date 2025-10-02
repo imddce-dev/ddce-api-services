@@ -52,12 +52,10 @@ export async function sendApprovalMail(
     คำขอการใช้งานระบบ <b>DDCE API SERVICE REQUEST</b> ของท่าน 
     <span style="color:green"><b>ได้รับการอนุมัติแล้ว</b></span>
   </p>
-  <p>ท่านสามารถเข้าสู่ระบบและยืนสมัครขอใช้ระบบบริการ API ได้แล้ว</p>
-
+  <p>ท่านสามารถเข้าสู่ระบบและยืนสมัครขอใช้ระบบบริการ API ได้ที่ https://api-service-ddce.ddc.moph.go.th/</p>
   <br/>
   <p>
-    กองควบคุมโรคและภัยสุขภาพในภาวะฉุกเฉิน<br/>
-    กรมควบคุมโรค
+    กองควบคุมโรคและภัยสุขภาพในภาวะฉุกเฉิน  กรมควบคุมโรค
   </p>
 
   <hr style="margin:20px 0; border:0; border-top:1px solid #ddd;" />
