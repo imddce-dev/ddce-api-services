@@ -24,7 +24,7 @@ type Row = {
 
 // ==== 2) อ่าน JSON + ปรับสกีมาให้ตรง UI =====================================
 // - ต้องเปิด tsconfig: "resolveJsonModule": true และตั้ง alias "@/..."
-import rawJson from "@/stores/data/Request.json";
+import rawJson from "../../stores/Data/Request.json";
 
 // สกีมดิบที่อาจมาจากฐานข้อมูล/ไฟล์ (ตามภาพตัวอย่างคอลัมน์)
 type Raw = {

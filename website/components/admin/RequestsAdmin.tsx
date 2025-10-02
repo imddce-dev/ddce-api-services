@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 // ต้องเปิด resolveJsonModule ใน tsconfig.json
-import requestsJson from "@/stores/data/Request.json";
+import requestsJson from "../../stores/Data/Request.json";
 
 /* ============================================================================
    TYPES (แบบที่ UI ใช้งาน)
