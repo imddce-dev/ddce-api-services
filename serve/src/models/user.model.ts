@@ -144,8 +144,99 @@ export const appoveUser = async (db: DrizzleDB , userId : number , appove: boole
     };
 }
 
+export const updateUser = async (
+  db: DrizzleDB,
+  data: {
+    userId: number;
+    fullname: string;
+    phone: string;
+    email: string;
+  }
+) => {
+  try {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, data.userId),
+    });
 
+    if (!user) {
+      return {
+        success: false,
+        code: "NOT_FOUND",
+        message: `ไม่พบผู้ใช้ที่มี id = ${data.userId}`,
+      };
+    }
 
+    await db
+      .update(users)
+      .set({
+        fullname: data.fullname,
+        phone: data.phone,
+        email: data.email,
+      })
+      .where(eq(users.id, data.userId));
+
+    const updatedUser = await db.query.users.findFirst({
+      where: eq(users.id, data.userId),
+    });
+
+    return {
+      success: true,
+      message: "Update Data Success!",
+      data: updatedUser,
+    };
+  } catch (err) {
+    console.error("Update user error:", err);
+    return {
+      success: false,
+      code: "DB_ERROR",
+      message: "เกิดข้อผิดพลาดระหว่างอัพเดตข้อมูล",
+    };
+  }
+};
+
+export const removeUser =  async (db: DrizzleDB , userId: number)  => {
+    try{
+       
+      const checkUser = await db.query.users.findFirst({
+        where: eq(users.id, userId)
+      })
+
+      if(!checkUser) {
+        console.log("ไม่พบผู้ใช้งาน")
+        return {
+          success: false,
+          code: "NOT_FOUND",
+          message: `ไม่พบผู้ใช้ที่มี id = ${userId}`,
+        }
+      }
+
+      if(checkUser.appove === true || checkUser.status === 'active'){
+        console.log("ไม่สามารถลบได้ เนื่องจาก ผู้ใช้ยัง Active")
+        return {
+          success: false,
+          code:"USER IN ACTIVE",
+          message:"User Active !"
+        }
+      }
+
+      await db
+        .delete(users)
+        .where(eq(users.id,userId))
+
+      return{
+        success:true,
+        message: "Delete User Success !"
+      }
+
+    }catch (err){
+      console.error("Delete user error", err);
+      return {
+        success: false,
+        code: "DB_ERROR",
+        message: "เกิดข้อผิดพลาดระหว่างลบข้อมูล"
+      }
+    }
+}
 
 
 

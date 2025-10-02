@@ -37,8 +37,8 @@ export const createApiRequest = async (
   );
   return apiRes.data;
 };
-
-
+     
+/*-----------------------------ดึง users ทั้งหมด------------------------------------------------------------ */
 export interface userRequest {
   id: number;
   fullname: string;
@@ -59,11 +59,14 @@ export interface userRequestRes {
   data: userRequest[]
 }
 export const fetchUsers = async (): Promise<userRequestRes> => {
-  const res = await apiClient.get<userRequestRes>('/users/fetchusers')
+  const res = await apiClient.get<userRequestRes>('/users/fetchusers',{
+    headers:{
+       "Cache-Control": "no-store"
+    }
+  })
   return res.data
 }
-
-
+/*------------------------------------อนุมัติ----------------------------------------------------- */
 export interface approveRequest {
   userId: number;
   appove: boolean
@@ -71,4 +74,41 @@ export interface approveRequest {
 export const appoveUser = async (payload: approveRequest): Promise<approveRequest> => {
   const res = await apiClient.post<approveRequest>('/users/approve',payload)
   return res.data
+}
+/*---------------------------------อัพเดท-------------------------------------------------------- */
+export interface updateRequest {
+  userId: number;
+  fullname: string;
+  phone: string;
+  email: string
+}
+export const updateUsers = async ( paylaod: updateRequest): Promise<updateRequest> => {
+  try{
+    const resp = await apiClient.put<updateRequest>('/users/update-user',paylaod)
+    return resp.data
+  }catch (error : any){
+    console.error("Update user error:", error);
+    throw new Error(
+      error.response?.data?.message || "ไม่สามารถอัปเดตข้อมูลผู้ใช้ได้"
+    );
+  }
+}
+
+/*-----------------------------------ลบ user------------------------------------------------------ */
+export interface RemoveRequest {
+   userId: number;
+}
+export const deleteUser = async (userId: number): Promise<RemoveRequest> => {
+  try{
+    const resp = await apiClient.delete<RemoveRequest>('/users/delete-user',{
+      data:{userId},
+    })
+    return resp.data
+    
+  }catch (error : any){
+    console.error("Update user error:", error);
+    throw new Error(
+      error.response?.data?.message || "ไม่สามารถอัปเดตข้อมูลผู้ใช้ได้"
+    );
+  }
 }
