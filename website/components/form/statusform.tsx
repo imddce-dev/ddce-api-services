@@ -225,7 +225,7 @@ export default function StatusForm() {
                       สร้างเมื่อ: <span className="text-slate-300">{formatDate(ev.created_at)}</span>
                     </div>
                     <div className="hidden h-5 w-px bg-slate-700 md:block" />
-                    <button
+                    {/* <button                                                   // ปุ่มดู API Key (ถ้าอนุมัติแล้ว)ปิดอยู่่/>/////////////////////////////////////////////////////////////////
                       onClick={() => handleOpenKey(ev)}
                       disabled={!approveEnabled}
                       className="inline-flex items-center gap-2 rounded-lg border border-emerald-600/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200 ring-1 ring-inset ring-emerald-500/30 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-40"
@@ -233,7 +233,7 @@ export default function StatusForm() {
                     >
                       <KeyRound className="h-4 w-4" />
                       ดู API Key
-                    </button>
+                    </button> */}
                   </div>
                 </div>
 
@@ -254,7 +254,7 @@ export default function StatusForm() {
         </div>
       )}
 
-      {/* API Key Dialog */}
+      API Key Dialog
       {openKeyForId !== null && (
         <div
           className="fixed inset-0 z-[1000] grid place-items-center bg-black/60 p-4"
