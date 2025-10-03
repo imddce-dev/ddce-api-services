@@ -83,7 +83,7 @@ export default function DashboardPage() {
             <Stat title="รอตรวจสอบ" value="0" foot="เฉลี่ย 2-3 วันทำการ" icon={<Clock className="h-4 w-4" />} />
             <Stat title="คีย์ที่ใช้งานอยู่" value="0" foot="อัปเดตล่าสุด 2 ชม." icon={<KeyRound className="h-4 w-4" />} />
           </section>
-          <section className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+          {/* <section className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
             <QuickCard
               title="ยื่นคำขอใช้งาน API"
               desc="กรอกข้อมูลผู้ยื่น/หน่วยงาน เลือก Scope และส่งเพื่ออนุมัติ"
@@ -104,7 +104,7 @@ export default function DashboardPage() {
               tone="amber"
               icon={<Library className="h-5 w-5" />}
             />
-          </section>
+          </section> */}
           <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 ring-1 ring-inset ring-white/5 lg:col-span-1">
               <h3 className="mb-1 text-sm font-semibold">ปริมาณการเรียกใช้งาน (7 วัน)</h3>
@@ -126,9 +126,9 @@ export default function DashboardPage() {
                 </svg>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-slate-300">
-                <span className="inline-flex items-center gap-1"><Cpu className="h-4 w-4 text-cyan-300" /> Mebs</span>
-                <span className="inline-flex items-center gap-1"><Activity className="h-4 w-4 text-emerald-300" /> EbS-DDC</span>
-                <span className="inline-flex items-center gap-1"><Database className="h-4 w-4 text-amber-300" /> EbS-Pro..</span>
+                <span className="inline-flex items-center gap-1"><Cpu className="h-4 w-4 text-cyan-300" /> M-EBS</span>
+                <span className="inline-flex items-center gap-1"><Activity className="h-4 w-4 text-emerald-300" /> EBS-DDC</span>
+                <span className="inline-flex items-center gap-1"><Database className="h-4 w-4 text-amber-300" /> EBS-Pro..</span>
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-0 ring-1 ring-inset ring-white/5 lg:col-span-2 overflow-hidden">
@@ -167,7 +167,7 @@ export default function DashboardPage() {
             </div>
           </section>
           <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Card>
+            {/* <Card>
               <h4 className="mb-1 flex items-center gap-2 text-sm font-semibold"><Waves className="h-4 w-4 text-cyan-300" /> ขั้นตอนยื่นคำขอสั้น ๆ</h4>
               <ol className="space-y-1 text-xs text-slate-300">
                 <li>1) กรอกข้อมูลผู้ยื่นและหน่วยงาน</li>
@@ -185,7 +185,7 @@ export default function DashboardPage() {
                 <Link href="/docs" className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 hover:bg-white/10">เปิดเอกสาร</Link>
                 <Link href="/support" className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 hover:bg-white/10"><LifeBuoy className="h-4 w-4" />ขอความช่วยเหลือ</Link>
               </div>
-            </Card>
+            </Card> */}
           </section>
           {/* Footer */}
           <footer className="mt-8 border-t border-white/10 pt-3 text-xs text-slate-500">
