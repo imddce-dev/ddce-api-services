@@ -1,3 +1,4 @@
+import { promises } from 'dns';
 import apiClient from './apiConfig';
 
 interface ApiRequest {
@@ -7,7 +8,7 @@ interface ApiRequest {
   organizerName:        string;
   agree:                boolean;
   allowedIPs:           string;
-  authAttachment:       File[];   // upload file(s)
+  authAttachment:       File[];   
   authMethod:           string;
   callbackUrl:          string;
   dataFormat:           string;
@@ -37,38 +38,126 @@ export const createApiRequest = async (
   );
   return apiRes.data;
 };
+ 
 
-
-export interface userRequest {
-  id: number;
-  fullname: string;
-  username: string;
-  email: string;
-  phone: string;
-  organizeId: string;
-  organizeName: string;
-  appove: boolean;
-  appoveAt: string
-  createAt: string
-  status: string;
+export interface ApiReqData {
+  id:                     number,
+  requester_name:         string,
+  requester_email:        string,
+  requester_phone:        string,
+  organizer_name:         string,
+  agree:                  boolean,
+  allowed_ips:            string,
+  auth_method:            string,
+  callback_url:           string,
+  data_format:            string,
+  data_source:            string,
+  description:            string,
+  project_name:           string,
+  purpose:                string,
+  rate_limit_per_minute:  number,
+  retention_days:         number,
+  user_record:            number,
+  status:                 string,
+  created_at:             string,
+  updated_at:             string,
 }
 
+interface ApiReqRes {
+  success:                boolean,
+  code?:                  string,
+  message?:               string, 
+  data:                   ApiReqData[]
+}
+
+export const FetchApiReqById = async(id: number): Promise<ApiReqRes> => {
+    try{
+        const resp = await apiClient.get<ApiReqRes>(`/options/api-request/${id}`,{
+          headers:{
+            "Cache-Control": "no-store"
+          }
+        })
+        return resp.data
+    }catch(err : any){
+        console.error("Fetch Events Api error:", err);
+        throw new Error(
+          err.response?.data?.message || "ไม่สามารถกึงข้อมูลได้"
+        );
+    }
+}
+
+
+/*-----------------------------ดึง users ทั้งหมด------------------------------------------------------------ */
+export interface userRequest {
+  id:           number;
+  fullname:     string;
+  username:     string;
+  email:        string;
+  phone:        string;
+  organizeId:   string;
+  organizeName: string;
+  appove:       boolean;
+  appoveAt:     string
+  createAt:     string
+  status:       string;
+}
 
 export interface userRequestRes {
-  success: boolean;
-  data: userRequest[]
+  success:      boolean;
+  data:         userRequest[]
 }
+
 export const fetchUsers = async (): Promise<userRequestRes> => {
-  const res = await apiClient.get<userRequestRes>('/users/fetchusers')
+  const res = await apiClient.get<userRequestRes>('/users/fetchusers',{
+    headers:{
+       "Cache-Control": "no-store"
+    }
+  })
   return res.data
 }
-
-
+/*------------------------------------อนุมัติ----------------------------------------------------- */
 export interface approveRequest {
-  userId: number;
-  appove: boolean
+  userId:       number;
+  appove:       boolean
 }
 export const appoveUser = async (payload: approveRequest): Promise<approveRequest> => {
   const res = await apiClient.post<approveRequest>('/users/approve',payload)
   return res.data
+}
+/*---------------------------------อัพเดท-------------------------------------------------------- */
+export interface updateRequest {
+  userId:       number;
+  fullname:     string;
+  phone:        string;
+  email:        string
+}
+export const updateUsers = async ( paylaod: updateRequest): Promise<updateRequest> => {
+  try{
+    const resp = await apiClient.put<updateRequest>('/users/update-user',paylaod)
+    return resp.data
+  }catch (error : any){
+    console.error("Update user error:", error);
+    throw new Error(
+      error.response?.data?.message || "ไม่สามารถอัปเดตข้อมูลผู้ใช้ได้"
+    );
+  }
+}
+
+/*-----------------------------------ลบ user------------------------------------------------------ */
+export interface RemoveRequest {
+   userId:      number;
+}
+export const deleteUser = async (userId: number): Promise<RemoveRequest> => {
+  try{
+    const resp = await apiClient.delete<RemoveRequest>('/users/delete-user',{
+      data:{userId},
+    })
+    return resp.data
+    
+  }catch (error : any){
+    console.error("Update user error:", error);
+    throw new Error(
+      error.response?.data?.message || "ไม่สามารถอัปเดตข้อมูลผู้ใช้ได้"
+    );
+  }
 }

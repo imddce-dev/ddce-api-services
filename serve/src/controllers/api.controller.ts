@@ -82,3 +82,43 @@ export const creatApiReq = async (c: Context) => {
     );
   }
 };
+
+
+export const EvenApiByID = async(c: Context)=> {
+  try{
+
+    const db =  c.get('db') as DrizzleDB
+    const id = Number(c.req.param('id'))
+
+    if(isNaN(id)){
+       return c.json(
+        { success: false, message: "ID ไม่ถูกต้อง" },
+        400
+      );
+    }
+
+    const result = await apiModel.fetchRequestById(db,id)
+    
+    if(result.success === false){
+      return c.json({
+        success: false,
+        message: result.message
+      },500)
+    }
+
+    return c.json({
+      success: true,
+      data: result.data
+  },200)
+       
+    
+
+  }catch(error : any){
+    console.log(error)
+    return c.json({
+      success: false,
+      code: 'INTERNAL_SERVER_ERROR',
+      message: error.message || 'An internal server error occurred.',
+    },500)
+  }
+}

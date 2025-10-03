@@ -70,3 +70,76 @@ export const appoveUser = async (c:Context) => {
         }, 500);
    }
 }
+
+export const updateUser = async (c:Context) => {
+  try{
+    const db = c.get('db') as DrizzleDB
+    const body = await c.req.json();
+    const result = await userModel.updateUser(db, body)
+    if(result.success === false){
+       if(result.code == "NOT_FOUND"){
+          return c.json ({
+            success: false,
+            message: result.message
+          },404) 
+       }
+       return c.json({
+          success: false,
+          message: result.message
+       },400)
+    }
+    return c.json({
+      success: true,
+      message: result.message
+    },200)
+
+  }catch (error){
+    console.error(error);
+    return c.json({
+       success: false,
+       code: 'INTERNAL_SERVER_ERROR',
+       message: 'An internal server error occurred.' 
+    },500)
+  }
+}
+
+
+export const deleteUser = async (c:Context) => {
+  try{
+     
+    const db = c.get('db') as DrizzleDB
+    const body = await c.req.json();
+    const UserId = body.userId
+    const result = await userModel.removeUser(db, UserId)
+    if(result.success === false){
+       if(result.code === "NOT_FOUND"){
+        return c.json({
+          success:false,
+          message: result.message
+        },404)
+       }else if(result.code === "USER IN ACTIVE"){
+         return c.json({
+          success:false,
+          message: result.message
+        },404)
+       }else{
+          return c.json({
+            success:false,
+            message: result.message
+          },500)
+       }
+    }
+    return c.json({
+       success: true,
+       message: result.message
+    },200)
+
+  }catch(error){
+    console.error(error);
+    return c.json({
+       success: false,
+       code: 'INTERNAL_SERVER_ERROR',
+       message: 'An internal server error occurred.' 
+    },500)
+  }
+}

@@ -5,7 +5,8 @@ export const coreMiddleware = cors({
         'Content-Type',
         'X-CSRF-Token', 
         'X-Custom-Header',
-        'Upgrade-Insecure-Requests'
+        'Upgrade-Insecure-Requests',
+        'Cache-Control',
     ],
     allowMethods: [ 
         'POST',
