@@ -1,7 +1,9 @@
 import { DrizzleDB } from '../configs/type';
 import { apiRequests, apiRequestAttachments } from '../configs/mysql/schema';
 import { db } from '../configs/mysql';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
+import { date } from 'drizzle-orm/pg-core';
+
 
 export type ApiRequestData = {
   requesterName: string;
@@ -129,10 +131,161 @@ export const fetchRequestById = async(db: DrizzleDB, currentId:number) => {
       }
   }
 }
+export const fetchRequest = async(db:DrizzleDB) => {
+    try{
+      const result = await db 
+        .select({
+            id: apiRequests.id,
+            requester_name: apiRequests.requesterName,
+            requester_email: apiRequests.requesterEmail,
+            requester_phone: apiRequests.requesterPhone,
+            organizer_name: apiRequests.organizerName,
+            agree: apiRequests.agree,
+            allowed_ips: apiRequests.allowedIPs,
+            auth_method: apiRequests.authMethod,
+            callback_url: apiRequests.callbackUrl,
+            data_format: apiRequests.dataFormat,
+            data_source: apiRequests.dataSource,
+            description: apiRequests.description,
+            project_name: apiRequests.projectName,
+            purpose: apiRequests.purpose,
+            rate_limit_per_minute: apiRequests.rateLimitPerMinute,
+            retention_days: apiRequests.retentionDays,
+            user_record: apiRequests.userRecord,
+            status: apiRequests.status,
+            created_at: apiRequests.createdAt,
+            updated_at: apiRequests.updatedAt,
+        })
+        .from(apiRequests)
+        .orderBy(desc(apiRequests.id))
+
+      return {
+        success: true,
+        data: result
+      }
+
+    }catch (err) {
+       console.log("Error Fetch events Request:", err)
+       return{
+        success: false,
+        code:"UNKNOWN_ERROR",
+        message:"เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่",
+       }
+    }
+}
+
+const VALID_STATUS = ["sending", "pending", "active", "inactive"] as const;
+type StatusType = typeof VALID_STATUS[number];
+
+export const updatStatusApi = async(db: DrizzleDB, eventId:number, status:string) => {
+  try{
+
+     if(!VALID_STATUS.includes(status as StatusType)){
+      return {
+        success: false,
+        code:"INVALID_STATUS",
+         message: `สถานะไม่ถูกต้อง ต้องเป็นหนึ่งใน: ${VALID_STATUS.join(", ")}`,
+      }
+     }
+     const chkEvents = await db.query.apiRequests.findFirst({
+      where: eq(apiRequests.id,eventId)
+     })
+
+     if(!chkEvents){
+      return {
+        success:false,
+        code:"NOT_FOUND",
+        message:"Not Match Id Events"
+      }
+     }
 
 
+     await db
+     .update(apiRequests)
+     .set({
+      status: status
+     })
+     .where(eq(apiRequests.id,eventId))
+
+    return {
+      success:true,
+      message:"update Success !"
+    }
+
+  }catch (error){
+    console.log("Error Update Status Request:",error)
+    return{
+      success: false,
+      code:"UNKNOWN_ERROR",
+      message:"เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่",
+    }
+  }
+}
 
 
+export const updateDataRequest = async( 
+  db: DrizzleDB,
+  data:{
+    id: number,
+    requester_name: string,
+    requester_email: string,
+    requester_phone: string,
+    allowed_ips: string,
+    auth_method: string,
+    callback_url: string,
+    data_format: string,
+    data_source: string,
+    description: string,
+    project_name: string,
+    purpose: string,
+    rate_limit_per_minute: string,
+    retention_days: string,
+  }
+)=> {
+  try{
+     const chkEvent = await db.query.apiRequests.findFirst({
+    where: eq(apiRequests.id, data.id)
+  })
+  if(!chkEvent){
+    return {
+      success: false,
+      code:"NOT_FOUND",
+      message:"Not Match Id Events"
+    }
+  }
+  await db
+    .update(apiRequests)
+    .set({
+      requesterName: data.requester_name,
+      requesterEmail: data.requester_email,
+      requesterPhone: data.requester_phone,
+      allowedIPs: data.allowed_ips,
+      authMethod: data.auth_method,
+      callbackUrl: data.callback_url,
+      dataFormat: data.data_format,
+      dataSource: data.data_source,
+      description: data.description,
+      projectName: data.project_name,
+      purpose: data.purpose,
+      rateLimitPerMinute: Number(data.rate_limit_per_minute),
+      retentionDays: Number(data.retention_days)
+    })
+    .where(eq(apiRequests.id, data.id))
+
+  return { 
+    success: true,
+    message: "Update Data"
+  }
+
+  }catch (error){
+    console.log("Error Update Status Request:",error)
+    return{
+      success: false,
+      code:"UNKNOWN_ERROR",
+      message:"เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่",
+    }
+  }
 
 
+}
 

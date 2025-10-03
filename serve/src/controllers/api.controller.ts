@@ -105,20 +105,119 @@ export const EvenApiByID = async(c: Context)=> {
         message: result.message
       },500)
     }
-
     return c.json({
       success: true,
       data: result.data
   },200)
-       
-    
-
+      
   }catch(error : any){
     console.log(error)
     return c.json({
       success: false,
       code: 'INTERNAL_SERVER_ERROR',
       message: error.message || 'An internal server error occurred.',
+    },500)
+  }
+}
+
+export const FetchEventApi = async (c: Context) => {
+  try{
+
+    const db = c.get('db') as DrizzleDB
+    const result = await apiModel.fetchRequest(db)
+
+     if(result.success === false){
+      return c.json({
+        success: false,
+        message: result.message
+      },500)
+    }
+
+    return c.json({
+      success: true,
+      data: result.data
+    })
+    
+
+  }catch (error : any){
+    console.log(error)
+    return c.json({
+      success: false,
+      code: 'INTERNAL_SERVER_ERROR',
+      message: error.message || 'An internal server error occurred.',
+    },500)
+  }
+}
+export const updatStatusApi = async (c: Context) => {
+  try{
+     const db = c.get('db') as DrizzleDB
+     const body = await c.req.json() 
+     const eventId = Number(body.eventId);
+     const status =  body.status
+
+     const result = await apiModel.updatStatusApi(db, eventId, status)
+
+     if(result.success === false){
+        if(result.code === "NOT_FOUND"){
+            return c.json({
+              success : false,
+              message: result.message
+            },404)
+        }else{
+            return c.json({
+              success : false,
+              message: result.message
+            },400)
+        }
+     }
+
+    return c.json({
+      success: true,
+      message: result.message
+    },200)
+
+  }catch (error : any){
+    console.log(error)
+    return c.json({
+      success: false,
+      code: "INTERNAL_SERVER_ERROR",
+      message: error.message || 'An internal server error occurred.'
+    },500)
+  }
+}
+
+export const updateDataRequest = async (c:Context) => {
+  try{
+    const db = c.get('db') as DrizzleDB
+    const body = await c.req.json()
+
+    const result = await apiModel.updateDataRequest(db,body)
+
+    if(result.success === false){
+      if(result.code === "NOT_FOUND"){
+        return c.json({
+          success: false,
+          message: result.message
+        },404)
+      }else{
+        return c.json({
+          success: false,
+          message: result.message
+        },400)
+      }
+    }
+
+    return c.json({
+      success:true,
+      message: result.message
+    },200)
+
+  }catch (error : any){
+    console.log(error)
+    return c.json({
+      success: false,
+      code: "INTERNAL_SERVER_ERROR",
+      message: error.message || 'An internal server error occurred.'
     },500)
   }
 }

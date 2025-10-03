@@ -1,7 +1,7 @@
 import { promises } from 'dns';
 import apiClient from './apiConfig';
 
-interface ApiRequest {
+export interface ApiRequest {
   requesterName:        string;
   requesterEmail:       string;
   requesterPhone:       string;
@@ -39,7 +39,7 @@ export const createApiRequest = async (
   return apiRes.data;
 };
  
-
+/*-----------------------------ดึง Api Request ตาม users ------------------------------------------------------------ */
 export interface ApiReqData {
   id:                     number,
   requester_name:         string,
@@ -82,6 +82,26 @@ export const FetchApiReqById = async(id: number): Promise<ApiReqRes> => {
         console.error("Fetch Events Api error:", err);
         throw new Error(
           err.response?.data?.message || "ไม่สามารถกึงข้อมูลได้"
+        );
+    }
+}
+
+/*-----------------------------ดึง Api Request ทั้งหมด------------------------------------------------------------ */
+/*-----------------------ดึง interface ApiReqData ApiReqRes------------------------------------------------------*/
+
+export const FetchAllApireq = async(): Promise<ApiReqRes> => {
+    try{
+      const resp = await apiClient.get<ApiReqRes>('/options/api-request',{
+        headers:{
+          "Cache-Control": "no-store"
+        }
+      })
+      return resp.data
+
+    }catch (error :any){
+      console.error("Fetch Events Api error:", error)
+      throw new Error(
+          error.response?.data?.message || "ไม่สามารถดึงข้อมูลได้"
         );
     }
 }

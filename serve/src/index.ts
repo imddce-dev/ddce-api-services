@@ -52,8 +52,9 @@ const main = async () => {
     const options = app.basePath('web-api/options/')
     options.post('api-request',apiController.creatApiReq)
     options.get('api-request/:id',apiController.EvenApiByID)
+    options.get('api-request',apiController.FetchEventApi)
+    options.put('approve-request',apiController.updatStatusApi)
 
-    // No Middle..
     const application = app.basePath('web-api/');
     application.get('org', orgController.getOrg);
     
@@ -62,7 +63,7 @@ const main = async () => {
     userApi.post('/createusr', userController.createUser);
     userApi.get('/fetchusers',authMiddleware,userController.getAllUsers)
     userApi.post('/approve',authMiddleware,userController.appoveUser)
-    userApi.put('/update-user',userController.updateUser) //รอทดสอบ 
+    userApi.put('/update-user',authMiddleware,userController.updateUser) 
     userApi.delete('/delete-user',authMiddleware,userController.deleteUser) 
   
     const port = parseInt(process.env.SERVER_PORT || '8080');
