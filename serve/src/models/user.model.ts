@@ -1,12 +1,49 @@
-import { users } from '../configs/mysql/schema';
-import { eq } from 'drizzle-orm';
+import { organizer, users } from '../configs/mysql/schema';
+import { desc, eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import { DrizzleDB } from '../configs/type';
 
 
 export const findAll = async (db: DrizzleDB) => {
-  return await db.query.users.findMany();
+  try{
+    const existingUserAll = await db
+       .select({
+        id: users.id,
+        fullname: users.fullname,
+        username: users.username,
+        email: users.email,
+        phone: users.phone, 
+        organizeId: users.organizer,
+        organizeName: organizer.name,
+        appove: users.appove,
+        appoveAt: users.appoveAt,
+        createAt: users.createdAt,
+        status: users.status
+       })
+       .from(users)
+       .innerJoin(organizer, eq(users.organizer,organizer.id))
+       .orderBy(desc(users.id));
+    
+    if( existingUserAll.length === 0 ){
+      return {
+        success: false,
+        code: 'NO DATA',
+        message: "ไม่มีข้อมูล หรืออาจเกิดข้อผิดพลาด !",
+      }
+    }
+    return {
+      success: true,
+      data: existingUserAll
+    }
+  }catch(error){
+    console.error("Error fetching users:", error);
+    return {
+      success: false,
+      code: "UNKNOWN_ERROR",
+      message: "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่", 
+    };
 };
+}
 
 
 export const create = async (
@@ -77,6 +114,40 @@ export const create = async (
     };
   }
 };
+
+
+export const appoveUser = async (db: DrizzleDB , userId : number , appove: boolean) => {
+    const checkUser = await db.query.users.findFirst({
+      where: eq(users.id, userId)
+     })
+    if (!checkUser) {
+      console.log("ไม่พบผู้ใช้");
+      return {
+        success: false,
+        code: "NOT_FOUND",
+        message: `ไม่พบผู้ใช้ที่มี id = ${userId}`,
+      };
+    } 
+    await db
+      .update(users)
+      .set({
+        appove:appove,
+        appoveAt: new Date(),
+        status: appove ? "active" : "pending",
+      })
+      .where(eq(users.id, userId))
+
+    return {
+      success: true,
+      status : appove,
+      data: {email:checkUser.email, username: checkUser.username}
+    };
+}
+
+
+
+
+
 
 
 

@@ -73,6 +73,8 @@ const main = async () => {
     const userApi = app.basePath('web-api/users');
     userApi.use('*',rateLimited.createAuthRateLimiter())
     userApi.post('/createusr', userController.createUser);
+    userApi.get('fetchusers',authMiddleware,userController.getAllUsers)
+    userApi.post('approve',authMiddleware,userController.appoveUser)
   
     const port = parseInt(process.env.SERVER_PORT || '8080');
 

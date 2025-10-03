@@ -37,3 +37,38 @@ export const createApiRequest = async (
   );
   return apiRes.data;
 };
+
+
+export interface userRequest {
+  id: number;
+  fullname: string;
+  username: string;
+  email: string;
+  phone: string;
+  organizeId: string;
+  organizeName: string;
+  appove: boolean;
+  appoveAt: string
+  createAt: string
+  status: string;
+}
+
+
+export interface userRequestRes {
+  success: boolean;
+  data: userRequest[]
+}
+export const fetchUsers = async (): Promise<userRequestRes> => {
+  const res = await apiClient.get<userRequestRes>('/users/fetchusers')
+  return res.data
+}
+
+
+export interface approveRequest {
+  userId: number;
+  appove: boolean
+}
+export const appoveUser = async (payload: approveRequest): Promise<approveRequest> => {
+  const res = await apiClient.post<approveRequest>('/users/approve',payload)
+  return res.data
+}
