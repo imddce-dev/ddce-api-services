@@ -15,7 +15,7 @@ import { secureHeadersMiddleware } from './middlewares/secure-headers.middleware
 import *  as rateLimited from './middlewares/rate-limit.middleware';
 import { verifyCsrf } from './middlewares/csrf.middleware';
 import { authMiddleware } from './middlewares/auth.middleware'
-import { sendMail } from './utils/nodemailer'
+
 
 type AppContext = {
   Variables: {
@@ -26,7 +26,6 @@ type AppContext = {
 const app = new Hono<AppContext>();
 const main = async () => {
   try {
-    console.log('Connecting to MySQL and Redis...');
     await Promise.all([
       db.execute(sql`select 1`),
       connectRedis()
@@ -53,7 +52,9 @@ const main = async () => {
     options.post('api-request',apiController.creatApiReq)
     options.get('api-request/:id',apiController.EvenApiByID)
     options.get('api-request',apiController.FetchEventApi)
+    options.put('api-request',apiController.updateDataRequest)
     options.put('approve-request',apiController.updatStatusApi)
+    options.delete('api-request/:id',apiController.deleteDataRequest)
 
     const application = app.basePath('web-api/');
     application.get('org', orgController.getOrg);

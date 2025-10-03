@@ -154,7 +154,7 @@ export const updatStatusApi = async (c: Context) => {
      const body = await c.req.json() 
      const eventId = Number(body.eventId);
      const status =  body.status
-
+     console.log(eventId)
      const result = await apiModel.updatStatusApi(db, eventId, status)
 
      if(result.success === false){
@@ -192,7 +192,6 @@ export const updateDataRequest = async (c:Context) => {
     const body = await c.req.json()
 
     const result = await apiModel.updateDataRequest(db,body)
-
     if(result.success === false){
       if(result.code === "NOT_FOUND"){
         return c.json({
@@ -213,6 +212,50 @@ export const updateDataRequest = async (c:Context) => {
     },200)
 
   }catch (error : any){
+    console.log(error)
+    return c.json({
+      success: false,
+      code: "INTERNAL_SERVER_ERROR",
+      message: error.message || 'An internal server error occurred.'
+    },500)
+  }
+}
+
+export const deleteDataRequest = async (c: Context) => {
+  try{
+
+    const db = c.get('db') as DrizzleDB
+    const id = Number(c.req.param('id'))
+
+    if(isNaN(id)){
+       return c.json(
+        { success: false, message: "ID ไม่ถูกต้อง" },
+        400
+      );
+    }
+
+    const result = await apiModel.deleteRequest(db,id)
+
+    if(result.success === false){
+      if(result.code === 'NOT_FOUND'){
+        return c.json({
+          success: false,
+          message: result.message
+        },404)
+      }else{
+        return c.json({
+          success: false,
+          message: result.message
+        },400)
+      }
+    }
+
+    return c.json({
+        success: true,
+    },200)
+
+
+  }catch (error : any) {
     console.log(error)
     return c.json({
       success: false,

@@ -1,9 +1,7 @@
+
 import { DrizzleDB } from '../configs/type';
 import { apiRequests, apiRequestAttachments } from '../configs/mysql/schema';
-import { db } from '../configs/mysql';
 import { desc, eq } from 'drizzle-orm';
-import { date } from 'drizzle-orm/pg-core';
-
 
 export type ApiRequestData = {
   requesterName: string;
@@ -174,7 +172,7 @@ export const fetchRequest = async(db:DrizzleDB) => {
     }
 }
 
-const VALID_STATUS = ["sending", "pending", "active", "inactive"] as const;
+const VALID_STATUS = ["sending", "pending", "active", "inactive", "denied"] as const;
 type StatusType = typeof VALID_STATUS[number];
 
 export const updatStatusApi = async(db: DrizzleDB, eventId:number, status:string) => {
@@ -190,7 +188,6 @@ export const updatStatusApi = async(db: DrizzleDB, eventId:number, status:string
      const chkEvents = await db.query.apiRequests.findFirst({
       where: eq(apiRequests.id,eventId)
      })
-
      if(!chkEvents){
       return {
         success:false,
@@ -238,11 +235,12 @@ export const updateDataRequest = async(
     description: string,
     project_name: string,
     purpose: string,
-    rate_limit_per_minute: string,
-    retention_days: string,
+    rate_limit_per_minute: number,
+    retention_days: number,
   }
 )=> {
   try{
+    console.log(data.id)
      const chkEvent = await db.query.apiRequests.findFirst({
     where: eq(apiRequests.id, data.id)
   })
@@ -285,7 +283,53 @@ export const updateDataRequest = async(
       message:"เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่",
     }
   }
+}
 
 
+export const deleteRequest = async (db:DrizzleDB, eventId:number) =>{
+  try{
+      const CheckEvent = await db.query.apiRequests.findFirst({
+        where: eq(apiRequests.id, eventId)
+      })
+
+     if(!CheckEvent){
+      return{
+        success: false,
+        code: "NOT_FOUND",
+        message:"Not Match Id Events"
+      }
+     }
+    
+     if(CheckEvent.status === 'active'){
+      return{
+        success: false,
+        code: "EVENT_IS_ACTIVE",
+        message: "Event Request Active"
+      }
+     }
+
+      await db
+      .delete(apiRequests)
+      .where(eq(apiRequests.id, eventId))
+
+
+      await db
+      .delete(apiRequestAttachments)
+      .where(eq(apiRequestAttachments.apiRequestId, eventId))
+
+
+      return{
+        success: true,
+        Message: "Data Delete Successfully !"
+      }
+
+  }catch (error){
+      console.log("Error Delete Event Request:",error)
+      return{
+        success: false,
+        code:"UNKNOWN_ERROR",
+        message:"เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่"
+      }
+  }
 }
 

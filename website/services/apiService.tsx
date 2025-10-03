@@ -1,5 +1,6 @@
 import { promises } from 'dns';
 import apiClient from './apiConfig';
+import { error } from 'console';
 
 export interface ApiRequest {
   requesterName:        string;
@@ -90,7 +91,7 @@ export const FetchApiReqById = async(id: number): Promise<ApiReqRes> => {
 /*-----------------------ดึง interface ApiReqData ApiReqRes------------------------------------------------------*/
 
 export const FetchAllApireq = async(): Promise<ApiReqRes> => {
-    try{
+  try{
       const resp = await apiClient.get<ApiReqRes>('/options/api-request',{
         headers:{
           "Cache-Control": "no-store"
@@ -98,13 +99,64 @@ export const FetchAllApireq = async(): Promise<ApiReqRes> => {
       })
       return resp.data
 
-    }catch (error :any){
+  }catch (error :any){
       console.error("Fetch Events Api error:", error)
       throw new Error(
           error.response?.data?.message || "ไม่สามารถดึงข้อมูลได้"
         );
+  }
+}
+/*-----------------------------อัพเดท Api Request ------------------------------------------------------------ */
+/*-----------------------ดึง interface ApiReqData------------------------------------------------------*/
+export const updateApiReq = async(payload:ApiReqData): Promise<ApiReqData> => {
+    try{
+      const resp = await apiClient.put<ApiReqData>('/options/api-request',payload)
+      return resp.data
+    }catch (error :any){
+      console.error("Update Events Api error:", error)
+      throw new Error(
+          error.response?.data?.message || "เกิดข้อผิดพลาดไม่สามารถทำรายการได้"
+        );
+  }
+}
+/*-----------------------------อนุมัติ คำขอ api------------------------------------------------------------ */
+export interface approveApi {
+  eventId:           number;
+  status:            string;
+}
+
+export const appoveApi = async (payload:approveApi): Promise<approveApi> => {
+  try{
+    const resp = await apiClient.put<approveApi>('/options/approve-request',payload)
+    return resp.data
+
+  }catch(err : any){
+    console.error("Approve Error:",err)
+    throw new Error(
+      err.response?.data?.message || "เกิดข้อผิดพลาดไม่สามารถทำรายการได้"
+    )
+  }
+}
+
+/*-----------------------------ลบคำขอ api------------------------------------------------------------ */
+export interface deleteApiData {
+  id: number;
+}
+
+export const deleteApi = async (id: number): Promise<deleteApiData> => {
+    try{
+
+      const resp = await apiClient.delete<deleteApiData>(`/options/api-request/${id}`)
+      return resp.data
+
+    }catch(err : any){
+      console.error("Delete Error:",err)
+      throw new Error(
+        err.response?.data?.message || "เกิดข้อผิดพลาดไม่สามารถทำรายการได้"
+      )
     }
 }
+
 
 
 /*-----------------------------ดึง users ทั้งหมด------------------------------------------------------------ */
