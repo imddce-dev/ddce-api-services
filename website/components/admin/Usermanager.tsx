@@ -83,7 +83,7 @@ export default function Usermanager() {
     try {
       setLoading(true);
       const res = await fetchUsers();
-      if (res?.success) setUserdata(res.data);
+      if (res?.success) setUserdata([...res.data]);
     } catch (e) {
       console.error("Reload users failed:", e);
       alert((e as any)?.message || "โหลดรายชื่อผู้ใช้ล้มเหลว");

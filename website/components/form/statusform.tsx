@@ -187,7 +187,7 @@ export default function StatusForm() {
       {loading && <ListSkeleton />}
 
       {!loading && error && (
-        <EmptyState title={error} subtitle="โปรดลองใหม่ภายหลัง หรือเข้าสู่ระบบอีกครั้ง" />
+        <EmptyState title={error} subtitle="ยังไม่มีคำขอของคุณในระบบ" />
       )}
 
       {!loading && !error && !hasItems && (
