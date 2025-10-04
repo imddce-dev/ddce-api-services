@@ -1,5 +1,6 @@
 import { mysqlTable, serial, varchar, timestamp, int, boolean, text, index, unique } from 'drizzle-orm/mysql-core';
 import { ref } from 'process';
+import { create } from '../../models/user.model';
 
 export const users = mysqlTable('users', {
   id:         int('id').autoincrement().primaryKey(),
@@ -120,3 +121,17 @@ export const otp_code = mysqlTable('otp_code',{
       userIdx: unique('uniq_user_id').on(table.userId), 
       refIdx: index('idx_ref').on(table.ref),
 }))
+
+export const users_notification = mysqlTable('users_notification',{
+  id:                 int('id').autoincrement().primaryKey(),
+  userId:             int('user_id').references(()=> users.id, {onDelete : 'cascade'}).notNull(),
+  sendMail:           varchar('send_mail',{ length: 191 }).notNull(),
+  createdAt:           timestamp('created_at').defaultNow().notNull()
+})
+
+export const api_notification = mysqlTable('api_notification',{
+  id:                 int('id').autoincrement().primaryKey(),
+  eventId:            int('event_id').references(()=> apiRequests.id, {onDelete : 'cascade'}).notNull(),
+  sendMail:           varchar('send_mail', { length: 191 }).notNull(),
+  createdAt:           timestamp('created_at').defaultNow().notNull()
+})

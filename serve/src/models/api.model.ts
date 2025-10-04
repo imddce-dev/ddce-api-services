@@ -1,4 +1,5 @@
-
+import { api_notification } from './../configs/mysql/schema';
+import { sendApprovalApi } from '../utils/nodemailer';
 import { DrizzleDB } from '../configs/type';
 import { apiRequests, apiRequestAttachments } from '../configs/mysql/schema';
 import { desc, eq } from 'drizzle-orm';
@@ -175,50 +176,89 @@ export const fetchRequest = async(db:DrizzleDB) => {
 const VALID_STATUS = ["sending", "pending", "active", "inactive", "denied"] as const;
 type StatusType = typeof VALID_STATUS[number];
 
-export const updatStatusApi = async(db: DrizzleDB, eventId:number, status:string) => {
-  try{
-
-     if(!VALID_STATUS.includes(status as StatusType)){
+export const updateStatusApi = async (db: DrizzleDB, eventId: number, status: StatusType) => {
+  try {
+    if (!VALID_STATUS.includes(status)) {
       return {
         success: false,
-        code:"INVALID_STATUS",
-         message: `สถานะไม่ถูกต้อง ต้องเป็นหนึ่งใน: ${VALID_STATUS.join(", ")}`,
-      }
-     }
-     const chkEvents = await db.query.apiRequests.findFirst({
-      where: eq(apiRequests.id,eventId)
-     })
-     if(!chkEvents){
+        code: "INVALID_STATUS",
+        message: `สถานะไม่ถูกต้อง ต้องเป็นหนึ่งใน: ${VALID_STATUS.join(", ")}`,
+      };
+    }
+
+    const chkEvents = await db.query.apiRequests.findFirst({
+      where: eq(apiRequests.id, eventId),
+    });
+
+    if (!chkEvents) {
       return {
-        success:false,
-        code:"NOT_FOUND",
-        message:"Not Match Id Events"
+        success: false,
+        code: "NOT_FOUND",
+        message: "ไม่พบ Event ID ที่ต้องการ",
+      };
+    }
+
+    if (chkEvents.status === status) {
+      return {
+        success: true,
+        message: `สถานะยังคงเป็น '${status}' อยู่แล้ว`,
+      };
+    }
+
+    if (["active", "denied"].includes(chkEvents.status)) {
+      await db
+        .update(apiRequests)
+        .set({ status })
+        .where(eq(apiRequests.id, eventId));
+
+      return {
+        success: true,
+        message: `สถานะเดิมคือ '${chkEvents.status}' จึงไม่ส่งอีเมลซ้ำ`,
+      };
+    }
+
+    const result = await db.transaction(async (tx) => {
+      await tx
+        .update(apiRequests)
+        .set({ status })
+        .where(eq(apiRequests.id, eventId));
+
+      const checkNoti = await tx.query.api_notification.findFirst({
+        where: eq(api_notification.eventId, eventId),
+      });
+
+      if (!checkNoti && (status === "active" || status === "denied")) {
+        await tx.insert(api_notification).values({
+          eventId,
+          sendMail: chkEvents.requesterEmail,
+        });
       }
-     }
 
+      return { updated: true, hadNoti: !!checkNoti };
+    });
 
-     await db
-     .update(apiRequests)
-     .set({
-      status: status
-     })
-     .where(eq(apiRequests.id,eventId))
+    await sendApprovalApi({
+      to: chkEvents.requesterEmail || "",
+      status,
+      username: chkEvents.requesterName,
+      requestId: eventId,
+    });
 
     return {
-      success:true,
-      message:"update Success !"
-    }
+      success: true,
+      message: `อัปเดตสถานะเป็น '${status}' สำเร็จ`,
+      transaction: result,
+    };
 
-  }catch (error){
-    console.log("Error Update Status Request:",error)
-    return{
+  } catch (error) {
+    console.error("Error Update Status Request:", error);
+    return {
       success: false,
-      code:"UNKNOWN_ERROR",
-      message:"เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่",
-    }
+      code: "UNKNOWN_ERROR",
+      message: "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่",
+    };
   }
-}
-
+};
 
 export const updateDataRequest = async( 
   db: DrizzleDB,

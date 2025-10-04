@@ -155,7 +155,7 @@ export const updatStatusApi = async (c: Context) => {
      const eventId = Number(body.eventId);
      const status =  body.status
      console.log(eventId)
-     const result = await apiModel.updatStatusApi(db, eventId, status)
+     const result = await apiModel.updateStatusApi(db, eventId, status)
 
      if(result.success === false){
         if(result.code === "NOT_FOUND"){
