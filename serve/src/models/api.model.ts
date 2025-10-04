@@ -2,7 +2,9 @@ import { api_notification } from './../configs/mysql/schema';
 import { sendApprovalApi } from '../utils/nodemailer';
 import { DrizzleDB } from '../configs/type';
 import { apiRequests, apiRequestAttachments } from '../configs/mysql/schema';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
+
+const BASE_URL = "https://api-service-ddce.ddc.moph.go.th/";
 
 export type ApiRequestData = {
   requesterName: string;
@@ -130,48 +132,63 @@ export const fetchRequestById = async(db: DrizzleDB, currentId:number) => {
       }
   }
 }
-export const fetchRequest = async(db:DrizzleDB) => {
-    try{
-      const result = await db 
-        .select({
-            id: apiRequests.id,
-            requester_name: apiRequests.requesterName,
-            requester_email: apiRequests.requesterEmail,
-            requester_phone: apiRequests.requesterPhone,
-            organizer_name: apiRequests.organizerName,
-            agree: apiRequests.agree,
-            allowed_ips: apiRequests.allowedIPs,
-            auth_method: apiRequests.authMethod,
-            callback_url: apiRequests.callbackUrl,
-            data_format: apiRequests.dataFormat,
-            data_source: apiRequests.dataSource,
-            description: apiRequests.description,
-            project_name: apiRequests.projectName,
-            purpose: apiRequests.purpose,
-            rate_limit_per_minute: apiRequests.rateLimitPerMinute,
-            retention_days: apiRequests.retentionDays,
-            user_record: apiRequests.userRecord,
-            status: apiRequests.status,
-            created_at: apiRequests.createdAt,
-            updated_at: apiRequests.updatedAt,
-        })
-        .from(apiRequests)
-        .orderBy(desc(apiRequests.id))
 
-      return {
-        success: true,
-        data: result
-      }
 
-    }catch (err) {
-       console.log("Error Fetch events Request:", err)
-       return{
-        success: false,
-        code:"UNKNOWN_ERROR",
-        message:"เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่",
-       }
-    }
-}
+
+export const fetchRequest = async (db: DrizzleDB) => {
+  try {
+    const result = await db
+      .select({
+        id: apiRequests.id,
+        requester_name: apiRequests.requesterName,
+        requester_email: apiRequests.requesterEmail,
+        requester_phone: apiRequests.requesterPhone,
+        organizer_name: apiRequests.organizerName,
+        agree: apiRequests.agree,
+        allowed_ips: apiRequests.allowedIPs,
+        auth_method: apiRequests.authMethod,
+        callback_url: apiRequests.callbackUrl,
+        data_format: apiRequests.dataFormat,
+        data_source: apiRequests.dataSource,
+        description: apiRequests.description,
+        project_name: apiRequests.projectName,
+        purpose: apiRequests.purpose,
+        rate_limit_per_minute: apiRequests.rateLimitPerMinute,
+        retention_days: apiRequests.retentionDays,
+        user_record: apiRequests.userRecord,
+        status: apiRequests.status,
+        created_at: apiRequests.createdAt,
+        updated_at: apiRequests.updatedAt,
+        attachments: sql`
+          (
+            SELECT JSON_ARRAYAGG(
+              JSON_OBJECT(
+                'name', a.file_name,
+                'path', CONCAT(${BASE_URL}, a.file_path)
+              )
+            )
+            FROM ${apiRequestAttachments} AS a
+            WHERE a.api_request_id = ${apiRequests}.id
+            LIMIT 2
+          )
+        `.as("attachments"),
+      })
+      .from(apiRequests)
+      .orderBy(desc(apiRequests.id));
+
+    return {
+      success: true,
+      data: result,
+    };
+  } catch (err) {
+    console.error("Error Fetch events Request:", err);
+    return {
+      success: false,
+      code: "UNKNOWN_ERROR",
+      message: "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่",
+    };
+  }
+};
 
 const VALID_STATUS = ["sending", "pending", "active", "inactive", "denied"] as const;
 type StatusType = typeof VALID_STATUS[number];

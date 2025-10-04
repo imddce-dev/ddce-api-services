@@ -10,7 +10,7 @@ const RequestsAdmin = () => {
         try{
           const response = await FetchAllApireq();
           if(response.success){
-            setReqdata(response.data)
+            setReqdata([...response.data])
           }else{
             alert("No")
           }
@@ -34,6 +34,17 @@ const RequestsAdmin = () => {
               <div><span className="font-semibold">ระบบ/โครงการ:</span> {r.project_name}</div>
               <div><span className="font-semibold">สถานะ:</span> {r.status}</div>
               <div><span className="font-semibold">สร้างเมื่อ:</span> {r.created_at}</div>
+              <div>
+                <div>ดูเอกสาร</div>
+              {
+                r.attachments.map(i =>(
+                  <div key={i.name}>
+                    <p>ชื่อ:{i.name}</p>
+                    <p>ลิงค์:{i.path}</p>
+                  </div>
+                ))
+              }
+              </div>
             </li>
           ))}
         </ul>

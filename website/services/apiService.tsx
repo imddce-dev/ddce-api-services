@@ -41,6 +41,11 @@ export const createApiRequest = async (
 };
  
 /*-----------------------------ดึง Api Request ตาม users ------------------------------------------------------------ */
+interface attachmentsStruct{
+  name:   string,
+  path:   string,
+}
+
 export interface ApiReqData {
   id:                     number,
   requester_name:         string,
@@ -62,6 +67,7 @@ export interface ApiReqData {
   status:                 string,
   created_at:             string,
   updated_at:             string,
+  attachments:            attachmentsStruct[]
 }
 
 interface ApiReqRes {
