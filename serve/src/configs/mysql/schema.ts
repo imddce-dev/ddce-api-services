@@ -1,6 +1,7 @@
 import { mysqlTable, serial, varchar, timestamp, int, boolean, text, index, unique } from 'drizzle-orm/mysql-core';
 import { ref } from 'process';
 import { create } from '../../models/user.model';
+import { creatApiReq } from '../../controllers/api.controller';
 
 export const users = mysqlTable('users', {
   id:         int('id').autoincrement().primaryKey(),
@@ -134,4 +135,13 @@ export const api_notification = mysqlTable('api_notification',{
   eventId:            int('event_id').references(()=> apiRequests.id, {onDelete : 'cascade'}).notNull(),
   sendMail:           varchar('send_mail', { length: 191 }).notNull(),
   createdAt:           timestamp('created_at').defaultNow().notNull()
+})
+
+export const otp_verify_key = mysqlTable('otp_verify_key',{
+  id:           int('id').notNull().primaryKey(),
+  eventId:      int('event_id').references(() => apiRequests.id, {onDelete : 'cascade'}).notNull(),
+  code:         varchar('code',{length:6}).notNull(),
+  ref:          varchar('ref',{length:10}).notNull(),
+  createdAt:    timestamp('created_at').defaultNow().notNull(),
+  expiredAt:    timestamp('expired_at').notNull()
 })

@@ -1,5 +1,5 @@
-export const dynamic = 'force-dynamic';
 "use client";
+export const dynamic = 'force-dynamic';
 import { usePage } from "@/contexts/PageContext";
 import React, { useEffect } from "react";
 import UserManager from "@/components/admin/Usermanager"; 

@@ -189,8 +189,6 @@ export const fetchUsers = async (): Promise<userRequestRes> => {
   const res = await apiClient.get<userRequestRes>('/users/fetchusers',{
     headers:{
       "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-      "Pragma": "no-cache",
-      "Expires": "0"
     }
   })
   return res.data

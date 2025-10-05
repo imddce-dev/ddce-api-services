@@ -1,8 +1,10 @@
+import { generateToken } from './../utils/authToken';
 import { eq } from "drizzle-orm"
 import { db } from "../configs/mysql"
 import { customAlphabet } from "nanoid";
-import  {otp_code as otpCode, users }  from '../configs/mysql/schema'
+import  {apiRequests, otp_code as otpCode, users , otp_verify_key }  from '../configs/mysql/schema'
 import   * as sendMail  from '../utils/nodemailer'
+import { DrizzleDB } from '../configs/type';
 
 interface otpPayloads {
    username : string;
@@ -118,4 +120,24 @@ export const GenerOtp = async(username : string): Promise<otpPayloads | null> =>
   }
 }
 
+export const otpVerifyKey = async(db: DrizzleDB, eventId:number) => {
+    try{
+        const currentEvents = await db.query.apiRequests.findFirst({
+            where: eq(apiRequests.id, eventId)
+        })
+        if(!currentEvents){
+            return{
+                success: false,
+                code: "NOT_FOUND",
+                message:"This event was not found."
+            }
+        }
+        await db.delete(otp_verify_key).where(eq(otp_verify_key.eventId,eventId))
 
+    }catch (error){
+        console.log('Error Generate OTP:', error)
+        return {
+            success:false
+        }
+    }
+}
