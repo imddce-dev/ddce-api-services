@@ -5,7 +5,8 @@ import { useUserStore } from '@/stores/useUserStore'
 import apiClient from '@/services/apiConfig'
 import {
   KeyRound, Copy, Check, Eye, EyeOff, ShieldCheck, Clock, XCircle,
-  Sparkles, Info, Mail, User as UserIcon, Send,
+  Sparkles, Info, Mail, User as UserIcon, Send, Link as LinkIcon, Globe, Network,
+  ChevronDown, ChevronUp, FileText
 } from 'lucide-react'
 
 /* ============================== helpers ============================== */
@@ -102,12 +103,15 @@ export default function StatusForm() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // API Key dialog
+  // ดู/คัดลอก API Key
   const [openKeyForId, setOpenKeyForId] = useState<number | null>(null)
   const [apiKey, setApiKey] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
   const [copyOk, setCopyOk] = useState(false)
   const [keyLoading, setKeyLoading] = useState(false)
+
+  // กางรายละเอียดในการ์ด
+  const [expanded, setExpanded] = useState<Set<number>>(new Set())
 
   const userProfile = useUserStore((s) => s.userProfile)
   const currentId = userProfile?.id ?? null
@@ -166,6 +170,14 @@ export default function StatusForm() {
     setCopyOk(true); setTimeout(() => setCopyOk(false), 1200)
   }
 
+  const toggleExpand = (id: number) => {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
   return (
     <main className="relative">
       {/* BG */}
@@ -199,6 +211,7 @@ export default function StatusForm() {
           {items.map((ev) => {
             const st = parseStatus(ev.status)
             const approveEnabled = st.step === 3 && !st.denied
+            const isOpen = expanded.has(ev.id)
             return (
               <article
                 key={ev.id}
@@ -225,7 +238,9 @@ export default function StatusForm() {
                       สร้างเมื่อ: <span className="text-slate-300">{formatDate(ev.created_at)}</span>
                     </div>
                     <div className="hidden h-5 w-px bg-slate-700 md:block" />
-                    {/* <button                                                   // ปุ่มดู API Key (ถ้าอนุมัติแล้ว)ปิดอยู่่/>/////////////////////////////////////////////////////////////////
+
+                    {/* ปุ่มดู API Key (เฉพาะอนุมัติ) */}
+                    <button
                       onClick={() => handleOpenKey(ev)}
                       disabled={!approveEnabled}
                       className="inline-flex items-center gap-2 rounded-lg border border-emerald-600/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200 ring-1 ring-inset ring-emerald-500/30 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-40"
@@ -233,20 +248,92 @@ export default function StatusForm() {
                     >
                       <KeyRound className="h-4 w-4" />
                       ดู API Key
-                    </button> */}
+                    </button>
+
+                    {/* ปุ่มกางรายละเอียดข้อมูลที่กรอก */}
+                    <button
+                      onClick={() => toggleExpand(ev.id)}
+                      className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition hover:bg-slate-700"
+                      title={isOpen ? 'ซ่อนรายละเอียด' : 'ดูรายละเอียดคำขอ'}
+                    >
+                      {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      {isOpen ? 'ซ่อนรายละเอียด' : 'ดูรายละเอียด'}
+                    </button>
                   </div>
                 </div>
 
-                {/* Stepper: สีตามสถานะ */}
+                {/* Stepper */}
                 <div className="mt-4">
                   <Stepper status={ev.status} />
                 </div>
 
-                {/* meta */}
-                <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-slate-300 md:grid-cols-2 lg:grid-cols-3">
-                  <Meta label="ระบบ/โครงการ" value={ev.project_name} />
-                  <Meta label="แหล่งข้อมูล" value={ev.data_source} />
-                  <Meta label="รูปแบบข้อมูล" value={ev.data_format} />
+                {/* รายละเอียดที่กรอก: กาง/พับได้ */}
+                <div
+                  className={`transition-all duration-300 ease-out overflow-hidden ${isOpen ? 'max-h-[1000px] mt-4 opacity-100' : 'max-h-0 opacity-0'}`}
+                  aria-hidden={!isOpen}
+                >
+                  <div className="rounded-xl border border-slate-800/70 bg-slate-950/40 p-4">
+                    <div className="mb-2 text-sm font-medium text-slate-300">รายละเอียดคำขอ</div>
+
+                    <div className="grid grid-cols-1 gap-3 text-sm text-slate-300 md:grid-cols-2 lg:grid-cols-3">
+                      <Meta label="ระบบ/โครงการ" value={ev.project_name} />
+                      <Meta label="แหล่งข้อมูล" value={ev.data_source} />
+                      <Meta label="รูปแบบข้อมูล" value={ev.data_format} />
+                      <Meta label="Rate limit (req/min)" value={String(ev.rate_limit_per_minute ?? '—')} />
+                      <Meta label="Retention (days)" value={String(ev.retention_days ?? '—')} />
+                      <Meta label="Allowed IPs" value={ev.allowed_ips} />
+                      <MetaLink label="Callback URL" value={ev.callback_url} />
+                    </div>
+
+                    <div className="mt-3">
+                      <div className="text-[11px] uppercase tracking-wide text-slate-500">คำอธิบาย</div>
+                      <div className="mt-1 max-h-52 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-900/60 p-3 text-sm text-slate-200">
+                        {ev.description || '—'}
+                      </div>
+                    </div>
+
+                    <div className="mt-3">
+                      <div className="text-[11px] uppercase tracking-wide text-slate-500">ไฟล์แนบ/เอกสาร</div>
+                      {ev.attachments?.length ? (
+                        <ul className="mt-1 space-y-2 text-sm">
+                          {ev.attachments.map((a) => (
+                            <li key={`${ev.id}-${a.path}`} className="break-words">
+                              <a
+                                href={a.path}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 transition"
+                              >
+                                <LinkIcon className="h-4 w-4" />
+                                <span className="truncate">{a.name || a.path}</span>
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="text-sm text-slate-400">— ไม่มีไฟล์แนบ —</div>
+                      )}
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+                      <div className="rounded-lg border border-slate-800/70 bg-slate-950/40 p-3">
+                        <div className="text-[11px] uppercase tracking-wide text-slate-500">ผู้ยื่นคำขอ</div>
+                        <div className="mt-1 flex items-center gap-2 text-slate-200">
+                          <Mail className="h-4 w-4" />
+                          <a className="hover:underline" href={`mailto:${ev.requester_email}`}>
+                            {ev.requester_name || '—'} ({ev.requester_email || '—'})
+                          </a>
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-slate-800/70 bg-slate-950/40 p-3">
+                        <div className="text-[11px] uppercase tracking-wide text-slate-500">หน่วยงาน/องค์กร</div>
+                        <div className="mt-1 flex items-center gap-2 text-slate-200">
+                          <FileText className="h-4 w-4" />
+                          <span>{ev.organizer_name || '—'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </article>
             )
@@ -254,14 +341,14 @@ export default function StatusForm() {
         </div>
       )}
 
-  
+      {/* API KEY Dialog */}
       {openKeyForId !== null && (
         <div
           className="fixed inset-0 z-[1000] grid place-items-center bg-black/60 p-4"
           onKeyDown={(e) => e.key === 'Escape' && closeDialog()}
           onClick={(e) => { if (e.target === e.currentTarget) closeDialog() }}
         >
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900/90 shadow-[0_8px_60px_-12px_rgba(16,185,129,0.35)] backdrop-blur">
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900/90 shadow-[0_8px_60px_-12px_rgba(16,185,129,0.35)] backdrop-blur transition-all duration-200">
             <div className="flex items-center justify-between border-b border-slate-800/80 px-5 py-3">
               <div className="flex items-center gap-2">
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-400/30">
@@ -273,7 +360,7 @@ export default function StatusForm() {
                 </div>
               </div>
               <button
-                className="rounded-lg bg-slate-800/70 px-2.5 py-1.5 text-sm text-slate-300 hover:bg-slate-700"
+                className="rounded-lg bg-slate-800/70 px-2.5 py-1.5 text-sm text-slate-300 hover:bg-slate-700 transition"
                 onClick={closeDialog}
               >
                 ปิด
@@ -285,7 +372,7 @@ export default function StatusForm() {
                 <div className="h-5 w-40 animate-pulse rounded bg-slate-700/40" />
               ) : (
                 <>
-                  <div className="mb-3 flex items-center gap-2 rounded-lg border border-emerald-700/30 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-200">
+                  <div className="mb-3 flex items-start gap-2 rounded-lg border border-emerald-700/30 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-200">
                     <Info className="h-4 w-4" />
                     เก็บรักษา API Key อย่างปลอดภัย หลีกเลี่ยงการแชร์สาธารณะ และควรหมุนคีย์ตามนโยบายหน่วยงาน
                   </div>
@@ -297,14 +384,14 @@ export default function StatusForm() {
                     <div className="mt-3 flex items-center gap-2">
                       <button
                         onClick={() => setRevealed(v => !v)} disabled={!apiKey}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-700 disabled:opacity-40"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-700 transition disabled:opacity-40"
                       >
                         {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         {revealed ? 'ซ่อน' : 'แสดง'}
                       </button>
                       <button
                         onClick={handleCopy} disabled={!apiKey || apiKey.startsWith('[')}
-                        className="inline-flex items-center gap-1 rounded-lg border border-emerald-700/40 bg-emerald-600/20 px-3 py-1.5 text-xs text-emerald-200 hover:bg-emerald-600/30 disabled:opacity-40"
+                        className="inline-flex items-center gap-1 rounded-lg border border-emerald-700/40 bg-emerald-600/20 px-3 py-1.5 text-xs text-emerald-200 hover:bg-emerald-600/30 transition disabled:opacity-40"
                       >
                         {copyOk ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                         {copyOk ? 'คัดลอกแล้ว' : 'คัดลอก'}
@@ -362,6 +449,21 @@ function Meta({ label, value }: { label: string; value?: string }) {
     <div className="rounded-lg border border-slate-800/70 bg-slate-950/40 p-3">
       <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
       <div className="truncate text-slate-200">{value || '—'}</div>
+    </div>
+  )
+}
+
+function MetaLink({ label, value }: { label: string; value?: string }) {
+  if (!value) return <Meta label={label} value="—" />
+  return (
+    <div className="rounded-lg border border-slate-800/70 bg-slate-950/40 p-3">
+      <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="truncate">
+        <a href={value} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-cyan-300 hover:text-cyan-200">
+          <Globe className="h-4 w-4" />
+          <span className="truncate">{value}</span>
+        </a>
+      </div>
     </div>
   )
 }
