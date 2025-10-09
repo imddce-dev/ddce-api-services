@@ -1,5 +1,5 @@
-import { generateToken } from './../utils/authToken';
-import { eq } from "drizzle-orm"
+import { generateToken, generateTokenTemp, JWTPayloadTemp } from './../utils/authToken';
+import { and, eq } from "drizzle-orm"
 import { db } from "../configs/mysql"
 import { customAlphabet } from "nanoid";
 import  {apiRequests, otp_code as otpCode, users , otp_verify_key }  from '../configs/mysql/schema'
@@ -120,10 +120,10 @@ export const GenerOtp = async(username : string): Promise<otpPayloads | null> =>
   }
 }
 
-export const otpVerifyKey = async(db: DrizzleDB, eventId:number) => {
+export const otpKey = async(db: DrizzleDB, id:number) => {
     try{
         const currentEvents = await db.query.apiRequests.findFirst({
-            where: eq(apiRequests.id, eventId)
+            where: eq(apiRequests.id, id)
         })
         if(!currentEvents){
             return{
@@ -132,12 +132,77 @@ export const otpVerifyKey = async(db: DrizzleDB, eventId:number) => {
                 message:"This event was not found."
             }
         }
-        await db.delete(otp_verify_key).where(eq(otp_verify_key.eventId,eventId))
+        await db.delete(otp_verify_key).where(eq(otp_verify_key.eventId, id))
+        const code = String(Math.floor(100000+Math.random()*900000))
+        const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',6)
+        const ref = nanoid()
+        const to = currentEvents.requesterEmail
+        const expiredAt =  new Date(Date.now() + 5 * 60 * 1000)
+        const eventId = id
+        const fullname = currentEvents.requesterName
 
+        await db.insert(otp_verify_key).values({
+            eventId,
+            code,
+            ref,
+            expiredAt
+        })
+         await sendMail.SendOtpOfKey({to,id,code,ref,fullname,expiredAt})
+        return{
+            success: true,
+            data: {ref}
+        }
     }catch (error){
         console.log('Error Generate OTP:', error)
         return {
-            success:false
+            success:false,
+            code: "UNKNOWN_ERROR",
+            message: "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่",
         }
     }
 }
+
+export const vertifyOtpKey = async(db: DrizzleDB, code: string ,eventId : number, ref : string) => {
+    try{
+        const currentOtp = await db.query.otp_verify_key.findFirst({
+            where: and(
+                eq(otp_verify_key.code, code),
+                eq(otp_verify_key.eventId, eventId),
+                eq(otp_verify_key.ref, ref)
+            )               
+        })
+        if(!currentOtp){
+            return{
+                success: false,
+                code: "NOT_FOUND",
+                message:"This event was not found."
+            }
+        }
+
+        if (currentOtp.used) {
+            return { success: false, code: "USED", message: "This OTP was already used." }
+        }
+
+        if (new Date(currentOtp.expiredAt) < new Date()) {
+            return { success: false, code: "EXPIRED", message: "This OTP has expired." }
+        }
+
+        const payload:JWTPayloadTemp = {
+            id : eventId,
+            exp: Math.floor(Date.now() / 1000) + (5 * 60)
+        }
+        const token = await generateTokenTemp(payload)
+        return{
+            success: true,
+            data: token
+        }  
+    }catch (error) { 
+        console.log('Error Generate OTP:', error)
+        return {
+            success:false,
+            code: "UNKNOWN_ERROR",
+            message: "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่",
+        }
+    }
+}
+
