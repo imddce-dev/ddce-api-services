@@ -5,6 +5,7 @@ import { customAlphabet } from "nanoid";
 import  {apiRequests, otp_code as otpCode, users , otp_verify_key }  from '../configs/mysql/schema'
 import   * as sendMail  from '../utils/nodemailer'
 import { DrizzleDB } from '../configs/type';
+import { mailQueue } from '../queue/mailQueue';
 
 interface otpPayloads {
    username : string;
@@ -16,7 +17,6 @@ interface otpPayloads {
 
 export const GenerOtp = async(username : string): Promise<otpPayloads | null> => {
   try{
-
     const exitingUser = await db
     .select({id: users.id,fullname: users.fullname, email: users.email})
     .from(users)
@@ -147,7 +147,7 @@ export const otpKey = async(db: DrizzleDB, id:number) => {
             ref,
             expiredAt
         })
-         await sendMail.SendOtpOfKey({to,id,code,ref,fullname,expiredAt})
+        await mailQueue.add("senfdOtpKey",{to,id,code,ref,fullname,expiredAt})
         return{
             success: true,
             data: {ref}

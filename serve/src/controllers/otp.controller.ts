@@ -2,6 +2,7 @@ import { verify } from 'hono/jwt';
 import { Context } from "hono";
 import { DrizzleDB } from "../configs/type";
 import * as otpModel from '../models/otp.model'
+import { setCookie } from 'hono/cookie';
 
 
 export const otpVertiKey = async(c: Context) => {

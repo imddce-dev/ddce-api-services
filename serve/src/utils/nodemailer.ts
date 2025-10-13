@@ -1,4 +1,5 @@
 import { getTransporter } from "../configs/mail"
+
 function cleanTitle(fullName: string): string {
   return fullName.replace(/^(นาย|นางสาว|นาง|ดร\.|คุณ|Mr\.|Mrs\.|Ms\.)\s*/i, "").trim();
 }
@@ -19,7 +20,7 @@ export async function sendMail(to: string, subject: string, html: string) {
 export async function sendOtpMail(to: string, subject: string, html: string){
     const t = await getTransporter();
     const info = await t.sendMail({
-        from: process.env.MAIL_FROM || process.env.SMTP_USER,
+        from: `"IM-DDCE Services"<${process.env.MAIL_FROM || process.env.SMTP_USER}>`,
         to,
         subject,
         html,

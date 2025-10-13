@@ -2,6 +2,7 @@
   "name": "serve",
   "scripts": {
     "dev": "bun --watch src/index.ts",
+    "worker": "bun --watch src/queue/Worker.ts",
     "start": "bun src/index.ts",
     "migrate": "bunx drizzle-kit push"
   },
