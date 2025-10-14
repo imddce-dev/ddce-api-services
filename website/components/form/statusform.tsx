@@ -230,8 +230,7 @@ export default function StatusForm() {
   }
 
   return (
-<>
-      <main className="relative min-h-[120vh] pb-24">
+    <main className="relative">
       {/* BG */}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_40%_at_70%_10%,rgba(16,185,129,0.17),rgba(2,6,23,0))]" />
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(38%_28%_at_20%_18%,rgba(34,211,238,0.14),rgba(2,6,23,0))]" />
