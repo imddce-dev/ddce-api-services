@@ -15,10 +15,20 @@ export interface JWTPayload {
     [key: string]: unknown;
 }
 
+export interface JWTPayloadTemp{
+    id : number;
+    exp: number;
+    [key: string]: unknown
+}
+
 export const TOKEN_EXPIRATION = 60 * 5
 
 export const generateToken = async (payload: JWTPayload): Promise<string> => {
     return await sign(payload, JWT_SECRET, JWT_ALGORITHM)
+}
+
+export const generateTokenTemp = async (payload: JWTPayloadTemp): Promise<string> => {
+  return await sign(payload, JWT_SECRET, JWT_ALGORITHM)
 }
 
 export const verifyToken = async (token: string): Promise<JWTPayload | null> => {
@@ -39,3 +49,8 @@ export const decodeToken = (token: string): { payload: unknown, header: { alg: s
         return null;
     }
 }
+
+
+
+
+

@@ -5,6 +5,7 @@ import * as userController from './controllers/user.controller';
 import * as authController from './controllers/auth.controller';
 import * as orgController from './controllers/org.controller'
 import * as apiController from './controllers/api.controller'
+import * as otpController from './controllers/otp.controller'
 import { db } from './configs/mysql';
 import { DrizzleDB } from './configs/type';
 import { sql } from 'drizzle-orm';
@@ -55,6 +56,8 @@ const main = async () => {
     options.put('api-request',apiController.updateDataRequest)
     options.put('approve-request',apiController.updatStatusApi)
     options.delete('api-request/:id',apiController.deleteDataRequest)
+    options.get('otp/:id',otpController.otpVertiKey)
+    options.post('vertify-otp',otpController.verifyTokenKey)
 
     const application = app.basePath('web-api/');
     application.get('org', orgController.getOrg);

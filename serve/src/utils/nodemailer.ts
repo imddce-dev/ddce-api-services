@@ -1,4 +1,5 @@
 import { getTransporter } from "../configs/mail"
+
 function cleanTitle(fullName: string): string {
   return fullName.replace(/^(นาย|นางสาว|นาง|ดร\.|คุณ|Mr\.|Mrs\.|Ms\.)\s*/i, "").trim();
 }
@@ -19,7 +20,7 @@ export async function sendMail(to: string, subject: string, html: string) {
 export async function sendOtpMail(to: string, subject: string, html: string){
     const t = await getTransporter();
     const info = await t.sendMail({
-        from: process.env.MAIL_FROM || process.env.SMTP_USER,
+        from: `"IM-DDCE Services"<${process.env.MAIL_FROM || process.env.SMTP_USER}>`,
         to,
         subject,
         html,
@@ -233,7 +234,107 @@ export async function sendApprovalApi({
     html,
   });
 
-  console.log(`📧 [DDC API] Sent ${status} mail to ${to} (#${requestNo})`);
+  console.log(`📧 [DDC API] Sent  mail to ${to}`);
   return info;
 }
 
+
+//Send otp For Watch API KEYS
+export async function SendOtpOfKey({
+ to,
+ id,
+ code,
+ ref,
+ fullname,
+ expiredAt,
+}:{
+  to: string,
+  id: number,
+  code: string,
+  ref: string,
+  fullname: string,
+  expiredAt: Date
+}){
+  const t = await getTransporter()
+  const subject = "ส่งรหัสยืนยัน OTP เพื่อเข้าดู API KEY"
+  const Newname = cleanTitle(fullname); 
+  const requestNo = id.toString().padStart(6, "0");
+  const html = `
+    <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8" />
+            <title>OTP Verification</title>
+            <style>
+            body {
+                font-family: Arial, sans-serif;
+                background: #f4f4f7;
+                padding: 20px;
+                color: #333;
+            }
+            .container {
+                max-width: 500px;
+                margin: 0 auto;
+                background: #fff;
+                border-radius: 10px;
+                padding: 20px;
+                border: 1px solid #ddd;
+            }
+            h2 {
+                color: #2c7be5;
+                text-align: center;
+            }
+            .otp {
+                font-size: 32px;
+                font-weight: bold;
+                text-align: center;
+                letter-spacing: 5px;
+                margin: 20px 0;
+                color: #e63946;
+            }
+            .info {
+                font-size: 14px;
+                margin: 10px 0;
+            }
+            .footer {
+                margin-top: 20px;
+                font-size: 12px;
+                text-align: center;
+                color: #888;
+            }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+            <h2>🔐 รหัส OTP สำหรับเข้าดู API KEYS</h2>
+            <p>สวัสดีคุณ <b>${fullname}</b>,</p>
+            <p>กรุณาใช้รหัส OTP ด้านล่างนี้เพื่อเข้าดู API KEY:</p>
+
+            <div class="otp">${code}</div>
+
+            <div class="info">
+                <p><b>Reference:</b> ${ref}</p>
+                <p><b>หมดอายุ:</b> ${expiredAt.toLocaleString("th-TH", { hour12: false })}</p>
+            </div>
+
+            <p>หากคุณไม่ได้ทำการร้องขอนี้ กรุณาเพิกเฉยต่ออีเมลนี้</p>
+
+            <div class="footer">
+                © ${new Date().getFullYear()} DDCE API REQUEST
+            </div>
+            </div>
+        </body>
+        </html>
+  
+  `
+ const info = await t.sendMail({
+    from: process.env.MAIL_FROM || process.env.SMTP_USER,
+    to,
+    subject,
+    html,
+ })
+
+  console.log(`📧 [DDC API] Sent mail to ${to}`)
+  return info
+
+}

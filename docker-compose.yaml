@@ -16,6 +16,22 @@ services:
     networks:
       - app-network
 
+  worker-app:
+    build:
+      context: ./serve
+      dockerfile: Dockerfile
+    container_name: worker-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - hono-app
+    command: ["bun", "run", "src/queue/Worker.ts"]
+    networks:
+      - app-network
+
+
   next-app:
     build:
       context: ./website

@@ -239,3 +239,40 @@ export const deleteUser = async (userId: number): Promise<RemoveRequest> => {
     );
   }
 }
+/*-------------------------------------------------------------------------------------------------*/
+export interface otpVertifyStruct {
+  success: boolean;
+  message: string;
+  data: {
+    ref: string;
+    expiredAt?: string;
+  };
+}
+export const generateOtp = async(id :number): Promise<otpVertifyStruct> => {
+  try{
+    const response = await apiClient.get<otpVertifyStruct>(`/options/otp/${id}`)
+    return response.data
+  }catch (error : any ){
+    console.error("Generate Key Error:", error)
+    throw new Error(
+      error.response?.data?.message || "ไม่สามารถสร้างรหัส OTP ได้"
+    )
+  }
+}
+
+export interface VertifyOtpStruct{
+  code: string
+  ref: string
+  eventId : number
+}
+export const  vertifyOtp = async (paylaod : VertifyOtpStruct): Promise<VertifyOtpStruct> => {
+  try{
+    const resp = await apiClient.post<VertifyOtpStruct>('/options/vertify-otp',paylaod)
+    return resp.data
+  }catch (error: any){
+    console.error("Vertify Key error:", error)
+    throw new error (
+      error.response?.data.message || "ไม่สามารถยืนยัน OTP ได้"
+    )
+  }
+}

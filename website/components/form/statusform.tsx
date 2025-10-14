@@ -1,13 +1,13 @@
 'use client'
 import React, { useEffect, useMemo, useState } from 'react'
-import { FetchApiReqById, type ApiReqData } from '@/services/apiService'
+import { FetchApiReqById, type ApiReqData ,generateOtp, type otpVertifyStruct } from '@/services/apiService'
 import { useUserStore } from '@/stores/useUserStore'
-import apiClient from '@/services/apiConfig'
 import {
   KeyRound, Copy, Check, Eye, EyeOff, ShieldCheck, Clock, XCircle,
   Sparkles, Info, Mail, User as UserIcon, Send, Link as LinkIcon, Globe, Network,
   ChevronDown, ChevronUp, FileText
 } from 'lucide-react'
+import { set } from 'react-hook-form'
 
 /* ============================== helpers ============================== */
 function formatDate(dateStr?: string) {
@@ -102,6 +102,9 @@ export default function StatusForm() {
   const [items, setItems] = useState<ApiReqData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
+  const [otpref, setOtpref] = useState<string>("ABC123");
+  const [timeLeft, setTimeLeft] = useState(300);
 
   // ดู/คัดลอก API Key
   const [openKeyForId, setOpenKeyForId] = useState<number | null>(null)
@@ -130,6 +133,39 @@ export default function StatusForm() {
     load()
   }, [currentId])
 
+  useEffect(()=> {
+    if (timeLeft <= 0) return; 
+    const timer = setInterval(() => setTimeLeft((t) => t - 1), 1000);
+    return () => clearInterval(timer);
+  },[timeLeft])
+
+  const countdownText = `${String(Math.floor(timeLeft / 60)).padStart(2, "0")}:${String(
+    timeLeft % 60
+  ).padStart(2, "0")}`;
+
+ 
+  const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const val = e.target.value.replace(/\D/g, ""); 
+  const newOtp = [...otp];
+  newOtp[index] = val;
+  setOtp(newOtp);
+  if (val && e.target.nextElementSibling) {
+    (e.target.nextElementSibling as HTMLInputElement).focus();
+  }
+  };
+
+  const handleSubmitOtp = () => {
+    const code = otp.join("");
+    console.log("✅ กรอกรหัส:", code);
+  };
+
+  const resetOtpForm = () => {
+  setOtp(Array(6).fill(""));  // เคลียร์ช่องกรอก
+  setTimeLeft(300);           // รีเซ็ตตัวนับเวลา
+  setOtpref("");       // รีเซ็ต Ref (ในที่นี้ตั้งค่าเป็นคงที่)
+};
+
+
   const hasItems = items.length > 0
 
   // summary
@@ -150,14 +186,20 @@ export default function StatusForm() {
 
   const handleOpenKey = async (req: ApiReqData) => {
     const st = parseStatus(req.status)
+    resetOtpForm();
     if (!(st.step === 3 && !st.denied)) return
-    setKeyLoading(true); setOpenKeyForId(req.id); setApiKey(null); setRevealed(false); setCopyOk(false)
+    if (openKeyForId === req.id) { closeDialog(); return } // คลิกซ้ำปิด
+    setOpenKeyForId(req.id); 
     try {
-      const resp = await apiClient.get<{ success: boolean; data?: { apiKey: string } }>(
-        `/options/api-request/${req.id}/apikey`, { headers: { 'Cache-Control': 'no-store' } }
-      )
-      if (resp.data?.success && resp.data?.data?.apiKey) setApiKey(resp.data.data.apiKey)
-      else setApiKey('[ไม่พบ API Key]')
+      await new Promise(res => setTimeout(res, 500));
+      const res = await generateOtp(req.id);
+      if(res?.success){
+        setOtpref(res.data.ref);
+        setTimeLeft(300); 
+        setOtp(Array(6).fill(""));
+      }else{
+        throw new Error(res?.message || "ไม่สามารถสร้างรหัส OTP ได้");
+      }
     } catch (e) {
       console.error('ดึง API Key ล้มเหลว:', e)
       setApiKey('[เกิดข้อผิดพลาดในการดึง API Key]')
@@ -346,19 +388,15 @@ export default function StatusForm() {
       {openKeyForId !== null && (
         <div
           className="fixed inset-0 z-[1000] grid place-items-center bg-black/60 p-4"
-          onKeyDown={(e) => e.key === 'Escape' && closeDialog()}
-          onClick={(e) => { if (e.target === e.currentTarget) closeDialog() }}
+          onKeyDown={(e) => e.key === "Escape" && closeDialog()} // ปิดด้วย ESC ได้
         >
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900/90 shadow-[0_8px_60px_-12px_rgba(16,185,129,0.35)] backdrop-blur transition-all duration-200">
+          <div
+            className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900/90 shadow-[0_8px_60px_-12px_rgba(16,185,129,0.35)] backdrop-blur transition-all duration-200"
+            onClick={(e) => e.stopPropagation()} // ป้องกันไม่ให้คลิกพื้นหลังแล้วปิด
+          >
             <div className="flex items-center justify-between border-b border-slate-800/80 px-5 py-3">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-400/30">
-                  <KeyRound className="h-5 w-5 text-emerald-300" />
-                </span>
-                <div>
-                  <h2 className="text-base font-semibold text-slate-100">API Key</h2>
-                  <p className="text-xs text-slate-400">สำหรับคำขอ #{openKeyForId}</p>
-                </div>
+              <div>
+                <h2 className="text-base font-semibold text-slate-100">OTP Verification</h2>
               </div>
               <button
                 className="rounded-lg bg-slate-800/70 px-2.5 py-1.5 text-sm text-slate-300 hover:bg-slate-700 transition"
@@ -368,39 +406,41 @@ export default function StatusForm() {
               </button>
             </div>
 
-            <div className="px-5 py-4">
-              {keyLoading ? (
-                <div className="h-5 w-40 animate-pulse rounded bg-slate-700/40" />
-              ) : (
-                <>
-                  <div className="mb-3 flex items-start gap-2 rounded-lg border border-emerald-700/30 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-200">
-                    <Info className="h-4 w-4" />
-                    เก็บรักษา API Key อย่างปลอดภัย หลีกเลี่ยงการแชร์สาธารณะ และควรหมุนคีย์ตามนโยบายหน่วยงาน
-                  </div>
-
-                  <div className="group relative">
-                    <code className="block w-full truncate rounded-xl bg-slate-950/70 px-3 py-3 text-sm tracking-wide ring-1 ring-inset ring-slate-700">
-                      {revealed ? apiKey ?? '—' : mask(apiKey ?? '')}
-                    </code>
-                    <div className="mt-3 flex items-center gap-2">
-                      <button
-                        onClick={() => setRevealed(v => !v)} disabled={!apiKey}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-700 transition disabled:opacity-40"
-                      >
-                        {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        {revealed ? 'ซ่อน' : 'แสดง'}
-                      </button>
-                      <button
-                        onClick={handleCopy} disabled={!apiKey || apiKey.startsWith('[')}
-                        className="inline-flex items-center gap-1 rounded-lg border border-emerald-700/40 bg-emerald-600/20 px-3 py-1.5 text-xs text-emerald-200 hover:bg-emerald-600/30 transition disabled:opacity-40"
-                      >
-                        {copyOk ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                        {copyOk ? 'คัดลอกแล้ว' : 'คัดลอก'}
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+            {/* Body */}
+            <div className="px-6 py-6 flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center">
+                <img src="/otp.png" alt="otp" width={120} height={120}/>
+                <p className='font-medium text-xl'>Verification Code</p>
+                <p className="text-sm text-slate-300 text-center">กรุณากรอกรหัสผ่าน 6 หลักที่ได้รับทางอีเมล เพื่อยืนยันสิทธิ์การเข้าดู API Key ของท่าน</p>
+              </div>
+              <div className="flex gap-2">
+                {[...Array(6)].map((_, i) => (
+                  <input
+                    key={i}
+                    type="text"
+                    maxLength={1}
+                    inputMode="numeric"
+                    className="h-11 w-11 text-center text-lg font-semibold text-slate-100 rounded-lg bg-slate-800 border border-slate-600 focus:border-emerald-500 focus:outline-none"
+                    value={otp[i] ?? ""}
+                    onChange={(e) => handleOtpChange(e, i)}
+                  />
+                ))}
+              </div>
+              <div className='text-sm text-slate-400 flex justify-between w-full px-5'>
+                <p>Ref: <span className="text-slate-400">{otpref ?? "—"}</span></p>
+                <p>เวลา{" "}
+                  <span className={timeLeft <= 60 ? "text-red-400 font-semibold" : "text-slate-300"}>
+                    {countdownText}
+                  </span>
+                </p>
+              </div>
+               <button
+                onClick={handleSubmitOtp}
+                disabled={otp.join("").length !== 6 || timeLeft <= 0}
+                className="mt-3 w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white font-medium hover:bg-emerald-500 transition disabled:opacity-40"
+              >
+                ยืนยันรหัส OTP
+              </button>
             </div>
           </div>
         </div>
