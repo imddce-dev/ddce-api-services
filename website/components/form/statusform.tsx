@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useMemo, useState } from 'react'
-import { FetchApiReqById, type ApiReqData ,generateOtp, type otpVertifyStruct, vertifyOtp } from '@/services/apiService'
+import { FetchApiReqById, type ApiReqData ,generateOtp, type otpVertifyStruct, verifyOtp } from '@/services/apiService'
 import { useUserStore } from '@/stores/useUserStore'
 import {
   KeyRound, Copy, Check, Eye, EyeOff, ShieldCheck, Clock, XCircle,
@@ -105,6 +105,11 @@ export default function StatusForm() {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const [otpref, setOtpref] = useState<string>("ABC123");
   const [timeLeft, setTimeLeft] = useState(300);
+  const [apiUrl, setApiUrl] = useState<string>('https://api.example.com/data');
+  const [clientId, setClientId] = useState<string>('ddce_client_1234567890abcdef');
+  const [secretKey, setsecretKey] = useState<string>('ddce_sk_live_51N7K1XH6bYb3e4...');
+  const [showSecret, setShowSecret] = useState(false);
+  const [errorOtp, setErrorOtp] = useState<string | null>(null)
 
   // ดู/คัดลอก API Key
   const [openKeyForId, setOpenKeyForId] = useState<number | null>(null)
@@ -159,24 +164,35 @@ export default function StatusForm() {
     const eventId = openKeyForId
     const ref = otpref
     if(code.length !== 6 || !eventId || !ref) return;
-    const payload = { code , ref, eventId}
-    const resp = await vertifyOtp(payload as any)
-    if(resp?.success){
-      alert("ยืนยันรหัส OTP สำเร็จ")
-    }else{
-      alert(resp?.message || "ยืนยันรหัส OTP ไม่สำเร็จ")
+    try{
+        const payload = { code , ref, eventId}
+        const resp = await verifyOtp(payload as any)
+        if(resp?.success){
+          alert("ยืนยันรหัส OTP สำเร็จ")
+          closeDialog()
+          setTimeout(() => {
+          setApiKey('asweee2343ddd/!2323'); // เปิด API Key
+        }, 100); 
+        }else{
+          setErrorOtp(resp?.message || "ไม่สามารถยืนยันรหัส OTP ได้")
+        }
+    }catch (error : any){
+      console.error("Vertify Otp Error:", error)
+      setErrorOtp(error.response?.data?.message || "ไม่สามารถยืนยันรหัส OTP ได้")
     }
+    
   };
 
   const resetOtpForm = () => {
   setOtp(Array(6).fill(""));  // เคลียร์ช่องกรอก
   setTimeLeft(300);           // รีเซ็ตตัวนับเวลา
-  setOtpref("");       // รีเซ็ต Ref (ในที่นี้ตั้งค่าเป็นคงที่)
+  setOtpref(""); 
+  setErrorOtp(null);      // รีเซ็ต Ref (ในที่นี้ตั้งค่าเป็นคงที่)
 };
 
-
+  
   const hasItems = items.length > 0
-
+  const closeDialogApikey = () => { setApiKey(null); setRevealed(false); setCopyOk(false) }
   // summary
   const summary = useMemo(() => {
     const m = new Map<string, number>()
@@ -203,6 +219,7 @@ export default function StatusForm() {
       await new Promise(res => setTimeout(res, 500));
       const res = await generateOtp(req.id);
       if(res?.success){
+        setErrorOtp(null);
         setOtpref(res.data.ref);
         setTimeLeft(300); 
         setOtp(Array(6).fill(""));
@@ -442,6 +459,7 @@ export default function StatusForm() {
                   </span>
                 </p>
               </div>
+              {errorOtp && <p className="text-sm text-red-400 transition-opacity duration-200 ease-in-out">{errorOtp}</p>}
                <button
                 onClick={handleSubmitOtp}
                 disabled={otp.join("").length !== 6 || timeLeft <= 0}
@@ -453,11 +471,96 @@ export default function StatusForm() {
           </div>
         </div>
       )}
+      {/* End API KEY Dialog */}
+
+      {/*View API KEY Dialog */}
+      {apiKey !== null && (
+        <div
+          className="fixed inset-0 z-[1000] grid place-items-center bg-black/60 p-4"
+          onKeyDown={(e) => e.key === "Escape" && closeDialogApikey()}
+        >
+          <div
+            className="w-full max-w-xl overflow-hidden rounded-2xl border border-emerald-500/40 bg-slate-900/95 shadow-[0_8px_60px_-12px_rgba(16,185,129,0.35)] backdrop-blur-xl transition-all duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-800/80 px-5 py-3">
+              <h2 className="text-base font-semibold text-emerald-300">API Credentials</h2>
+              <button
+                onClick={closeDialogApikey}
+                className="rounded-lg bg-slate-800/70 px-2.5 py-1.5 text-sm text-slate-300 hover:bg-slate-700 transition"
+              >
+                ปิด
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-4 p-5">
+              <div className='flex justify-center'>
+                <img src="/api.png" alt="api" width={120} height={120} />
+              </div>
+              <div>
+                <p className="text-sm font-medium uppercase text-slate-200 mb-1">API URL</p>
+                <div className="flex items-center justify-between rounded-md bg-slate-800/70 px-3 py-2 text-sm text-slate-400">
+                  <span className="truncate">{apiUrl}</span>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(apiUrl)}
+                    className="ml-2 text-emerald-400 hover:text-emerald-300"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium uppercase text-slate-200 mb-1">Client ID</p>
+                <div className="flex items-center justify-between rounded-md bg-slate-800/70 px-3 py-2 text-sm text-slate-300">
+                  <span className="truncate">{clientId}</span>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(clientId)}
+                    className="ml-2 text-emerald-400 hover:text-emerald-300"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              {/* Secret Key */}
+              <div>
+                <p className="text-sm font-medium uppercase text-slate-200 mb-1">Secret Key</p>
+                <div className="flex items-center justify-between rounded-md bg-slate-800/70 px-3 py-2 text-sm text-slate-300">
+                  <span className="truncate select-none">
+                    {showSecret ? secretKey : "••••••••••••••••••••••••••••"}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowSecret(!showSecret)}
+                      className="text-emerald-400 hover:text-emerald-300"
+                    >
+                      {showSecret ? "Hide" : "Show"}
+                    </button>
+                    {showSecret && (
+                      <button
+                        onClick={() => navigator.clipboard.writeText(secretKey)}
+                        className="text-emerald-400 hover:text-emerald-300"
+                      >
+                        Copy
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
     </main>
   )
 
   function closeDialog() {
-    setOpenKeyForId(null); setApiKey(null); setRevealed(false); setCopyOk(false)
+    setOpenKeyForId(null); setRevealed(false); setCopyOk(false)
   }
 }
 

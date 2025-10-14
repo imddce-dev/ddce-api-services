@@ -1,6 +1,19 @@
-import { promises } from 'dns';
 import apiClient from './apiConfig';
-import { error } from 'console';
+const isProd = process.env.NODE_ENV === "production";
+
+function safeLog(...args: any[]) {
+  if (!isProd) console.error(...args);
+}
+
+function getErrorMessage(error: any, fallback: string): string {
+  return (
+    error?.response?.data?.message ||
+    error?.response?.message ||
+    error?.message ||
+    fallback
+  );
+}
+
 
 export interface ApiRequest {
   requesterName:        string;
@@ -252,31 +265,36 @@ export const generateOtp = async(id :number): Promise<otpVertifyStruct> => {
     const response = await apiClient.get<otpVertifyStruct>(`/options/otp/${id}`)
     return response.data
   }catch (error : any ){
-    console.error("Generate Key Error:", error)
     throw new Error(
-      error.response?.data?.message || "ไม่สามารถสร้างรหัส OTP ได้"
+      error.response?.message || "ไม่สามารถสร้างรหัส OTP ได้"
     )
   }
 }
 
-export interface VertifyOtpStruct{
-  success: boolean
-  message: string
-  data:{
-    token: string
-  }
-  code: string
-  ref: string
-  eventId: number
+export interface VerifyOtpStruct {
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+  };
 }
-export const  vertifyOtp = async (paylaod : VertifyOtpStruct): Promise<VertifyOtpStruct> => {
-  try{
-    const resp = await apiClient.post<VertifyOtpStruct>('/options/vertify-otp',paylaod)
-    return resp.data
-  }catch (error: any){
-    console.error("Vertify Key error:", error)
-    throw new error (
-      error.response?.data.message || "ไม่สามารถยืนยัน OTP ได้"
-    )
-  }
+
+export interface VerifyOtpPayload {
+  code: string;
+  ref: string;
+  eventId: number;
 }
+export const verifyOtp = async (
+  payload: VerifyOtpPayload
+): Promise<VerifyOtpStruct> => {
+  try {
+    const resp = await apiClient.post<VerifyOtpStruct>(
+      "/options/vertify-otp",
+      payload
+    );
+    return resp.data;
+  } catch (error: any) {
+    safeLog("verifyOtp error:", error);
+    throw new Error(getErrorMessage(error, "ไม่สามารถยืนยันรหัส OTP ได้"));
+  }
+};
