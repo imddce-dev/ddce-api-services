@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useMemo, useState } from 'react'
-import { FetchApiReqById, type ApiReqData ,generateOtp, type otpVertifyStruct } from '@/services/apiService'
+import { FetchApiReqById, type ApiReqData ,generateOtp, type otpVertifyStruct, vertifyOtp } from '@/services/apiService'
 import { useUserStore } from '@/stores/useUserStore'
 import {
   KeyRound, Copy, Check, Eye, EyeOff, ShieldCheck, Clock, XCircle,
@@ -154,9 +154,18 @@ export default function StatusForm() {
   }
   };
 
-  const handleSubmitOtp = () => {
+  const handleSubmitOtp = async () => {
     const code = otp.join("");
-    console.log("✅ กรอกรหัส:", code);
+    const eventId = openKeyForId
+    const ref = otpref
+    if(code.length !== 6 || !eventId || !ref) return;
+    const payload = { code , ref, eventId}
+    const resp = await vertifyOtp(payload as any)
+    if(resp?.success){
+      alert("ยืนยันรหัส OTP สำเร็จ")
+    }else{
+      alert(resp?.message || "ยืนยันรหัส OTP ไม่สำเร็จ")
+    }
   };
 
   const resetOtpForm = () => {
