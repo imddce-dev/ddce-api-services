@@ -245,7 +245,6 @@ export interface otpVertifyStruct {
   message: string;
   data: {
     ref: string;
-    expiredAt?: string;
   };
 }
 export const generateOtp = async(id :number): Promise<otpVertifyStruct> => {
@@ -261,9 +260,14 @@ export const generateOtp = async(id :number): Promise<otpVertifyStruct> => {
 }
 
 export interface VertifyOtpStruct{
+  success: boolean
+  message: string
+  data:{
+    token: string
+  }
   code: string
   ref: string
-  eventId : number
+  eventId: number
 }
 export const  vertifyOtp = async (paylaod : VertifyOtpStruct): Promise<VertifyOtpStruct> => {
   try{
