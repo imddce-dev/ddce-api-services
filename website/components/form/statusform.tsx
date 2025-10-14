@@ -171,26 +171,22 @@ export default function StatusForm() {
           alert("ยืนยันรหัส OTP สำเร็จ")
           closeDialog()
           setTimeout(() => {
-          setApiKey('asweee2343ddd/!2323'); // เปิด API Key
-        }, 100); 
+          setApiKey(resp.data.token); 
+        }, 400); 
         }else{
           setErrorOtp(resp?.message || "ไม่สามารถยืนยันรหัส OTP ได้")
         }
     }catch (error : any){
-      console.error("Vertify Otp Error:", error)
       setErrorOtp(error.response?.data?.message || "ไม่สามารถยืนยันรหัส OTP ได้")
     }
     
   };
-
   const resetOtpForm = () => {
   setOtp(Array(6).fill(""));  // เคลียร์ช่องกรอก
   setTimeLeft(300);           // รีเซ็ตตัวนับเวลา
   setOtpref(""); 
   setErrorOtp(null);      // รีเซ็ต Ref (ในที่นี้ตั้งค่าเป็นคงที่)
 };
-
-  
   const hasItems = items.length > 0
   const closeDialogApikey = () => { setApiKey(null); setRevealed(false); setCopyOk(false) }
   // summary

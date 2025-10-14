@@ -1,10 +1,10 @@
 {
   "name": "serve",
   "scripts": {
-    "dev": "bun --watch src/index.ts",
+    "dev": "concurrently \"bun run server\" \"bun run worker\"",
+    "server": "bun --watch src/index.ts",
     "worker": "bun --watch src/queue/Worker.ts",
-    "start": "bun src/index.ts",
-    "migrate": "bunx drizzle-kit push"
+    "start": "bun src/index.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.893.0",
@@ -32,6 +32,7 @@
     "@types/nodemailer": "^7.0.1",
     "@types/react": "^19.1.12",
     "bun-types": "^1.2.21",
+    "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.4"
   }
 }

@@ -51,7 +51,7 @@ export const creatApiReq = async (c: Context) => {
       const buffer = await f.arrayBuffer();
       const key = `documents/attachments/${filename}`;
 
-      await minioClient.putObject('documents', key, Buffer.from(buffer));
+      await minioClient.putObject('fileebs', key, Buffer.from(buffer));
 
       attachments.push({
         fileName: filename,
