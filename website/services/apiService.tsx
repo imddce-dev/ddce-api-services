@@ -262,7 +262,7 @@ export const generateOtp = async(id :number): Promise<otpVertifyStruct> => {
 export interface VertifyOtpStruct{
   success: boolean
   message: string
-  data:{
+  data:{ 
     token: string
   }
   code: string
