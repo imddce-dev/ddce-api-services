@@ -1,8 +1,8 @@
 "use client";
+export const dynamic = 'force-dynamic';
 import React, { useEffect } from "react";
 import APIForm from "@/components/form/APIform";
 import { usePage } from "@/contexts/PageContext";
-
 export default function RequestPage() {
   const { setPageInfo } = usePage();
   useEffect(() => {

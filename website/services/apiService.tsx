@@ -1,6 +1,19 @@
-import { promises } from 'dns';
 import apiClient from './apiConfig';
-import { error } from 'console';
+const isProd = process.env.NODE_ENV === "production";
+
+function safeLog(...args: any[]) {
+  if (!isProd) console.error(...args);
+}
+
+function getErrorMessage(error: any, fallback: string): string {
+  return (
+    error?.response?.data?.message ||
+    error?.response?.message ||
+    error?.message ||
+    fallback
+  );
+}
+
 
 export interface ApiRequest {
   requesterName:        string;
@@ -116,7 +129,11 @@ export const FetchAllApireq = async(): Promise<ApiReqRes> => {
 /*-----------------------ดึง interface ApiReqData------------------------------------------------------*/
 export const updateApiReq = async(payload:ApiReqData): Promise<ApiReqData> => {
     try{
-      const resp = await apiClient.put<ApiReqData>('/options/api-request',payload)
+      const resp = await apiClient.put<ApiReqData>('/options/api-request',payload,{
+      headers:{
+        "Cache-Control": "no-store"
+      }
+    })
       return resp.data
     }catch (error :any){
       console.error("Update Events Api error:", error)
@@ -133,7 +150,12 @@ export interface approveApi {
 
 export const appoveApi = async (payload:approveApi): Promise<approveApi> => {
   try{
-    const resp = await apiClient.put<approveApi>('/options/approve-request',payload)
+    const resp = await apiClient.put<approveApi>('/options/approve-request',payload,{
+      headers:{
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store"
+      }
+    })
     return resp.data
 
   }catch(err : any){
@@ -199,7 +221,12 @@ export interface approveRequest {
   appove:       boolean
 }
 export const appoveUser = async (payload: approveRequest): Promise<approveRequest> => {
-  const res = await apiClient.post<approveRequest>('/users/approve',payload)
+  const res = await apiClient.post<approveRequest>('/users/approve',payload,{
+    headers:{
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store"
+    }
+  })
   return res.data
 }
 /*---------------------------------อัพเดท-------------------------------------------------------- */
@@ -211,7 +238,12 @@ export interface updateRequest {
 }
 export const updateUsers = async ( paylaod: updateRequest): Promise<updateRequest> => {
   try{
-    const resp = await apiClient.put<updateRequest>('/users/update-user',paylaod)
+    const resp = await apiClient.put<updateRequest>('/users/update-user',paylaod,{
+      headers:{
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store"
+      }
+    })
     return resp.data
   }catch (error : any){
     console.error("Update user error:", error);
@@ -249,34 +281,43 @@ export interface otpVertifyStruct {
 }
 export const generateOtp = async(id :number): Promise<otpVertifyStruct> => {
   try{
-    const response = await apiClient.get<otpVertifyStruct>(`/options/otp/${id}`)
+    const response = await apiClient.get<otpVertifyStruct>(`/options/otp/${id}`,{
+      headers:{
+        "Cache-Control": "no-store"
+      }
+    })
     return response.data
   }catch (error : any ){
-    console.error("Generate Key Error:", error)
     throw new Error(
-      error.response?.data?.message || "ไม่สามารถสร้างรหัส OTP ได้"
+      error.response?.message || "ไม่สามารถสร้างรหัส OTP ได้"
     )
   }
 }
 
-export interface VertifyOtpStruct{
-  success: boolean
-  message: string
-  data:{ 
-    token: string
-  }
-  code: string
-  ref: string
-  eventId: number
+export interface VerifyOtpStruct {
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+  };
 }
-export const  vertifyOtp = async (paylaod : VertifyOtpStruct): Promise<VertifyOtpStruct> => {
-  try{
-    const resp = await apiClient.post<VertifyOtpStruct>('/options/vertify-otp',paylaod)
-    return resp.data
-  }catch (error: any){
-    console.error("Vertify Key error:", error)
-    throw new error (
-      error.response?.data.message || "ไม่สามารถยืนยัน OTP ได้"
-    )
-  }
+
+export interface VerifyOtpPayload {
+  code: string;
+  ref: string;
+  eventId: number;
 }
+export const verifyOtp = async (
+  payload: VerifyOtpPayload
+): Promise<VerifyOtpStruct> => {
+  try {
+    const resp = await apiClient.post<VerifyOtpStruct>(
+      "/options/vertify-otp",
+      payload,{ headers: { "Cache-Control": "no-store" } }
+    );
+    return resp.data;
+  } catch (error: any) {
+    safeLog("verifyOtp error:", error);
+    throw new Error(getErrorMessage(error, "ไม่สามารถยืนยันรหัส OTP ได้"));
+  }
+};

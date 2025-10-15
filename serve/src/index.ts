@@ -63,7 +63,6 @@ const main = async () => {
     application.get('org', orgController.getOrg);
     
     const userApi = app.basePath('web-api/users');
-    userApi.use('*',rateLimited.createAuthRateLimiter())
     userApi.post('/createusr', userController.createUser);
     userApi.get('/fetchusers',authMiddleware,userController.getAllUsers)
     userApi.post('/approve',authMiddleware,userController.appoveUser)

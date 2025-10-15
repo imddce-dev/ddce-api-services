@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = 'force-dynamic';
 import React, { useEffect } from "react";
 import StatusForm from "@/components/form/statusform";
 import { usePage } from "@/contexts/PageContext";
