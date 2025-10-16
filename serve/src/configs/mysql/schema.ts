@@ -1,4 +1,4 @@
-import { mysqlTable, serial, varchar, timestamp, int, boolean, text, index, unique } from 'drizzle-orm/mysql-core';
+import { mysqlTable, serial, varchar, timestamp, int, boolean, text, index, unique, mysqlEnum } from 'drizzle-orm/mysql-core';
 
 export const users = mysqlTable('users', {
   id:         int('id').autoincrement().primaryKey(),
@@ -85,6 +85,7 @@ export const apiRequestAttachments = mysqlTable("api_request_attachments", {
 export const api_keys = mysqlTable('api_keys',{
   id:                int('id').autoincrement().primaryKey(), 
   user_id:           int('user_id').references(() => users.id, { onDelete: "cascade" }).notNull(),
+  event_id:          int('event_id').references(() => apiRequests.id, { onDelete: "cascade" }).notNull(),
   client_key:        varchar('client_key',{ length:191}).notNull(),
   secret_key:        varchar('secret_key',{ length:191}).notNull(),
   status:            int('status').notNull(),
@@ -150,3 +151,11 @@ export const otp_verify_key = mysqlTable("otp_verify_key", {
   idxEvent: index('idx_event').on(table.eventId),
 }));
 
+export const url_api = mysqlTable('url_api',{
+  id:                int('id').autoincrement().primaryKey(),  
+  url:               varchar('url',{ length:191}).notNull(),
+  usage:             mysqlEnum('usage',['mebs2','ebs_province','ebs_ddc']).notNull().default('ebs_ddc'),
+  method:            varchar('method',{ length:10}).notNull(),
+  status:            mysqlEnum('status',['active','inactive']).notNull().default('active'),
+  createdAt:         timestamp('created_at').defaultNow().notNull(),
+})

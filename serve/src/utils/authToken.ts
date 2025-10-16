@@ -16,7 +16,7 @@ export interface JWTPayload {
 }
 
 export interface JWTPayloadTemp{
-    id : number;
+    tempAuthId : number;
     exp: number;
     [key: string]: unknown
 }

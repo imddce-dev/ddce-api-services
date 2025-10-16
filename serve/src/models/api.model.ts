@@ -1,4 +1,4 @@
-import { api_notification } from './../configs/mysql/schema';
+import { api_keys, api_notification, url_api } from './../configs/mysql/schema';
 import { sendApprovalApi } from '../utils/nodemailer';
 import { DrizzleDB } from '../configs/type';
 import { apiRequests, apiRequestAttachments } from '../configs/mysql/schema';
@@ -390,3 +390,62 @@ export const deleteRequest = async (db:DrizzleDB, eventId:number) =>{
   }
 }
 
+
+export const getApikeyByRequestId = async(db:DrizzleDB, requestId:number) =>{
+  try{
+    const currentId = await db.query.apiRequests.findFirst({
+      where: eq(apiRequests.id, requestId)
+    })
+    if(!currentId){
+      return{
+        success: false,
+        code:"NOT_FOUND",
+        message:"Not Match Id Events"
+      }
+    }
+    if(currentId.status !== "active"){
+      return{
+        success: false,
+        code:"REQUEST_NOT_ACTIVE",
+        message:"คำขอของคุณยังไม่ได้รับการอนุมัติ"
+      }
+    }
+    const url = await db.query.url_api.findFirst({
+      where: eq(url_api.usage, currentId.dataSource as 'mebs2' | 'ebs_province' | 'ebs_ddc')
+    })
+    if(!url){
+      return{
+        success: false,
+        code:"URL_NOT_FOUND",
+        message:"ไม่พบ URL สำหรับคำขอนี้"
+      }
+    }
+
+    const apikey = await db.query.api_keys.findFirst({
+      where: eq(api_keys.event_id, requestId)
+    })
+    if(!apikey){
+      return{
+        success: false,
+        code:"APIKEY_NOT_FOUND",
+        message:"ไม่พบ API Key สำหรับคำขอนี้"
+      }
+    }
+    return{
+      success: true,
+      data: {
+        url: url.url,
+        clientId: apikey.client_key,
+        secretKey: apikey.secret_key
+      }
+    }
+    
+  }catch(error){
+    console.log("Error Get API Key By Request Id:",error)
+    return{
+      success: false,
+      code:"UNKNOWN_ERROR",
+      message:"เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่"
+    }
+  }
+}

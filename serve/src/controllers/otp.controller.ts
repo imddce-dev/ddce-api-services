@@ -70,10 +70,21 @@ export const verifyTokenKey = async (c: Context) => {
                 message: result.message
             },400)
         }
-
+        if(!result.token){
+            return c.json({
+                success: false,
+                code: "TOKEN_NOT_FOUND",
+                message: "Token not found"
+            },400)
+        }
+       setCookie(c, 'token_temp', result.token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None',
+       })
         return c.json ({
             success: true,
-            data : result.data
+            message: "Verify OTP Successfully !"
         },200)
 
     }catch(error : any){

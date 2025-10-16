@@ -321,3 +321,44 @@ export const verifyOtp = async (
     throw new Error(getErrorMessage(error, "ไม่สามารถยืนยันรหัส OTP ได้"));
   }
 };
+
+export interface tempAuthStruct {
+  success: boolean;
+  message: string;
+  data: {
+      url:   string;
+      clientId:  string;
+      secretKey: string;
+  }
+}
+
+export const getTempAuthToken = async (): Promise<tempAuthStruct> => {
+  try{
+    const resp = await apiClient.get<tempAuthStruct>("/options/get-apikey",{
+      headers:{
+        "Cache-Control": "no-store"
+      }
+    })
+    return resp.data
+  }catch (error : any){
+    safeLog("getTempAuthToken error:", error);
+    throw new Error(
+      error.response?.data?.message || "ไม่สามารถรับ token ชั่วคราวได้"
+    );
+  }
+}
+interface removeTempAuthRes {
+  success: boolean;
+  message: string;
+}
+export const RemoveTempAuthToken = async(): Promise<removeTempAuthRes> => {
+  try{
+    const resp = await apiClient.post<removeTempAuthRes>("/options/remove-temp-token")
+    return resp.data
+  }catch (error : any){
+    safeLog("RemoveTempAuthToken error:", error);
+    throw new Error(
+      error.response?.data?.message || "ไม่สามารถลบ token ชั่วคราวได้"
+    );
+  }
+}

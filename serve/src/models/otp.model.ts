@@ -120,7 +120,16 @@ export const GenerOtp = async(username : string): Promise<otpPayloads | null> =>
   }
 }
 
-export const otpKey = async(db: DrizzleDB, id:number) => {
+
+ interface OtpKeyResult {
+  success: boolean;
+  code?: string;              
+  message?: string;           
+  data?: {                    
+    ref: string;              
+  };
+}
+export const otpKey = async(db: DrizzleDB, id:number): Promise<OtpKeyResult> => {
     try{
         const currentEvents = await db.query.apiRequests.findFirst({
             where: eq(apiRequests.id, id)
@@ -162,7 +171,13 @@ export const otpKey = async(db: DrizzleDB, id:number) => {
     }
 }
 
-export const vertifyOtpKey = async(db: DrizzleDB, code: string ,eventId : number, ref : string) => {
+interface VerifyOtpResult {
+  success: boolean;
+  code?: string;
+  message?: string;
+  token?: string;
+}
+export const vertifyOtpKey = async(db: DrizzleDB, code: string ,eventId : number, ref : string): Promise<VerifyOtpResult> => {
     try{
         const currentOtp = await db.query.otp_verify_key.findFirst({
             where: and(
@@ -194,7 +209,7 @@ export const vertifyOtpKey = async(db: DrizzleDB, code: string ,eventId : number
         const token = await generateTokenTemp(payload)
         return{
             success: true,
-            data: token
+            token: token
         }  
     }catch (error) { 
         console.log('Error Generate OTP:', error)

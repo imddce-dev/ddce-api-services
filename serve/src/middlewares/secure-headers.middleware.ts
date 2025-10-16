@@ -1,7 +1,7 @@
 import { secureHeaders } from 'hono/secure-headers';
 
 export const secureHeadersMiddleware = secureHeaders({
-  xFrameOptions: 'DENY',
+  xFrameOptions: false,
   xContentTypeOptions: 'nosniff',
   referrerPolicy: 'strict-origin-when-cross-origin',
   strictTransportSecurity: 'max-age=31536000; includeSubDomains',
@@ -11,7 +11,8 @@ export const secureHeadersMiddleware = secureHeaders({
     scriptSrc: ["'self'"],
     styleSrc: ["'self'", "'unsafe-inline'"],
     imgSrc: ["'self'", "data:"],
-    objectSrc: ["'none'"]
+    objectSrc: ["'none'"],
+    frameAncestors: ["'self'", "http://localhost:8000"]
   },
   permissionsPolicy: {
     camera: [],

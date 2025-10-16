@@ -16,6 +16,7 @@ import { secureHeadersMiddleware } from './middlewares/secure-headers.middleware
 import *  as rateLimited from './middlewares/rate-limit.middleware';
 import { verifyCsrf } from './middlewares/csrf.middleware';
 import { authMiddleware } from './middlewares/auth.middleware'
+import { tempAuthMiddleware } from './middlewares/tempAuth.Middleware';
 
 
 type AppContext = {
@@ -50,14 +51,16 @@ const main = async () => {
 
 
     const options = app.basePath('web-api/options/')
-    options.post('api-request',apiController.creatApiReq)
-    options.get('api-request/:id',apiController.EvenApiByID)
-    options.get('api-request',apiController.FetchEventApi)
-    options.put('api-request',apiController.updateDataRequest)
-    options.put('approve-request',apiController.updatStatusApi)
-    options.delete('api-request/:id',apiController.deleteDataRequest)
-    options.get('otp/:id',otpController.otpVertiKey)
-    options.post('vertify-otp',otpController.verifyTokenKey)
+    options.post('api-request',authMiddleware,apiController.creatApiReq)
+    options.get('api-request/:id',authMiddleware,apiController.EvenApiByID)
+    options.get('api-request',authMiddleware,apiController.FetchEventApi)
+    options.put('api-request',authMiddleware,apiController.updateDataRequest)
+    options.put('approve-request',authMiddleware,apiController.updatStatusApi)
+    options.delete('api-request/:id',authMiddleware,apiController.deleteDataRequest)
+    options.get('otp/:id',authMiddleware,otpController.otpVertiKey)
+    options.post('vertify-otp',authMiddleware,otpController.verifyTokenKey)
+    options.get('get-apikey',tempAuthMiddleware,apiController.getApikeyByToken)
+    options.post('remove-temp-token',authMiddleware,apiController.RemoveTokenTemp)
 
     const application = app.basePath('web-api/');
     application.get('org', orgController.getOrg);
