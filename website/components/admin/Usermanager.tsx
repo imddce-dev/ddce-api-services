@@ -1,7 +1,7 @@
 // app/usermanager/page.tsx
-"use client";
+'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchUsers,
   type userRequest,
@@ -10,8 +10,8 @@ import {
   updateUsers,
   type updateRequest,
   deleteUser,
-} from "@/services/apiService";
-import { createPortal } from "react-dom";
+} from '@/services/apiService';
+import { createPortal } from 'react-dom';
 import {
   MoreVertical,
   Pencil,
@@ -22,21 +22,21 @@ import {
   Mail,
   Phone,
   Building2,
-} from "lucide-react";
+} from 'lucide-react';
 
 /* ----------------------- helpers ----------------------- */
-const cn = (...a: Array<string | false | null | undefined>) => a.filter(Boolean).join(" ");
-const StatusBadge = ({ status }: { status: userRequest["status"] }) => {
+const cn = (...a: Array<string | false | null | undefined>) => a.filter(Boolean).join(' ');
+const StatusBadge = ({ status }: { status: userRequest['status'] }) => {
   const map: Record<string, string> = {
-    active: "bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-500/30",
-    pending: "bg-amber-500/15 text-amber-300 ring-1 ring-inset ring-amber-500/30",
-    suspended: "bg-rose-500/15 text-rose-300 ring-1 ring-inset ring-rose-500/30",
+    active: 'bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-500/30',
+    pending: 'bg-amber-500/15 text-amber-300 ring-1 ring-inset ring-amber-500/30',
+    suspended: 'bg-rose-500/15 text-rose-300 ring-1 ring-inset ring-rose-500/30',
   };
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-        map[status] ?? "bg-slate-600/20 text-slate-300 ring-1 ring-inset ring-slate-600/40"
+        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+        map[status] ?? 'bg-slate-600/20 text-slate-300 ring-1 ring-inset ring-slate-600/40'
       )}
     >
       {status}
@@ -57,9 +57,9 @@ export default function Usermanager() {
   const [loading, setLoading] = useState(true);
 
   // filters
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState('');
   const [statusFilter, setStatusFilter] =
-    useState<"" | "active" | "pending" | "suspended">("");
+    useState<'' | 'active' | 'pending' | 'suspended'>('');
 
   // menu
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -69,7 +69,7 @@ export default function Usermanager() {
   // dialogs
   const [approveOpen, setApproveOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [submitting, setSubmitting] = useState<false | "approve" | "reject">(false);
+  const [submitting, setSubmitting] = useState<false | 'approve' | 'reject'>(false);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -85,14 +85,16 @@ export default function Usermanager() {
       const res = await fetchUsers();
       if (res?.success) setUserdata([...res.data]);
     } catch (e) {
-      console.error("Reload users failed:", e);
-      alert((e as any)?.message || "โหลดรายชื่อผู้ใช้ล้มเหลว");
+      console.error('Reload users failed:', e);
+      alert((e as any)?.message || 'โหลดรายชื่อผู้ใช้ล้มเหลว');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { reloadUsers(); }, []);
+  useEffect(() => {
+    reloadUsers();
+  }, []);
 
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
@@ -103,7 +105,7 @@ export default function Usermanager() {
       }
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         setOpenMenuId(null);
         setMenuPosition(null);
         setApproveOpen(false);
@@ -111,11 +113,11 @@ export default function Usermanager() {
         setEditOpen(false);
       }
     };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
     return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
     };
   }, []);
 
@@ -151,14 +153,13 @@ export default function Usermanager() {
   const handleApprove = async (approveVal: boolean) => {
     if (!selectedUserId) return;
     try {
-      setSubmitting(approveVal ? "approve" : "reject");
-      // ใช้ signature เดิมของ service: { userId, appove }
+      setSubmitting(approveVal ? 'approve' : 'reject');
       const payload: approveRequest = { userId: selectedUserId, appove: approveVal };
       await appoveUser(payload);
       await reloadUsers();
     } catch (err: any) {
-      console.error("Approve failed", err);
-      alert(err?.message || "ทำรายการไม่สำเร็จ");
+      console.error('Approve failed', err);
+      alert(err?.message || 'ทำรายการไม่สำเร็จ');
     } finally {
       setSubmitting(false);
       setApproveOpen(false);
@@ -173,8 +174,8 @@ export default function Usermanager() {
       await deleteUser(selectedUserId);
       await reloadUsers();
     } catch (err: any) {
-      console.error("Delete failed", err);
-      alert(err?.message || "ลบผู้ใช้ไม่สำเร็จ");
+      console.error('Delete failed', err);
+      alert(err?.message || 'ลบผู้ใช้ไม่สำเร็จ');
     } finally {
       setDeleting(false);
       setDeleteOpen(false);
@@ -187,9 +188,9 @@ export default function Usermanager() {
     if (!u) return;
     setEditData({
       id: u.id,
-      fullname: u.fullname ?? "",
-      email: u.email ?? "",
-      phone: u.phone ?? "",
+      fullname: u.fullname ?? '',
+      email: u.email ?? '',
+      phone: u.phone ?? '',
     });
     setEditOpen(true);
   };
@@ -197,20 +198,19 @@ export default function Usermanager() {
   const saveUser = async (payload: EditForm) => {
     setSaving(true);
     try {
-      // ใช้ signature เดิมของ service: updateUsers(updateRequest)
       const req: updateRequest = {
         userId: payload.id,
-        fullname: (payload.fullname ?? "").trim(),
-        email: (payload.email ?? "").trim(),
-        phone: (payload.phone ?? "").trim(),
+        fullname: (payload.fullname ?? '').trim(),
+        email: (payload.email ?? '').trim(),
+        phone: (payload.phone ?? '').trim(),
       };
       await updateUsers(req);
       await reloadUsers();
       setEditOpen(false);
       setEditData(null);
     } catch (e: any) {
-      console.error("Save user failed:", e);
-      alert(e?.message || "ไม่สามารถอัปเดตข้อมูลผู้ใช้ได้");
+      console.error('Save user failed:', e);
+      alert(e?.message || 'ไม่สามารถอัปเดตข้อมูลผู้ใช้ได้');
     } finally {
       setSaving(false);
     }
@@ -263,7 +263,7 @@ export default function Usermanager() {
             <tbody>
               {loading &&
                 Array.from({ length: 6 }).map((_, i) => (
-                  <tr key={`sk-${i}`} className={i % 2 ? "bg-slate-900/30" : "bg-slate-900/10"}>
+                  <tr key={`sk-${i}`} className={i % 2 ? 'bg-slate-900/30' : 'bg-slate-900/10'}>
                     <td className="px-3 py-3"><div className="h-4 w-10 animate-pulse rounded bg-slate-700/40" /></td>
                     <td className="px-3 py-3"><div className="h-4 w-40 animate-pulse rounded bg-slate-700/40" /></td>
                     <td className="px-3 py-3">
@@ -293,8 +293,8 @@ export default function Usermanager() {
                   <tr
                     key={user.id}
                     className={cn(
-                      i % 2 ? "bg-slate-900/30" : "bg-slate-900/10",
-                      "border-t border-slate-800/60 hover:bg-slate-800/40"
+                      i % 2 ? 'bg-slate-900/30' : 'bg-slate-900/10',
+                      'border-t border-slate-800/60 hover:bg-slate-800/40'
                     )}
                   >
                     <td className="px-3 py-3 align-middle text-sm text-slate-300">{user.id}</td>
@@ -343,6 +343,7 @@ export default function Usermanager() {
 
                     <td className="px-3 py-3 align-middle text-right">
                       <button
+                        type="button"
                         className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700/70 bg-slate-900/60 text-slate-300 outline-none ring-emerald-500/30 transition hover:bg-slate-800/70 focus:ring-2"
                         aria-haspopup="menu"
                         aria-expanded={openMenuId === user.id}
@@ -364,11 +365,12 @@ export default function Usermanager() {
         createPortal(
           <div
             ref={menuRef}
-            style={{ top: menuPosition.top, left: menuPosition.left, position: "absolute" }}
+            style={{ top: menuPosition.top, left: menuPosition.left, position: 'absolute' }}
             className="z-[9999] w-44 overflow-hidden rounded-xl border border-slate-700/70 bg-slate-900/95 shadow-2xl backdrop-blur"
             role="menu"
           >
             <button
+              type="button"
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-emerald-300 hover:bg-emerald-500/10"
               role="menuitem"
               onClick={() => {
@@ -381,6 +383,7 @@ export default function Usermanager() {
               <Check className="h-4 w-4" /> อนุมัติ/ไม่อนุมัติ
             </button>
             <button
+              type="button"
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-blue-300 hover:bg-blue-500/10"
               role="menuitem"
               onClick={() => {
@@ -393,6 +396,7 @@ export default function Usermanager() {
               <Pencil className="h-4 w-4" /> แก้ไข
             </button>
             <button
+              type="button"
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-rose-300 hover:bg-rose-500/10"
               role="menuitem"
               onClick={() => {
@@ -412,14 +416,15 @@ export default function Usermanager() {
       {approveOpen &&
         createPortal(
           <div className="fixed inset-0 z-[10000] grid place-items-center bg-black/60 p-4">
-            <div className="w-full max-w-[420px] rounded-2xl border border-slate-700 bg-slate-900 p-6 text-slate-200 shadow-2xl">
+            <div className="w-full max-w-[420px] rounded-2xl border border-slate-700 bg-slate-900 p-6 text-slate-200 shadow-2xl" role="dialog" aria-modal="true">
               <h2 className="text-lg font-semibold">ยืนยันการดำเนินการ</h2>
               <p className="mt-2 text-sm text-slate-300">
-                ต้องการเปลี่ยนสถานะผู้ใช้{" "}
+                ต้องการเปลี่ยนสถานะผู้ใช้{' '}
                 <span className="font-medium text-emerald-300">#{selectedUserId}</span> หรือไม่?
               </p>
               <div className="mt-6 flex justify-end gap-3">
                 <button
+                  type="button"
                   className="rounded-lg bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700"
                   onClick={() => setApproveOpen(false)}
                   disabled={!!submitting}
@@ -427,11 +432,12 @@ export default function Usermanager() {
                   ยกเลิก
                 </button>
                 <button
+                  type="button"
                   className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm hover:bg-rose-500 disabled:opacity-60"
                   onClick={() => handleApprove(false)}
                   disabled={!!submitting}
                 >
-                  {submitting === "reject" ? (
+                  {submitting === 'reject' ? (
                     <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-b-transparent" />
                   ) : (
                     <X className="h-4 w-4" />
@@ -439,11 +445,12 @@ export default function Usermanager() {
                   ไม่อนุมัติ
                 </button>
                 <button
+                  type="button"
                   className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm hover:bg-emerald-500 disabled:opacity-60"
                   onClick={() => handleApprove(true)}
                   disabled={!!submitting}
                 >
-                  {submitting === "approve" ? (
+                  {submitting === 'approve' ? (
                     <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-b-transparent" />
                   ) : (
                     <Check className="h-4 w-4" />
@@ -460,14 +467,15 @@ export default function Usermanager() {
       {deleteOpen &&
         createPortal(
           <div className="fixed inset-0 z-[10000] grid place-items-center bg-black/60 p-4">
-            <div className="w-full max-w-[420px] rounded-2xl border border-slate-700 bg-slate-900 p-6 text-slate-200 shadow-2xl">
+            <div className="w-full max-w-[420px] rounded-2xl border border-slate-700 bg-slate-900 p-6 text-slate-200 shadow-2xl" role="dialog" aria-modal="true">
               <h2 className="text-lg font-semibold text-rose-300">ลบผู้ใช้</h2>
               <p className="mt-2 text-sm text-slate-300">
-                คุณต้องการลบผู้ใช้{" "}
+                คุณต้องการลบผู้ใช้{' '}
                 <span className="font-medium text-rose-300">#{selectedUserId}</span> ใช่หรือไม่?
               </p>
               <div className="mt-6 flex justify-end gap-3">
                 <button
+                  type="button"
                   className="rounded-lg bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700"
                   onClick={() => setDeleteOpen(false)}
                   disabled={deleting}
@@ -475,6 +483,7 @@ export default function Usermanager() {
                   ยกเลิก
                 </button>
                 <button
+                  type="button"
                   className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm hover:bg-rose-500 disabled:opacity-60"
                   onClick={handleDelete}
                   disabled={deleting}
@@ -496,7 +505,7 @@ export default function Usermanager() {
       {editOpen && editData &&
         createPortal(
           <div className="fixed inset-0 z-[10000] grid place-items-center bg-black/60 p-4">
-            <div className="w-full max-w-[520px] rounded-2xl border border-slate-700 bg-slate-900 p-6 text-slate-200 shadow-2xl">
+            <div className="w-full max-w-[520px] rounded-2xl border border-slate-700 bg-slate-900 p-6 text-slate-200 shadow-2xl" role="dialog" aria-modal="true">
               <h2 className="text-lg font-semibold">แก้ไขข้อมูลผู้ใช้ #{editData.id}</h2>
 
               <div className="mt-4 grid grid-cols-1 gap-3">
@@ -514,7 +523,7 @@ export default function Usermanager() {
                 <label className="flex flex-col gap-1">
                   <span className="text-xs text-slate-400">อีเมล</span>
                   <input
-                    value={editData.email ?? ""}
+                    value={editData.email ?? ''}
                     onChange={(e) => setEditData({ ...editData, email: e.target.value })}
                     type="email"
                     className="rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm outline-none ring-emerald-500/30 focus:ring-2"
@@ -525,7 +534,7 @@ export default function Usermanager() {
                 <label className="flex flex-col gap-1">
                   <span className="text-xs text-slate-400">เบอร์โทร</span>
                   <input
-                    value={editData.phone ?? ""}
+                    value={editData.phone ?? ''}
                     onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
                     className="rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm outline-none ring-emerald-500/30 focus:ring-2"
                     placeholder="08x-xxx-xxxx"
@@ -539,6 +548,7 @@ export default function Usermanager() {
 
               <div className="mt-6 flex justify-end gap-3">
                 <button
+                  type="button"
                   className="rounded-lg bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700"
                   onClick={() => {
                     setEditOpen(false);
@@ -549,6 +559,7 @@ export default function Usermanager() {
                   ยกเลิก
                 </button>
                 <button
+                  type="button"
                   className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm hover:bg-emerald-500 disabled:opacity-60"
                   onClick={() => editData && saveUser(editData)}
                   disabled={saving}
