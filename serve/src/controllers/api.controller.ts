@@ -273,145 +273,37 @@ export const getApikeyByToken = async (c: Context) => {
     const id = Number(tempAuth?.id);
 
     if (!id || isNaN(id)) {
-      return c.html(`
-        <div style="font-family:sans-serif; padding:2rem;">
-          <h3 style="color:#e11d48;">ไม่พบข้อมูลการขอสิทธิ์ชั่วคราว</h3>
-        </div>
-      `, 400);
+      return c.json({
+        success: false,
+        message: "ID ไม่ถูกต้อง"
+      }, 400);
     }
 
     const result = await apiModel.getApikeyByRequestId(db, id);
 
     if (result.success === false) {
-      return c.html(`
-        <div style="font-family:sans-serif; padding:2rem;">
-          <h3 style="color:#e11d48;">${result.message}</h3>
-        </div>
-      `, result.code === "NOT_FOUND" ? 404 : 400);
+       if(result.code === "NOT_FOUND"){
+         return c.json({
+          success: false,
+          message: result.message
+         },404)
+       }
+      return c.json({
+        success: false,
+        message: result.message
+      }, 500);
     }
-    if (!result.data) {
-      return c.html(`
-        <div style="font-family:sans-serif; padding:2rem;">
-          <h3 style="color:#e11d48;">ไม่พบข้อมูล API Key</h3>
-        </div>
-      `, 404);
-    }
-    const apiKey = result.data.clientId;
-    const url = result.data.url;
-    const secret = result.data.secretKey;
-
-    return c.html(`
-      <html lang="th">
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>API Key Viewer</title>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-      <style>
-        body {
-          background: #0f172a;
-          color: #e2e8f0;
-          font-family: 'Inter', 'Noto Sans Thai', sans-serif;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-          margin: 0;
-        }
-
-        .card {
-          width: 100%;
-        }
-        .field {
-          margin-bottom: 1.2rem;
-        }
-
-        .label {
-          font-size: 1rem;
-          text-transform: uppercase;
-          color: #fff;
-          font-weight: 600;
-          margin-bottom: 0.3rem;
-        }
-
-        .input-row {
-          display: flex;
-          align-items: center;
-          background: #1e293b;
-          border: 1px solid #334155;
-          border-radius: 6px;
-          padding: 0.5rem 0.75rem;
-          justify-content: space-between;
-        }
-
-        .input-value {
-          color: #cbd5e1;
-          font-size: 0.9rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 270px;
-        }
-
-        .btn-copy, .btn-show {
-          color: #14b8a6;
-          font-size: 0.8rem;
-          font-weight: 500;
-          cursor: pointer;
-          background: none;
-          border: none;
-          outline: none;
-          transition: color 0.2s;
-        }
-
-        .btn-copy:hover, .btn-show:hover {
-          color: #2dd4bf;
-        }
-
-        small {
-          color: #64748b;
-          display: block;
-          text-align: center;
-          margin-top: 1.5rem;
-          font-size: 0.8rem;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="card">
-        <div class="field">
-          <div class="label">API URL</div>
-          <div class="input-row">
-            <div class="input-value" id="url">${url}</div>
-          </div>
-        </div>
-
-        <div class="field">
-          <div class="label">Client ID</div>
-          <div class="input-row">
-            <div class="input-value" id="clientId">${apiKey}</div>
-            
-          </div>
-        </div>
-
-        <div class="field">
-          <div class="label">Secret Key</div>
-          <div class="input-row">
-            <div class="input-value" id="secret">${secret}</div>
-          </div>
-        </div>
-      </div>
-    </body>
-    </html>
-    `);
+    return c.json({
+      success: true,
+      data: result.data
+    }, 200);
   } catch (error: any) {
     console.error(error);
-    return c.html(`
-      <div style="font-family:sans-serif; padding:2rem;">
-        <h3 style="color:#e11d48;">เกิดข้อผิดพลาดภายในระบบ</h3>
-        <p>${error.message || "An internal server error occurred."}</p>
-      </div>
-    `, 500);
+    return c.json({
+      success: false,
+      code: "INTERNAL_SERVER_ERROR",
+      message: error.message || 'An internal server error occurred.'
+    }, 500);
   }
 };
 
@@ -427,3 +319,54 @@ export const RemoveTokenTemp = async (c: Context) => {
       message: "ลบ Token ชั่วคราวเรียบร้อย"
     },200)
 }
+
+export const createApiKey = async (c:Context) => {
+  try{
+    const db = c.get('db') as DrizzleDB
+    const eventId = Number(c.req.param('id'))
+    if(isNaN(eventId)){
+       return c.json(
+        { success: false, message: "ID ไม่ถูกต้อง" },
+        400
+      );
+    }
+    const result = await apiModel.createApiKey(db,eventId)
+    if(result.success === false){
+      if(result.code === "NOT_FOUND"){
+        return c.json({
+          success: false,
+          message: result.message
+        },404)
+      }
+      else if(result.code === "REQUEST_NOT_ACTIVE"){
+        return c.json({
+          success: false,
+          message: result.message
+        },400)
+      }
+      else if(result.code === "APIKEY_ALREADY_EXISTS"){
+        return c.json({
+          success: false,
+          message: result.message
+        },400)
+      }else{
+        return c.json({
+          success: false,
+          message: result.message
+        },500)
+      }
+    }
+    return c.json({
+      success: true,
+      message: result.message
+    },201)
+  }catch(error : any){
+    console.log(error)
+    return c.json({
+      success: false,
+      code: "INTERNAL_SERVER_ERROR",
+      message: error.message || 'An internal server error occurred.'
+    },500)
+  }
+}
+

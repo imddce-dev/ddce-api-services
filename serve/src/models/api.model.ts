@@ -1,8 +1,10 @@
-import { api_keys, api_notification, url_api } from './../configs/mysql/schema';
+import * as bcrypt from 'bcrypt';
+import { api_keys, api_notification, url_api, organizer, users } from './../configs/mysql/schema';
 import { sendApprovalApi } from '../utils/nodemailer';
 import { DrizzleDB } from '../configs/type';
 import { apiRequests, apiRequestAttachments } from '../configs/mysql/schema';
-import { desc, eq, sql } from 'drizzle-orm';
+import { desc, eq, sql,and } from 'drizzle-orm';
+import { generateRandomKey, encrypt} from '../utils/hmactoken';
 
 const BASE_URL = "https://api-service-ddce.ddc.moph.go.th/";
 
@@ -431,12 +433,15 @@ export const getApikeyByRequestId = async(db:DrizzleDB, requestId:number) =>{
         message:"ไม่พบ API Key สำหรับคำขอนี้"
       }
     }
+    const decryptedClientKey = encrypt(apikey.client_key);
+    const decryptedSecretKey = encrypt(apikey.secret_key);
+
     return{
       success: true,
       data: {
         url: url.url,
-        clientId: apikey.client_key,
-        secretKey: apikey.secret_key
+        clientId: decryptedClientKey,
+        secretKey: decryptedSecretKey
       }
     }
     
@@ -449,3 +454,73 @@ export const getApikeyByRequestId = async(db:DrizzleDB, requestId:number) =>{
     }
   }
 }
+
+export const createApiKey = async(db:DrizzleDB, eventId: number) =>{
+  try{
+    const currentEvent = await db.query.apiRequests.findFirst({
+      where: eq(apiRequests.id, eventId)
+    })
+    if(!currentEvent){
+      return{
+        success: false,
+        code:"NOT_FOUND",
+        message:"Not Match Id Events"
+      }
+    }
+    if(currentEvent.status !== "active"){
+      return{
+        success: false,
+        code:"REQUEST_NOT_ACTIVE",
+        message:"คำขอของคุณยังไม่ได้รับการอนุมัติ"
+      }
+    }
+    const existingKey = await db.query.api_keys.findFirst({
+      where: and(
+        eq(api_keys.event_id, eventId),
+        eq(api_keys.status, 'active')
+      )
+    });
+    if (existingKey && existingKey.expiresAt > new Date()) {
+      return { success: false, code: "KEY_EXISTS", message: "Event นี้มี API Key ที่ยัง Active อยู่" };
+    }
+    const currentOrganize = await db.query.organizer.findFirst({  
+      where: eq(organizer.name, currentEvent.organizerName || "")
+    })
+    if(!currentOrganize){ 
+      return{
+        success: false,
+        code:"ORGANIZE_NOT_FOUND",
+        message:"ไม่พบข้อมูลผู้จัดงานสำหรับคำขอนี้"
+      }
+    }
+    const RawClientKey = generateRandomKey(24);
+    const RawSecretKey = generateRandomKey(48);
+    const encryptedClientKey = encrypt(RawClientKey);
+    const encryptedSecretKey = encrypt(RawSecretKey);
+    const expirationDate = new Date();
+    expirationDate.setMonth(expirationDate.getMonth() + 6); 
+    await db.insert(api_keys).values({
+      user_id: currentEvent.userRecord,
+      event_id: eventId,
+      organize_id: currentOrganize.id,
+      client_key: encryptedClientKey,
+      secret_key: encryptedSecretKey,
+      expiresAt: expirationDate,
+    })
+    return{
+      success: true,
+      data: {
+        clientKey: RawClientKey,
+        secretKey: RawSecretKey,
+        expiresAt: expirationDate
+      }
+    }
+  }catch(error){
+    console.log("Error Create API Key:",error)
+    return{
+      success: false,
+      code:"UNKNOWN_ERROR",
+      message:"เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่"
+    }
+  }
+} 

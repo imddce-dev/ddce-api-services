@@ -1,13 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  FetchAllApireq,
-  appoveApi,
-  updateApiReq,
-  deleteApi,
-  type ApiReqData,
-} from '@/services/apiService';
+import {FetchAllApireq,appoveApi,updateApiReq,deleteApi,type ApiReqData,regenerateApiKey} from '@/services/apiService';
 import {
   ArrowUpDown,
   Building2,
@@ -243,12 +237,15 @@ export default function RequestsAdmin() {
       reload();
     }
   };
+ 
+
+  
 
   /* ============================== UI ============================== */
   return (
-    <div className="ps-4 pe-4 md:ps-6 md:pe-6 pt-4 pb-8">
+    <div className="mx-auto">
       {/* Toolbar */}
-      <div className="mb-4 flex flex-col gap-2 md:mb-6 md:flex-row md:items-center md:justify-between">
+      <div className="sticky top-0 z-20 mb-4 flex flex-col gap-2  border-slate-800 bg-slate-950/80 backdrop-blur-md md:mb-6 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2 text-slate-400">
           <ArrowUpDown className="h-4 w-4" />
           <select
@@ -295,6 +292,7 @@ export default function RequestsAdmin() {
           </label>
         </div>
       </div>
+
 
       {/* Table (ซ่อนสกอร์ลบาร์แนวตั้ง แต่ยังเลื่อนได้) */}
       <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 shadow-xl transition-shadow duration-200">
@@ -368,13 +366,12 @@ export default function RequestsAdmin() {
                             aria-expanded={opened}
                             aria-controls={`row-detail-${r.id}`}
                           >
-                            <ChevronDown className={cn('h-4 w-4 transition-transform duration-200', opened && 'rotate-180')} />
+                            <ChevronDown className={cn('h-4 w-4 transition-transform duration-500 ease-in-out', opened && 'rotate-180')} />
                             ดูรายละเอียด
                           </button>
                         </td>
                       </tr>
 
-                      {/* Expanded detail row */}
                       <tr
                         ref={opened ? expandedRef : null}
                         id={`row-detail-${r.id}`}
@@ -485,6 +482,20 @@ function DetailInline({
     }
   };
 
+   const generateApikey = async (id: number) => {
+    try{
+      const resp = await regenerateApiKey(id);
+      if (resp?.success) {
+        alert("สร้าง API Key สำเร็จ!");
+      } else {
+        throw new Error(resp?.message || "ไม่สามารถสร้าง API Key ใหม่ได้");
+      }
+    } catch (error: any) {
+      alert(error.message || "เกิดข้อผิดพลาด ไม่สามารถสร้าง API Key ได้");
+    }
+   };
+
+
   return (
     <div className="p-4 md:p-5">
       <div className={cn('mb-4 h-1 w-full rounded bg-gradient-to-r', stripe)} />
@@ -591,19 +602,24 @@ function DetailInline({
           </div>
 
           <div className="flex flex-wrap items-center justify-start md:justify-end gap-2">
-            <a
-              href="#api-key-inline"
+            <button
+              onClick={() => generateApikey(row.id) }
+              disabled={!rowIsApproved}
               className={cn(
                 'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors duration-200',
                 rowIsApproved
-                  ? 'bg-indigo-600 hover:bg-indigo-500'
-                  : 'bg-slate-800 opacity-60 cursor-not-allowed pointer-events-none'
+                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                  : 'bg-slate-800 text-slate-400 opacity-60 cursor-not-allowed'
               )}
-              title={rowIsApproved ? 'เลื่อนไปที่ API Key' : 'ต้องอนุมัติก่อนจึงจะสร้าง/ใช้ API Key ได้'}
+              title={
+                rowIsApproved
+                  ? 'เลื่อนไปที่ API Key'
+                  : 'ต้องอนุมัติก่อนจึงจะสร้าง/ใช้ API Key ได้'
+              }
             >
               <KeySquare className="h-4 w-4" />
               สร้าง API Key
-            </a>
+            </button>
 
             <button
               className="inline-flex items-center gap-2 rounded-lg border border-rose-600/40 bg-rose-600/10 px-3 py-2 text-sm text-rose-300 hover:bg-rose-600/20 transition-colors duration-200"
@@ -790,108 +806,12 @@ function DetailInline({
           </div>
         </Card>
 
-        <InlineKeyGen
-          allowed={rowIsApproved}
-          projectName={draft.project_name || row.project_name || `Project #${row.id}`}
-          requesterName={row.requester_name}
-        />
+        
       </div>
     </div>
   );
 }
 
-/* ============================== Inline KeyGen ============================== */
-function InlineKeyGen({
-  allowed,
-  projectName,
-  requesterName,
-}: {
-  allowed: boolean;
-  projectName?: string;
-  requesterName?: string | null;
-}) {
-  const [apiKey, setApiKey] = useState<string>(() => generateKey());
-  const [copied, setCopied] = useState(false);
-
-  function generateKey() {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const len = 48;
-    let body = '';
-    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
-      const buf = new Uint32Array(len);
-      window.crypto.getRandomValues(buf);
-      for (let i = 0; i < len; i++) body += alphabet[buf[i] % alphabet.length];
-    } else {
-      for (let i = 0; i < len; i++) body += alphabet[Math.floor(Math.random() * alphabet.length)];
-    }
-    return `sk_${body}`;
-  }
-
-  const handleCopy = async () => {
-    if (!allowed) return;
-    try {
-      await navigator.clipboard.writeText(apiKey);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      // ignore
-    }
-  };
-
-  return (
-    <Card>
-      <div id="api-key-inline" className="mb-2 text-sm font-medium text-slate-300">API Key</div>
-      {!allowed ? (
-        <div className="mb-3 rounded-xl border border-rose-600/40 bg-rose-600/10 p-3 text-rose-200 text-sm">
-          ต้องมีสถานะ <b>อนุมัติ</b> เท่านั้นจึงจะสร้าง/ใช้ API Key ได้
-        </div>
-      ) : null}
-
-      <div className={cn('rounded-xl border border-slate-700 bg-slate-900/60 p-4', !allowed && 'opacity-60')}>
-        <div className="text-[11px] uppercase tracking-wide text-slate-500 mb-1">
-          สร้างคีย์สำหรับ <span className="text-slate-300">{projectName}</span>
-          {requesterName ? <> — ผู้ขอ: <span className="text-slate-400">{requesterName}</span></> : null}
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <input
-            readOnly
-            value={apiKey}
-            className="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 transition-colors duration-200"
-          />
-          <button
-            className={cn(
-              'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors duration-200',
-              allowed ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-800 cursor-not-allowed'
-            )}
-            onClick={handleCopy}
-            title={allowed ? 'คัดลอก' : 'ต้องอนุมัติก่อน'}
-            disabled={!allowed}
-          >
-            <Copy className="h-4 w-4" />
-            {copied ? 'คัดลอกแล้ว' : 'คัดลอก'}
-          </button>
-          <button
-            className={cn(
-              'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors duration-200',
-              allowed ? 'bg-emerald-700 hover:bg-emerald-600' : 'bg-slate-700 cursor-not-allowed'
-            )}
-            onClick={() => allowed && setApiKey(generateKey())}
-            title={allowed ? 'สุ่มใหม่' : 'ต้องอนุมัติก่อน'}
-            disabled={!allowed}
-          >
-            <RefreshCw className="h-4 w-4" />
-            สุ่มใหม่
-          </button>
-        </div>
-
-        <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
-          โปรดคัดลอกและเก็บ API Key นี้ไว้ให้ปลอดภัย — <b>จะแสดงให้เห็นเพียงครั้งเดียว</b>
-        </div>
-      </div>
-    </Card>
-  );
-}
 
 /* ============================== Tiny UI Components ============================== */
 

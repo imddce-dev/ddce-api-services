@@ -145,6 +145,24 @@ export default function StatusForm() {
     return () => clearInterval(timer);
   },[timeLeft])
 
+  useEffect(() => {
+  if (apiKey !== null) {
+    setTimeLeft(180);
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          closeDialogApikey();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }
+}, [apiKey]);
+
+
+
   const countdownText = `${String(Math.floor(timeLeft / 60)).padStart(2, "0")}:${String(
     timeLeft % 60
   ).padStart(2, "0")}`;
@@ -172,15 +190,15 @@ export default function StatusForm() {
           closeDialog()
           await new Promise(res => setTimeout(res, 500));
           setApiKey("Successfully fetched API Key!")
-          // const resToken = await getTempAuthToken()
-          // if(resToken?.success){
-          //   setApiKey("Successfully fetched API Key!")
-          //    setApiUrl(resToken.data.url)
-          //    setClientId(resToken.data.clientId)
-          //    setsecretKey(resToken.data.secretKey)
-          // }else{
-          //   alert("ไม่สามารถขอ Token ชั่วคราวได้")
-          // }
+          const resToken = await getTempAuthToken()
+          if(resToken?.success){
+            setApiKey("Successfully fetched API Key!")
+             setApiUrl(resToken.data.url)
+             setClientId(resToken.data.clientId)
+             setsecretKey(resToken.data.secretKey)
+          }else{
+            alert("ไม่สามารถขอ Token ชั่วคราวได้")
+          }
         }else{
           setErrorOtp(resp?.message || "ไม่สามารถยืนยันรหัส OTP ได้")
         }
@@ -496,7 +514,6 @@ export default function StatusForm() {
         <div
           className="fixed inset-0 z-[1000] grid place-items-center bg-black/60 p-4"
           onKeyDown={(e) => e.key === "Escape" && closeDialogApikey()}
-          onClick={closeDialogApikey}
         >
           <div
             className="w-full max-w-xl overflow-hidden rounded-2xl border border-emerald-500/40 bg-slate-900/95 shadow-[0_8px_60px_-12px_rgba(16,185,129,0.35)] backdrop-blur-xl transition-all duration-300"
@@ -514,27 +531,60 @@ export default function StatusForm() {
             </div>
 
             {/* Content */}
-            <div className="p-5">
-              <div className="flex justify-center mb-4">
-                <img src="/api.png" alt="api" width={120} height={120} />
+            <div className="p-6 space-y-4">
+              <div className='flex justify-center'>
+                <img src="/api.png" alt="api_logo" width={120} height={120} />
               </div>
 
-              {/* ✅ ใช้ iframe แทน JSON data */}
-              <iframe
-                src="http://localhost:8080/web-api/options/get-apikey"
-                className="w-full h-[240px] "
-                title="API Key Viewer"
-                sandbox="allow-same-origin allow-scripts"
-              />
+              {/* API URL */}
+              <div>
+                <label className="block text-sm font-medium text-emerald-300 mb-1">API URL</label>
+                <div className="flex items-center bg-slate-800/60 border border-slate-600 rounded-lg px-3 py-2">
+                  <div className="flex-1 text-slate-200 break-all">{apiUrl}</div>
+                  <button onClick={() => navigator.clipboard.writeText(apiUrl)} className="ml-2 text-emerald-400 hover:text-emerald-200 transition">
+                    <Copy size={18} />
+                  </button>
+                </div>
+              </div>
 
-              <p className="mt-4 text-center text-xs text-slate-400">
-                *ข้อมูลนี้จะแสดงได้เพียงชั่วคราว (5 นาที) หลังจาก OTP ยืนยันสำเร็จ
-              </p>
+              {/* Client ID */}
+              <div>
+                <label className="block text-sm font-medium text-emerald-300 mb-1">Client KEY</label>
+                <div className="flex items-center bg-slate-800/60 border border-slate-600 rounded-lg px-3 py-2">
+                  <div className="flex-1 text-slate-200 break-all">{clientId}</div>
+                  <button onClick={() => navigator.clipboard.writeText(clientId)} className="ml-2 text-emerald-400 hover:text-emerald-200 transition">
+                    <Copy size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Secret Key */}
+              <div>
+                <label className="block text-sm font-medium text-emerald-300 mb-1">Secret Key</label>
+                <div className="flex items-center bg-slate-800/60 border border-slate-600 rounded-lg px-3 py-2">
+                  <div className="flex-1 text-slate-200 break-all">
+                    {showSecret ? secretKey : '•'.repeat(secretKey.length)}
+                  </div>
+                  <button
+                    onClick={() => setShowSecret(!showSecret)}
+                    className="ml-2 text-emerald-400 hover:text-emerald-200 transition"
+                  >
+                    {showSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                  <button onClick={() => navigator.clipboard.writeText(secretKey)} className="ml-2 text-emerald-400 hover:text-emerald-200 transition">
+                    <Copy size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer Note */}
+              <div className={`text-center text-xs  ${timeLeft < 30 ? " text-red-400" : " text-emerald-400"}`}>
+                หน้าต่างนี้จะปิดอัตโนมัติใน {countdownText}
+              </div>
             </div>
           </div>
         </div>
       )}
-
 
 
     </main>

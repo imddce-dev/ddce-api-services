@@ -82,16 +82,23 @@ export const apiRequestAttachments = mysqlTable("api_request_attachments", {
   createdAt:        timestamp("created_at").defaultNow().notNull(),
 });
 
-export const api_keys = mysqlTable('api_keys',{
-  id:                int('id').autoincrement().primaryKey(), 
-  user_id:           int('user_id').references(() => users.id, { onDelete: "cascade" }).notNull(),
-  event_id:          int('event_id').references(() => apiRequests.id, { onDelete: "cascade" }).notNull(),
-  client_key:        varchar('client_key',{ length:191}).notNull(),
-  secret_key:        varchar('secret_key',{ length:191}).notNull(),
-  status:            int('status').notNull(),
-  createdAt:         timestamp('created_at').defaultNow().notNull(),
-  expiresAt:         timestamp('expires_at').defaultNow().notNull(),
-  last_used_at:      timestamp('last_used_at'),
+export const api_keys = mysqlTable('api_keys', {
+  id: int('id').autoincrement().primaryKey(),
+  user_id: int('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  event_id: int('event_id').references(() => apiRequests.id, { onDelete: 'cascade' }).notNull(),
+  organize_id: int('organize_id').references(() => organizer.id, { onDelete: 'cascade' }).notNull(),
+  client_key: text('client_key').notNull(),
+  secret_key: text('secret_key').notNull(),
+  status: mysqlEnum('status', ['active', 'revoked', 'expired']).default('active').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  last_used_at: timestamp('last_used_at'),
+}, (table) => {
+  return {
+    clientKeyHashIdx: index('idx_client_key').on(table.client_key),
+    userIdx: index('idx_user_id').on(table.user_id),
+    eventIdx: index('idx_event_id').on(table.event_id),
+  };
 });
 
 export const api_key_ips = mysqlTable('api_key_ips',{

@@ -61,6 +61,7 @@ const main = async () => {
     options.post('vertify-otp',authMiddleware,otpController.verifyTokenKey)
     options.get('get-apikey',tempAuthMiddleware,apiController.getApikeyByToken)
     options.post('remove-temp-token',authMiddleware,apiController.RemoveTokenTemp)
+    options.get('create-api-key/:id',apiController.createApiKey)
 
     const application = app.basePath('web-api/');
     application.get('org', orgController.getOrg);

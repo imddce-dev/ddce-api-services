@@ -362,3 +362,49 @@ export const RemoveTempAuthToken = async(): Promise<removeTempAuthRes> => {
     );
   }
 }
+
+interface apiKeyRes {
+  success: boolean;
+  code?:   string;
+  message?:string;
+  data?:   {
+    url:        string;
+    clientId:   string;
+    secretKey:  string;
+  }
+}
+export const fetchApiKeyByToken = async(token: string): Promise<apiKeyRes> => {
+  try{
+    const resp = await apiClient.get<apiKeyRes>("/options/get-apikey",{  
+      headers:{
+        "Cache-Control": "no-store"
+      },
+    })
+    return resp.data
+  }catch (error : any){
+    safeLog("fetchApiKeyByToken error:", error);
+    throw new Error(
+      error.response?.data?.message || "ไม่สามารถดึงข้อมูล Api Key ได้"
+    );
+  }
+}
+
+interface regenerateApiKeyRes {
+  success: boolean;
+  message: string;
+}
+export const regenerateApiKey = async(id: number): Promise<regenerateApiKeyRes> => {
+  try{
+    const resp = await apiClient.get<regenerateApiKeyRes>(`/options/create-api-key/${id}`,{
+      headers:{
+        "Cache-Control": "no-store"
+      }
+    })
+    return resp.data
+  }catch (error : any){
+    safeLog("regenerateApiKey error:", error);
+    throw new Error(
+      error.response?.data?.message || "ไม่สามารถสร้าง Api Key ใหม่ได้"
+    );
+  }
+}
