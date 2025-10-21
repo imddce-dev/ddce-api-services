@@ -1,10 +1,10 @@
-import * as bcrypt from 'bcrypt';
-import { api_keys, api_notification, url_api, organizer, users } from './../configs/mysql/schema';
+
+import { api_keys, api_notification, url_api, organizer, users, api_key_limits } from './../configs/mysql/schema';
 import { sendApprovalApi } from '../utils/nodemailer';
 import { DrizzleDB } from '../configs/type';
 import { apiRequests, apiRequestAttachments } from '../configs/mysql/schema';
 import { desc, eq, sql,and } from 'drizzle-orm';
-import { generateRandomKey, encrypt} from '../utils/hmactoken';
+import { generateClientKey,generateSecretKey, encrypt, decrypt} from '../utils/hmactoken';
 
 const BASE_URL = "https://api-service-ddce.ddc.moph.go.th/";
 
@@ -433,8 +433,8 @@ export const getApikeyByRequestId = async(db:DrizzleDB, requestId:number) =>{
         message:"ไม่พบ API Key สำหรับคำขอนี้"
       }
     }
-    const decryptedClientKey = encrypt(apikey.client_key);
-    const decryptedSecretKey = encrypt(apikey.secret_key);
+    const decryptedClientKey = decrypt(apikey.client_key);
+    const decryptedSecretKey = decrypt(apikey.secret_key);
 
     return{
       success: true,
@@ -493,13 +493,17 @@ export const createApiKey = async(db:DrizzleDB, eventId: number) =>{
         message:"ไม่พบข้อมูลผู้จัดงานสำหรับคำขอนี้"
       }
     }
-    const RawClientKey = generateRandomKey(24);
-    const RawSecretKey = generateRandomKey(48);
+
+  const tx = await db.transaction(async (tx) => {
+    const RawClientKey = generateClientKey(24);
+    const RawSecretKey = generateSecretKey(48);
     const encryptedClientKey = encrypt(RawClientKey);
     const encryptedSecretKey = encrypt(RawSecretKey);
     const expirationDate = new Date();
     expirationDate.setMonth(expirationDate.getMonth() + 6); 
-    await db.insert(api_keys).values({
+
+
+    await tx.insert(api_keys).values({
       user_id: currentEvent.userRecord,
       event_id: eventId,
       organize_id: currentOrganize.id,
@@ -507,7 +511,42 @@ export const createApiKey = async(db:DrizzleDB, eventId: number) =>{
       secret_key: encryptedSecretKey,
       expiresAt: expirationDate,
     })
-    return{
+
+    const currentApiKey = await tx.query.api_keys.findFirst({
+      where: eq(api_keys.event_id,eventId)
+    })
+    if(!currentApiKey?.id){
+        return{
+          success: false,
+          code:"APIKEY_NOT_FOUND",
+          message:"ไม่พบข้อมูลผู้จัดงานสำหรับคำขอนี้"
+        }
+    }
+
+    const currentLimit = await tx.query.api_key_limits.findFirst({
+      where: eq(api_key_limits.api_key_id, currentApiKey?.id)
+    })
+    
+    let route_prefix = "";
+    if(currentEvent.dataSource === 'ebs_ddc'){
+      route_prefix = "/api/v1/ebs"
+    }else if(currentEvent.dataSource === 'mebs2'){
+      route_prefix = "/api/v1/mebs"
+    }else{
+      route_prefix = "/api/v1/ebs_province"
+    }
+    const api_key_id = currentApiKey?.id
+    const per_min = 60 
+    const burst = 0
+
+    await tx.insert(api_key_limits).values({
+      api_key_id: api_key_id,
+      route_prefix: route_prefix,
+      per_min: per_min,
+      burst: burst
+    })
+
+     return{
       success: true,
       data: {
         clientKey: RawClientKey,
@@ -515,6 +554,9 @@ export const createApiKey = async(db:DrizzleDB, eventId: number) =>{
         expiresAt: expirationDate
       }
     }
+  })
+   return { success: true, data: tx };
+   
   }catch(error){
     console.log("Error Create API Key:",error)
     return{

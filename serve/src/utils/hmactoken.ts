@@ -38,8 +38,21 @@ export function verifyHmacToken(csrfKey : string, token : string) {
   }
 }
 
-export function generateRandomKey (length: number) : string {
-  return crypto.randomBytes(length).toString('base64url')
+export function generateClientKey(length: number): string {
+  const prefix = 'ddce_';
+  const randomLength = length - prefix.length;
+  if (randomLength <= 0) {
+    throw new Error(`Length must be greater than prefix length (${prefix.length})`);
+  }
+  const randomPart = crypto.randomBytes(randomLength)
+    .toString('base64url') 
+    .slice(0, randomLength); 
+
+  return prefix + randomPart;
+}
+
+export function generateSecretKey (length: number) : string { 
+  return crypto.randomBytes(length).toString('base64url') 
 }
 
 export function encrypt(text: string) {
