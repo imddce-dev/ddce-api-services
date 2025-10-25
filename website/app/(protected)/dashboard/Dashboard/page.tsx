@@ -104,7 +104,7 @@ function Stat({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 ring-1 ring-inset ring-white/5">
+    <div className="rounded-2xl border border-white/10 bg-slate-950 p-4 ring-1 ring-inset ring-white/5 shdow-5">
       <div className="flex items-center gap-2 text-slate-400">
         {icon}
         <span className="text-sm">{title}</span>
@@ -158,7 +158,7 @@ function QuickCard({
     amber: "from-amber-500/15 via-amber-400/10",
   }[tone];
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/50 p-4 ring-1 ring-inset ring-white/5">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10  p-4 ring-1 ring-inset ring-white/5 shdow-5">
       <div className={`pointer-events-none absolute -inset-16 -z-10 rounded-3xl bg-gradient-to-b ${g} to-transparent blur-2xl`} />
       <div className="mb-1 inline-flex items-center gap-2 text-slate-200">
         {icon}
@@ -342,9 +342,9 @@ export default function DashboardPage() {
   }, [rows]);
 
   return (
-    <div className="min-h-dvh bg-slate-950 text-slate-100">
+    <div className="min-h-dvh  text-slate-100">
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-gradient-to-b from-cyan-700/25 via-emerald-500/15 to-transparent blur-[90px]" />
-      <div className="mx-auto flex max-w-[1280px] gap-5 px-4 py-5 md:px-6">
+      <div className="mx-auto flex max-w-[1280px] gap-5  ">
         <main className="relative flex-1">
           {/* Stats */}
           <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -394,7 +394,7 @@ export default function DashboardPage() {
 
           {/* Recent Table (ของผู้ใช้ปัจจุบันเท่านั้น) */}
           <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 ring-1 ring-inset ring-white/5 lg:col-span-1">
+            <div className="rounded-2xl border border-white/10 bg-slate-950 p-4 ring-1 ring-inset ring-white/5 lg:col-span-1 shdow-5">
               <h3 className="mb-1 text-sm font-semibold">ปริมาณการเรียกใช้งาน (7 วัน)</h3>
               <p className="text-xs text-slate-400">รวมทุกบริการ (requests/hour)</p>
               <div className="mt-3 h-40 w-full rounded-xl bg-white/5 p-2">
@@ -433,7 +433,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/50 p-0 ring-1 ring-inset ring-white/5 lg:col-span-2">
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950 p-0 ring-1 ring-inset ring-white/5 lg:col-span-2 shdow-5">
               <div className="flex items-center justify-between p-4">
                 <h3 className="text-sm font-semibold">คำขอล่าสุด</h3>
                 <Link href="/dashboard/Status" className="text-xs text-cyan-300 hover:text-cyan-200">

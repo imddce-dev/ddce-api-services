@@ -87,8 +87,8 @@ export const api_keys = mysqlTable('api_keys', {
   user_id: int('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   event_id: int('event_id').references(() => apiRequests.id, { onDelete: 'cascade' }).notNull(),
   organize_id: int('organize_id').references(() => organizer.id, { onDelete: 'cascade' }).notNull(),
-  client_key: text('client_key').notNull(),
-  secret_key: text('secret_key').notNull(),
+  client_key: varchar('client_key', { length: 512 }).notNull(),
+  secret_key: varchar('secret_key', { length: 1024 }).notNull(),
   status: mysqlEnum('status', ['active', 'revoked', 'expired']).default('active').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   expiresAt: timestamp('expires_at').notNull(),
@@ -166,3 +166,15 @@ export const url_api = mysqlTable('url_api',{
   status:            mysqlEnum('status',['active','inactive']).notNull().default('active'),
   createdAt:         timestamp('created_at').defaultNow().notNull(),
 })
+
+export const api_active_sessions = mysqlTable('api_active_sessions', {
+  id: int('id').autoincrement().primaryKey(),
+  apiKeyId: int('apikey_id').references(() => apiRequests.id,{onDelete: "cascade"}).notNull(), 
+  deviceId: varchar('device_id', { length: 191 }).notNull(), 
+  ipAddress: varchar('ip_address', { length: 45 }), 
+  loginAt: timestamp('login_at').defaultNow().notNull(),
+  expiresAt: timestamp('expires_at'), 
+  isActive: boolean('is_active').default(true).notNull(),
+}, (table) => ({
+  apiKeyUnique: unique('uniq_api_active').on(table.apiKeyId),
+}));

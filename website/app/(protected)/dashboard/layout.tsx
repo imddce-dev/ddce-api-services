@@ -13,7 +13,6 @@ export default async function DashboardLayout({
   const cookieStore = await cookies(); 
   const token =  cookieStore.get('accessToken')?.value;
   console.log("Token from cookie:", token ? `...${token.slice(-6)}` : null);
-  // const userInfo = token ? await getUserProfile(token) : null;
   console.log("User Info from API:");
   console.log("--------------------------------------");
   return (

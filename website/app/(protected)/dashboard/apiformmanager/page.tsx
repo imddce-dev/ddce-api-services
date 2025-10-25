@@ -13,7 +13,7 @@ export default function Page() {
       });
     }, [setPageInfo]);
   return (
-    <div className="min-h-dvh  bg-slate-950 text-slate-100">
+    <div className="relative text-slate-100 mx-auto ">
       <RequestsAdmin />
     </div>
   );

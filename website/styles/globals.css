@@ -318,3 +318,8 @@ textarea::-webkit-scrollbar-track { background: transparent; }
 .toc-scroll:hover::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, rgba(34,211,238,.55), rgba(16,185,129,.55));
 }
+
+.shdow-5{
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+

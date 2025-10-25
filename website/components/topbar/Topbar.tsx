@@ -13,7 +13,7 @@ export function Topbar({ setOpen }: TopbarProps) {
     visible: { opacity: 1, y: 0 },
   };
   return (
-    <div className="flex items-center gap-2 md:mt-3 md:ms-1 md:mb-2">
+    <div className="flex items-center gap-2 md:mt-3 md:mb-2 shdow-5">
       <button
         onClick={() => setOpen(true)}
         className="rounded-xl p-2 text-slate-200 hover:bg-white/5 md:hidden"
